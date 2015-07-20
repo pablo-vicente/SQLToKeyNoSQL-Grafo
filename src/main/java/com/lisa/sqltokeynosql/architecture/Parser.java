@@ -10,5 +10,9 @@ package com.lisa.sqltokeynosql.architecture;
  * @author geomar
  */
 public class Parser {
+
+    public Parser() {
+        
+    }
     
 }
