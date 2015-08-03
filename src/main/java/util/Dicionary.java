@@ -15,6 +15,13 @@ public class Dicionary {
     ArrayList<BDR> Bdrs;
     ArrayList<NoSQL> targets;
 
+    public Dicionary() {
+        this.Bdrs = new <BDR> ArrayList();
+        this.targets = new <NoSQL> ArrayList();
+    }
+    
+    
+
     public ArrayList<BDR> getBdrs() {
         return Bdrs;
     }
