@@ -74,6 +74,7 @@ public class Table {
         this.pks = pks;
         this.fks = fks;
         this.attributes = attributes;
+        this.keys = new ArrayList<String>();
     }
 
     public Table(String name, NoSQL targetDB, ArrayList<String> pks, ArrayList<String> fks, ArrayList<String> attributes, ArrayList<String> keys) {

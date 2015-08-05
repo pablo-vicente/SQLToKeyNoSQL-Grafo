@@ -34,6 +34,14 @@ public class BDR {
     public ArrayList<Table> getTables() {
         return tables;
     }
+    
+     public Table getTable(String t) {
+         for (Table table: tables){
+             if (t.equals(table.getName()))
+                 return table;
+         }
+        return null;
+    }
 
     public void setTables(ArrayList<Table> tables) {
         this.tables = tables;

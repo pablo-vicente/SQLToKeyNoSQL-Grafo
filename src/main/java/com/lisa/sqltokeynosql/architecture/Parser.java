@@ -10,7 +10,11 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
+import net.sf.jsqlparser.expression.operators.relational.ItemsList;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
+import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.alter.Alter;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
@@ -33,16 +37,14 @@ import util.Table;
  */
 public class Parser {
 
-    private String sql;
     private ExecutionEngine ex;
 
-    public Parser(String sql) {
-        this.sql = sql;
+    public Parser() {
         ex = new ExecutionEngine();
         ex.createDBR("teste");
     }
 
-    public boolean run() {
+    public boolean run(String sql) {
 
         try {
 
@@ -74,7 +76,7 @@ public class Parser {
                 ArrayList <String> cols = new ArrayList();
                 ArrayList <String> pk = new ArrayList();
                 ArrayList <String> fk = new ArrayList();
-       net.sf.jsqlparser.schema.Table schemaT = ct.getTable();
+                net.sf.jsqlparser.schema.Table schemaT = ct.getTable();
                 System.out.print("\n"+schemaT.getName()+"\n");
                 for (ColumnDefinition c : cl){
                     cols.add(c.getColumnName());
@@ -83,8 +85,8 @@ public class Parser {
                         for( String s: c.getColumnSpecStrings()){
                             if (s.equals("PRIMARY"))
                                 i++;
-                            else if (s.equals("FOREIGN KEY") && i>0)
-                                System.out.println("Chave Estrangeira!");
+                            else if (s.equals("KEY") && i>0)
+                                pk.add(c.getColumnName());
                         }
                         
                     }
@@ -102,10 +104,37 @@ public class Parser {
                     }
                 }
                 Table dt = new Table(schemaT.getName(), new NoSQL("teste", "user", "senha", "endereço"), pk, null, cols);
-                ex.createTable(dt);
+                if (ex.createTable(dt))
+                    System.out.println("Tabela Criada");
+                else
+                    System.out.println("Tabela não Criada");
                 
             } else if (statement instanceof Insert) {
-                System.out.println("Insert");
+                Insert ins = (Insert) statement;
+                List<Expression> values = ((ExpressionList) ins.getItemsList()).getExpressions();
+                //System.out.println("Insert - "+ins.getTable().getName());
+                if (ins.getColumns().size() != values.size()){
+                    System.err.println("Problemas no insert colunas e valores diferentes");
+                    return false;
+                }
+                int s = ins.getColumns().size();   
+                ArrayList <String> cols, vals;
+                vals = new <String> ArrayList();
+                cols = new <String> ArrayList();
+                for(int i=0; i<s; i++){
+                    cols.add(ins.getColumns().get(i).getColumnName());
+                    vals.add(values.get(i).toString());
+                }
+                for(int i=0; i<s; i++){
+                    System.out.println(cols.get(i)+": "+vals.get(i));
+                }
+                
+                
+               if ( ex.insertData(ins.getTable().getName(), cols, vals))
+                   System.out.print("Inseriu");
+               else
+                    System.out.println("Não foi");
+                
             } else if (statement instanceof Delete) {
                 System.out.println("Delete");
             } else if (statement instanceof Update) {
@@ -117,7 +146,6 @@ public class Parser {
             } else {
                 System.out.println("Não suportado!");
             }
-            System.out.print("\n\nDigite um comando:\n\n>");
         } catch (JSQLParserException ex) {
             System.err.println(ex.getMessage());
             return false;

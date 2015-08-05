@@ -34,4 +34,37 @@ public class  ExecutionEngine {
         }
         return false;
     }
+    
+    public boolean insertData(String table, ArrayList <String> columns, ArrayList <String> values ){
+        Table t = bd.getTable(table);
+        if (t == null){
+            System.out.println("Tabela não Existe!");
+            return false;
+        }
+        boolean equal = true;
+        String key="";    
+        for (String k : t.getPks()){
+            equal = false;
+            for(String aux: columns){    
+                if (k.equals(aux)){
+                    key+=(key.length()>0?"_":"")+values.get(columns.indexOf(aux));
+                    equal = true;
+                    break;
+                 }
+            }
+            if (!equal){
+                System.out.println("Falta uma pk");
+                return false;
+            }
+        }
+        
+        t.getTargetDB().getConection().put(table, key, columns, values);
+        t.getKeys().add(key);
+        return true;
+    }
+    
+    public boolean deleteData(String table, ArrayList <String> columns, ArrayList <String> values ){
+        
+        return false;
+    }
 }

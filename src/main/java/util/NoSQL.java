@@ -14,12 +14,15 @@ public class NoSQL {
     private String user;
     private String password;
     private String url;
+    private ConectorMongo conection;
 
     public NoSQL(String alias, String user, String password, String url) {
         this.alias = alias;
         this.user = user;
         this.password = password;
         this.url = url;
+        conection = new ConectorMongo();
+        conection.connect(alias);
     }
 
     public String getAlias() {
@@ -53,7 +56,13 @@ public class NoSQL {
     public void setUrl(String url) {
         this.url = url;
     }
-    
-    
+
+    public ConectorMongo getConection() {
+        return conection;
+    }
+
+    public void setConection(ConectorMongo conection) {
+        this.conection = conection;
+    }
     
 }
