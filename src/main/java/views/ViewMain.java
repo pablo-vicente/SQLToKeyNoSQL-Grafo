@@ -6,6 +6,10 @@
 package views;
 
 import com.lisa.sqltokeynosql.architecture.Parser;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumnModel;
+import javax.swing.table.TableModel;
 
 /**
  *
@@ -128,13 +132,28 @@ public class ViewMain extends javax.swing.JFrame {
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         for(String s: jTextAreaInput.getText().split(";"))
             if (s.length()>2) p.run(s);
+        if (p.dataSet!= null){
+            montaDataSet();
+        }
+        
         jTextAreaInput.setText("");
+        
+        
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_jMenuItem2ActionPerformed
 
+    private void montaDataSet(){
+        String [][] data = new String[p.ds.getData().size()][p.ds.getColumns().size()];// p.ds.getData().toArray();
+        for (int i =0; i< p.ds.getData().size();i++){
+            data[i] = p.ds.getData().get(i);
+        }
+       // String [] cols;
+        jTable1.setModel(new DefaultTableModel(data, p.ds.getColumns().toArray()));
+    }
+    
     /**
      * @param args the command line arguments
      */

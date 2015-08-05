@@ -6,6 +6,7 @@
 package util;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import org.bson.Document;
 
 /**
@@ -27,6 +28,8 @@ public class Connector {
     
     public void delete(){}
     
-    public void get(){}
+    public HashMap<String, String> get(int n, String t,String key){
+        return null;
+    }
     
 }

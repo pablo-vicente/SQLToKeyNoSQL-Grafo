@@ -6,6 +6,8 @@
 package com.lisa.sqltokeynosql.architecture;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import util.BDR;
 import util.Dicionary;
 import util.Table;
@@ -66,5 +68,36 @@ public class  ExecutionEngine {
     public boolean deleteData(String table, ArrayList <String> columns, ArrayList <String> values ){
         
         return false;
+    }
+
+    ArrayList<HashMap<String, String>> getData(List<String>tablesN, List<String>cols, List<String>filters ) {
+        ArrayList <HashMap<String, String>> result = new <HashMap<String, String>>ArrayList();
+        HashMap<String, String> aux;
+        ArrayList<Table> tables = new <Table>ArrayList();
+        for (String s: tablesN){
+            Table t = bd.getTable(s);
+            if (t == null){
+                System.out.println("Tabela: "+s+" não existe!");
+                return null;
+            }
+            tables.add(t);
+        }
+        for(Table t: tables){
+            for (String k: t.getKeys()){
+                HashMap<String, String> _new = new <String, String>HashMap();
+                aux = t.getTargetDB().getConection().get(1, t.getName(),k );
+                for (String c: cols){
+                   if (!c.equals("*")){
+                       _new.put(c, aux.get(c));
+                   }else{
+                       //cols = t.getAttributes();
+                       _new = (HashMap) aux.clone();
+                       break;
+                   }
+                }
+                result.add(_new);
+            }
+        }
+        return result; //To change body of generated methods, choose Tools | Templates.
     }
 }

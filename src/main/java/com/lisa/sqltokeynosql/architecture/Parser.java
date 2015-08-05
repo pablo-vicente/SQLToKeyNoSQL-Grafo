@@ -6,6 +6,7 @@
 package com.lisa.sqltokeynosql.architecture;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -28,6 +29,7 @@ import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.select.SelectItem;
 import net.sf.jsqlparser.statement.update.Update;
 import net.sf.jsqlparser.util.TablesNamesFinder;
+import util.DataSet;
 import util.NoSQL;
 import util.Table;
 
@@ -38,6 +40,8 @@ import util.Table;
 public class Parser {
 
     private ExecutionEngine ex;
+    public ArrayList<HashMap<String, String>> dataSet;
+    public DataSet ds;
 
     public Parser() {
         ex = new ExecutionEngine();
@@ -45,7 +49,8 @@ public class Parser {
     }
 
     public boolean run(String sql) {
-
+        dataSet = null;
+        ds = null;
         try {
 
             Statement statement = CCJSqlParserUtil.parse(sql);
@@ -55,20 +60,33 @@ public class Parser {
                 Select selectStatement = (Select) statement;
                 TablesNamesFinder tablesNamesFinder = new TablesNamesFinder();
                 List<String> tableList = tablesNamesFinder.getTableList(selectStatement);
-                String tab = "Tabelas: ";
-                for (String t : tableList) {
-                    tab += t + ", ";
-                }
-                System.out.println("\n ak:");
+                ArrayList <String> cols = new ArrayList();
                 PlainSelect ps = (PlainSelect) selectStatement.getSelectBody();
-                System.out.println("Itens + Tabela");
                 for (SelectItem si : ps.getSelectItems()) {
-                    System.out.println(si.toString());
+                    cols.add(si.toString());
                 }
 
-                System.out.println("Tabelas " + ps.getFromItem().toString());
-
-                System.out.print(tab + "\n-------");
+                //System.out.println("Tabelas " + ps.getFromItem().toString());
+                dataSet = ex.getData(tableList, cols, null);
+                //if (cols.get(0).equals("*"))
+                  //  cols = 
+                ds = new DataSet();
+                ds.setColumns(cols);
+                for (HashMap<String, String> a: dataSet){
+                    String []v = new String[cols.size()];
+                    for (int i=0; i<cols.size();i++){
+                        v[i] = a.get(cols.get(i));
+                    }
+                    ds.getData().add(v);
+                }
+                
+                //System.out.print(tab + "\n-------");
+                if (dataSet==null){
+                    System.out.println("Ocorreu algum erro!");
+                }else{
+                    System.out.println("Foram encontras "+dataSet.size()+" tuplas!\n"+dataSet.toString());
+                }
+                
             } else if (statement instanceof CreateTable) {
                 System.out.println("Create table");
                 CreateTable ct = (CreateTable) statement;
@@ -125,15 +143,15 @@ public class Parser {
                     cols.add(ins.getColumns().get(i).getColumnName());
                     vals.add(values.get(i).toString());
                 }
-                for(int i=0; i<s; i++){
-                    System.out.println(cols.get(i)+": "+vals.get(i));
-                }
+               // for(int i=0; i<s; i++){
+                 //   System.out.println(cols.get(i)+": "+vals.get(i));
+                //}
                 
                 
                if ( ex.insertData(ins.getTable().getName(), cols, vals))
-                   System.out.print("Inseriu");
+                   System.out.println("Inserção executada com sucesso!");
                else
-                    System.out.println("Não foi");
+                    System.out.println("Problemas na inserção!");
                 
             } else if (statement instanceof Delete) {
                 System.out.println("Delete");
