@@ -24,18 +24,20 @@ import java.util.List;
  *
  * @author geomar
  */
-public class ConectorMongo {
+public class MongoConnector extends Connector {
     private MongoClient mongoClient;
     MongoDatabase db;
     
-    public ConectorMongo(){
+    public MongoConnector(){
          mongoClient = new MongoClient();
     }
     
+    @Override
     public void connect(String nbd){
         db = mongoClient.getDatabase(nbd);
     }
     
+    @Override
     public void put (String table, String key, ArrayList<String>cols, ArrayList<String>values){
         if (db.getCollection(table) == null){
             db.createCollection(table);
@@ -47,7 +49,9 @@ public class ConectorMongo {
             
     }
     
+    @Override
     public void delete(){}
     
+    @Override
     public void get(){}
 }
