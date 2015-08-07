@@ -132,7 +132,7 @@ public class ViewMain extends javax.swing.JFrame {
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         for(String s: jTextAreaInput.getText().split(";"))
             if (s.length()>2) p.run(s);
-        if (p.dataSet!= null){
+        if (p.ds!= null){
             montaDataSet();
         }
         

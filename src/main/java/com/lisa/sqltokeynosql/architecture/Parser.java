@@ -32,6 +32,7 @@ import net.sf.jsqlparser.util.TablesNamesFinder;
 import util.DataSet;
 import util.NoSQL;
 import util.Table;
+import util.WhereStatment;
 
 /**
  *
@@ -54,105 +55,114 @@ public class Parser {
         try {
 
             Statement statement = CCJSqlParserUtil.parse(sql);
-            
+
             if (statement instanceof Select) {
                 System.out.println("Select");
                 Select selectStatement = (Select) statement;
                 TablesNamesFinder tablesNamesFinder = new TablesNamesFinder();
                 List<String> tableList = tablesNamesFinder.getTableList(selectStatement);
-                ArrayList <String> cols = new ArrayList();
+                ArrayList<String> cols = new ArrayList();
                 PlainSelect ps = (PlainSelect) selectStatement.getSelectBody();
                 for (SelectItem si : ps.getSelectItems()) {
                     cols.add(si.toString());
                 }
+                ArrayList<Object> filters = null;// = new <String>ArrayList();
+                Expression e = ps.getWhere();
 
-                //System.out.println("Tabelas " + ps.getFromItem().toString());
-                dataSet = ex.getData(tableList, cols, null);
-                //if (cols.get(0).equals("*"))
-                  //  cols = 
-                ds = new DataSet();
-                ds.setColumns(cols);
-                for (HashMap<String, String> a: dataSet){
-                    String []v = new String[cols.size()];
-                    for (int i=0; i<cols.size();i++){
-                        v[i] = a.get(cols.get(i));
-                    }
-                    ds.getData().add(v);
+                //for (Expression s : ps.getWhere()) {
+                //  cols.add(si.toString());
+                //}
+                System.out.println("-> " + ps.getWhere());
+                if (ps.getWhere() != null) {
+                    WhereStatment ws = new WhereStatment();
+                    ps.getWhere().accept(ws);
+                    filters = ws.getParsedFilters();
                 }
                 
-                //System.out.print(tab + "\n-------");
-                if (dataSet==null){
+                //dataSet = ex.getData(tableList, cols, null);
+
+                ds = ex.getDataSet(tableList, cols, filters);;
+                /* ds.setColumns(cols);
+                 for (HashMap<String, String> a: dataSet){
+                 String []v = new String[cols.size()];
+                 for (int i=0; i<cols.size();i++){
+                 v[i] = a.get(cols.get(i));
+                 }
+                 ds.getData().add(v);
+                 }
+                 */
+                if (ds == null) {
                     System.out.println("Ocorreu algum erro!");
-                }else{
-                    System.out.println("Foram encontras "+dataSet.size()+" tuplas!\n"+dataSet.toString());
+                } else {
+                    System.out.println("Foram encontras " + ds.getData().size() + " tuplas!\n");
                 }
-                
+
             } else if (statement instanceof CreateTable) {
                 System.out.println("Create table");
                 CreateTable ct = (CreateTable) statement;
-                List<ColumnDefinition> cl =  ct.getColumnDefinitions();
-                ArrayList <String> cols = new ArrayList();
-                ArrayList <String> pk = new ArrayList();
-                ArrayList <String> fk = new ArrayList();
+                List<ColumnDefinition> cl = ct.getColumnDefinitions();
+                ArrayList<String> cols = new ArrayList();
+                ArrayList<String> pk = new ArrayList();
+                ArrayList<String> fk = new ArrayList();
                 net.sf.jsqlparser.schema.Table schemaT = ct.getTable();
-                System.out.print("\n"+schemaT.getName()+"\n");
-                for (ColumnDefinition c : cl){
+                System.out.print("\n" + schemaT.getName() + "\n");
+                for (ColumnDefinition c : cl) {
                     cols.add(c.getColumnName());
-                    if (c.getColumnSpecStrings()!= null){
-                        int i=0;
-                        for( String s: c.getColumnSpecStrings()){
-                            if (s.equals("PRIMARY"))
+                    if (c.getColumnSpecStrings() != null) {
+                        int i = 0;
+                        for (String s : c.getColumnSpecStrings()) {
+                            if (s.equals("PRIMARY")) {
                                 i++;
-                            else if (s.equals("KEY") && i>0)
+                            } else if (s.equals("KEY") && i > 0) {
                                 pk.add(c.getColumnName());
+                            }
                         }
-                        
+
                     }
                     //System.out.print("COluna:"+c.getColumnName()+", t: "+c.getColDataType().toString()+" \n");
                 }
-                if (ct.getIndexes() != null){
-                    for (Index index : ct.getIndexes()){
-                        if (index.getType().equals("PRIMARY KEY")){
-                            for (String c : index.getColumnsNames())
+                if (ct.getIndexes() != null) {
+                    for (Index index : ct.getIndexes()) {
+                        if (index.getType().equals("PRIMARY KEY")) {
+                            for (String c : index.getColumnsNames()) {
                                 pk.add(c);
-                        }else if (index.getType().equals("PRIMARY KEY")){
-                            
+                            }
+                        } else if (index.getType().equals("PRIMARY KEY")) {
+
                         }
                         //System.out.print("n: "+index.getName()+", tipo: "+index.getType()+ ", col: "+ index.getColumnsNames()+" o:"+index.toString());
                     }
                 }
                 Table dt = new Table(schemaT.getName(), new NoSQL("teste", "user", "senha", "endereço"), pk, null, cols);
-                if (ex.createTable(dt))
+                if (ex.createTable(dt)) {
                     System.out.println("Tabela Criada");
-                else
+                } else {
                     System.out.println("Tabela não Criada");
-                
+                }
+
             } else if (statement instanceof Insert) {
                 Insert ins = (Insert) statement;
                 List<Expression> values = ((ExpressionList) ins.getItemsList()).getExpressions();
                 //System.out.println("Insert - "+ins.getTable().getName());
-                if (ins.getColumns().size() != values.size()){
+                if (ins.getColumns().size() != values.size()) {
                     System.err.println("Problemas no insert colunas e valores diferentes");
                     return false;
                 }
-                int s = ins.getColumns().size();   
-                ArrayList <String> cols, vals;
+                int s = ins.getColumns().size();
+                ArrayList<String> cols, vals;
                 vals = new <String> ArrayList();
                 cols = new <String> ArrayList();
-                for(int i=0; i<s; i++){
+                for (int i = 0; i < s; i++) {
                     cols.add(ins.getColumns().get(i).getColumnName());
                     vals.add(values.get(i).toString());
                 }
-               // for(int i=0; i<s; i++){
-                 //   System.out.println(cols.get(i)+": "+vals.get(i));
-                //}
-                
-                
-               if ( ex.insertData(ins.getTable().getName(), cols, vals))
-                   System.out.println("Inserção executada com sucesso!");
-               else
+
+                if (ex.insertData(ins.getTable().getName(), cols, vals)) {
+                    System.out.println("Inserção executada com sucesso!");
+                } else {
                     System.out.println("Problemas na inserção!");
-                
+                }
+
             } else if (statement instanceof Delete) {
                 System.out.println("Delete");
             } else if (statement instanceof Update) {

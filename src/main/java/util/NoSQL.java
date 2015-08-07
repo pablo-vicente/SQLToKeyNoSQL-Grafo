@@ -5,6 +5,8 @@
  */
 package util;
 
+import com.lisa.sqltokeynosql.architecture.Connector;
+
 /**
  *
  * @author geomar
