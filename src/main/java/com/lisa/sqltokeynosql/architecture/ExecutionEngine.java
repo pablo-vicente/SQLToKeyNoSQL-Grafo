@@ -142,11 +142,43 @@ public class ExecutionEngine {
 
     private boolean applyFilter(List<Object> filters, HashMap tuple) {
         if (filters == null) return true;
+        Boolean result = false;
+        String col = null;
+        Object val = null;
+        Operator op = null;
        // System.out.print("FIltro: "+tuple.get(((Column)filters.get(0)).getColumnName())+" "+ (Operator) filters.get(1)+" "+ filters.get(2));
-        return compare((String) tuple.get(((Column)filters.get(0)).getColumnName()), (Operator) filters.get(1), filters.get(2));
+        for (Object o: filters){
+            if (o instanceof Column){
+                if (col == null)
+                    col = ((Column) o).getColumnName();
+                else
+                    System.out.println("Comparação de colunas;");
+            }else if (o instanceof Operator){
+                if (op == null)
+                    op = ((Operator) o);
+                else
+                    System.out.println("Comparação ja setada;");
+            }else{
+                if (val == null)
+                    val = (o);
+                else
+                    System.out.println("Comparação de valores;");
+            }
+            
+            if (col != null && op != null && val != null){
+                result = compare((String) tuple.get(col), op, val);
+                col = null;
+                op = null;
+                val = null;
+            }
+        }
+        
+        return result;
     }
 
     private boolean compare(String v1, Operator operation, Object val) {
+        if (v1 == null || val == null)
+            return false;
         return operation.compare(v1, val);
     }
 }
