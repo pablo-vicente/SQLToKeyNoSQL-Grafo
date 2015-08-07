@@ -14,6 +14,7 @@ import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.expression.operators.relational.ItemsList;
+import net.sf.jsqlparser.expression.operators.relational.MultiExpressionList;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.Statement;
@@ -78,9 +79,8 @@ public class Parser {
                     ps.getWhere().accept(ws);
                     filters = ws.getParsedFilters();
                 }
-                
-                //dataSet = ex.getData(tableList, cols, null);
 
+                //dataSet = ex.getData(tableList, cols, null);
                 ds = ex.getDataSet(tableList, cols, filters);;
                 /* ds.setColumns(cols);
                  for (HashMap<String, String> a: dataSet){
@@ -142,26 +142,42 @@ public class Parser {
 
             } else if (statement instanceof Insert) {
                 Insert ins = (Insert) statement;
-                List<Expression> values = ((ExpressionList) ins.getItemsList()).getExpressions();
-                //System.out.println("Insert - "+ins.getTable().getName());
-                if (ins.getColumns().size() != values.size()) {
-                    System.err.println("Problemas no insert colunas e valores diferentes");
-                    return false;
+                List<ExpressionList> exList;
+                if (ins.getItemsList() instanceof MultiExpressionList)
+                    exList = ((MultiExpressionList) ins.getItemsList()).getExprList();
+                else{
+                    exList = new <ExpressionList>ArrayList();
+                    exList.add((ExpressionList)ins.getItemsList());
                 }
-                int s = ins.getColumns().size();
+                    int s = ins.getColumns().size(),j=0;
                 ArrayList<String> cols, vals;
-                vals = new <String> ArrayList();
                 cols = new <String> ArrayList();
                 for (int i = 0; i < s; i++) {
                     cols.add(ins.getColumns().get(i).getColumnName());
-                    vals.add(values.get(i).toString());
+                }
+                
+                for (ExpressionList e : exList) {
+                    List<Expression> values = e.getExpressions();
+                    if (ins.getColumns().size() != values.size()) {
+                        System.err.println("Problemas no insert colunas e valores diferentes");
+                        return false;
+                    }
+                    vals = new <String> ArrayList();
+                    for (int i = 0; i < s; i++) {
+                        vals.add(values.get(i).toString());
+                    }
+                    if (ex.insertData(ins.getTable().getName(), cols, vals)){
+                        j++;
+                    }else{
+                        System.out.println("Problemas na inserção! "+j+" linhas inseridas;");
+                        return false;
+                    }
                 }
 
-                if (ex.insertData(ins.getTable().getName(), cols, vals)) {
-                    System.out.println("Inserção executada com sucesso!");
-                } else {
-                    System.out.println("Problemas na inserção!");
-                }
+                
+
+                System.out.println("Inserção executada com sucesso! "+j+" linhas inseridas;");
+                
 
             } else if (statement instanceof Delete) {
                 System.out.println("Delete");
