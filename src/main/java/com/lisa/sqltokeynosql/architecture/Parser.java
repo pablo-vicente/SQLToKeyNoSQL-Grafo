@@ -6,13 +6,25 @@
 package com.lisa.sqltokeynosql.architecture;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.expression.DateValue;
+import net.sf.jsqlparser.expression.DoubleValue;
 import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.LongValue;
+import net.sf.jsqlparser.expression.Parenthesis;
+import net.sf.jsqlparser.expression.StringValue;
+import net.sf.jsqlparser.expression.TimeValue;
+import net.sf.jsqlparser.expression.TimestampValue;
+import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
+import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
+import net.sf.jsqlparser.expression.operators.relational.GreaterThan;
 import net.sf.jsqlparser.expression.operators.relational.ItemsList;
 import net.sf.jsqlparser.expression.operators.relational.MultiExpressionList;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
@@ -30,10 +42,12 @@ import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.select.SelectItem;
 import net.sf.jsqlparser.statement.update.Update;
 import net.sf.jsqlparser.util.TablesNamesFinder;
+import net.sf.jsqlparser.util.deparser.ExpressionDeParser;
 import util.DataSet;
 import util.NoSQL;
 import util.Table;
 import util.WhereStatment;
+import util.operations.Greater;
 
 /**
  *
@@ -44,15 +58,20 @@ public class Parser {
     private ExecutionEngine ex;
     public ArrayList<HashMap<String, String>> dataSet;
     public DataSet ds;
+    public long timeToDO;
+    public final Stack<Integer> stak;
 
     public Parser() {
         ex = new ExecutionEngine();
         ex.createDBR("teste");
+        stak = new Stack<>();
+        stak.push(1);
     }
 
     public boolean run(String sql) {
         dataSet = null;
         ds = null;
+        timeToDO = 0;
         try {
 
             Statement statement = CCJSqlParserUtil.parse(sql);
@@ -67,17 +86,17 @@ public class Parser {
                 for (SelectItem si : ps.getSelectItems()) {
                     cols.add(si.toString());
                 }
-                ArrayList<Object> filters = null;// = new <String>ArrayList();
-                Expression e = ps.getWhere();
-
-                //for (Expression s : ps.getWhere()) {
-                //  cols.add(si.toString());
-                //}
+                Stack<Object> filters = null;
                 System.out.println("-> " + ps.getWhere());
                 if (ps.getWhere() != null) {
-                    WhereStatment ws = new WhereStatment();
-                    ps.getWhere().accept(ws);
-                    filters = ws.getParsedFilters();
+                    Expression e = ps.getWhere();
+                    ExpressionDeParser deparser = new WhereStatment();
+                    StringBuilder b = new StringBuilder();
+                    deparser.setBuffer(b);
+                    e.accept(deparser);
+                    //WhereStatment ws = new WhereStatment();
+                    //ps.getWhere().accept(ws);
+                    filters = ((WhereStatment) deparser).getParsedFilters();
                 }
 
                 //dataSet = ex.getData(tableList, cols, null);
@@ -143,19 +162,21 @@ public class Parser {
             } else if (statement instanceof Insert) {
                 Insert ins = (Insert) statement;
                 List<ExpressionList> exList;
-                if (ins.getItemsList() instanceof MultiExpressionList)
+                if (ins.getItemsList() instanceof MultiExpressionList) {
                     exList = ((MultiExpressionList) ins.getItemsList()).getExprList();
-                else{
+                } else {
                     exList = new <ExpressionList>ArrayList();
-                    exList.add((ExpressionList)ins.getItemsList());
+                    exList.add((ExpressionList) ins.getItemsList());
                 }
-                    int s = ins.getColumns().size(),j=0;
+                int s = ins.getColumns().size(), j = 0;
                 ArrayList<String> cols, vals;
                 cols = new <String> ArrayList();
                 for (int i = 0; i < s; i++) {
                     cols.add(ins.getColumns().get(i).getColumnName());
                 }
-                
+                long setTime = new Date().getTime();
+                long resetTime = 0;
+
                 for (ExpressionList e : exList) {
                     List<Expression> values = e.getExpressions();
                     if (ins.getColumns().size() != values.size()) {
@@ -166,18 +187,17 @@ public class Parser {
                     for (int i = 0; i < s; i++) {
                         vals.add(values.get(i).toString());
                     }
-                    if (ex.insertData(ins.getTable().getName(), cols, vals)){
+                    if (ex.insertData(ins.getTable().getName(), cols, vals)) {
                         j++;
-                    }else{
-                        System.out.println("Problemas na inserção! "+j+" linhas inseridas;");
+                    } else {
+                        System.out.println("Problemas na inserção! " + j + " linhas inseridas;");
                         return false;
                     }
                 }
+                resetTime = new Date().getTime();
+                timeToDO = resetTime - setTime;
 
-                
-
-                System.out.println("Inserção executada com sucesso! "+j+" linhas inseridas;");
-                
+                System.out.println("Inserção executada com sucesso! " + j + " linhas inseridas;");
 
             } else if (statement instanceof Delete) {
                 System.out.println("Delete");

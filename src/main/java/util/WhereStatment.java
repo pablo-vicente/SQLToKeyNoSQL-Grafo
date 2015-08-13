@@ -6,6 +6,7 @@
 package util;
 
 import java.util.ArrayList;
+import java.util.Stack;
 import net.sf.jsqlparser.expression.AllComparisonExpression;
 import net.sf.jsqlparser.expression.AnalyticExpression;
 import net.sf.jsqlparser.expression.AnyComparisonExpression;
@@ -54,6 +55,7 @@ import net.sf.jsqlparser.expression.operators.relational.NotEqualsTo;
 import net.sf.jsqlparser.expression.operators.relational.RegExpMatchOperator;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SubSelect;
+import net.sf.jsqlparser.util.deparser.ExpressionDeParser;
 import util.operations.Equal;
 import util.operations.Greater;
 import util.operations.GreaterEqual;
@@ -65,284 +67,206 @@ import util.operations.NotEqual;
  *
  * @author geomar
  */
-public class WhereStatment implements ExpressionVisitor{
+public class WhereStatment extends ExpressionDeParser{
     public int i = 0;
-    private ArrayList<Object> parsedFilters;
+    private Stack<Object> parsedFilters;
 
     public WhereStatment() {
-        parsedFilters = new ArrayList();
+        super();
+        parsedFilters = new Stack();        
     }
     
     @Override
     public void visit(NullValue nv) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        super.visit(nv);
     }
 
     @Override
     public void visit(Function fnctn) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        super.visit(fnctn);
     }
 
     @Override
     public void visit(SignedExpression se) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void visit(JdbcParameter jp) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void visit(JdbcNamedParameter jnp) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        super.visit(se);
     }
 
     @Override
     public void visit(DoubleValue dv) {
+        super.visit(dv);
         System.out.println((++i)+" "+dv);//To change body of generated methods, choose Tools | Templates.
-        parsedFilters.add(Double.valueOf(dv.toString()));
+        parsedFilters.push(Double.valueOf(dv.toString()));
     }
 
     @Override
     public void visit(LongValue lv) {
-        parsedFilters.add(Integer.valueOf(lv.toString()));
-        System.out.println((++i)+" l "+lv); //To change body of generated methods, choose Tools | Templates.
+        super.visit(lv);
+        parsedFilters.push(Integer.valueOf(lv.toString()));
+        //System.out.println((++i)+" l "+lv); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
     public void visit(DateValue dv) {
-        System.out.println((++i)+" "+dv);
-        parsedFilters.add(dv);
+        super.visit(dv);
+        //System.out.println((++i)+" "+dv);
+        parsedFilters.push(dv);
     }
 
     @Override
     public void visit(TimeValue tv) {
-        System.out.println((++i)+" "+tv);
-        parsedFilters.add(tv);
+        super.visit(tv);
+        //System.out.println((++i)+" "+tv);
+        parsedFilters.push(tv);
     }
 
     @Override
     public void visit(TimestampValue tv) {
-        System.out.println((++i)+" "+tv);
-        parsedFilters.add(tv);
+        super.visit(tv);
+//System.out.println((++i)+" "+tv);
+        parsedFilters.push(tv);
     }
 
     @Override
     public void visit(Parenthesis prnths) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        super.visit(prnths);
+        //System.out.println((++i)+" (");
+       // System.out.println((++i)+" )");
     }
 
     @Override
     public void visit(StringValue sv) {
-        System.out.println(" "+(++i)+" "+sv);
-        parsedFilters.add(sv.toString());
+        super.visit(sv);
+        //System.out.println(" "+(++i)+" "+sv);
+        parsedFilters.push(sv.toString());
     }
 
     @Override
     public void visit(Addition adtn) {
-        System.out.println(" "+(++i)+" "+"+");
-        adtn.getLeftExpression().accept(this);//To change body of generated methods, choose Tools | Templates.
-        parsedFilters.add(adtn);
-        adtn.getRightExpression().accept(this);
+        super.visit(adtn);
+       // System.out.println(" "+(++i)+" "+"+");
+        parsedFilters.push(adtn);
     }
 
     @Override
     public void visit(Division dvsn) {
-        System.out.println(" "+(++i)+" "+"\\"); //To change body of generated methods, choose Tools | Templates.
+        //System.out.println(" "+(++i)+" "+"\\"); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
     public void visit(Multiplication m) {
-        System.out.println(" "+(++i)+" "+"*"); //To change body of generated methods, choose Tools | Templates.
+        //System.out.println(" "+(++i)+" "+"*"); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
     public void visit(Subtraction s) {
-        System.out.println(" "+(++i)+" "+"-"); //To change body of generated methods, choose Tools | Templates.
+        //System.out.println(" "+(++i)+" "+"-"); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
     public void visit(AndExpression ae) {
-        System.out.println(" "+(++i)+" "+" and ");
-        ae.getLeftExpression().accept(this);
-        parsedFilters.add(ae);
-        ae.getRightExpression().accept(this);
+        super.visit(ae);
+       // System.out.println(" "+(++i)+" "+" and ");
+        parsedFilters.push(ae);
     }
 
     @Override
     public void visit(OrExpression oe) {
-        System.out.println(" "+(++i)+" "+" or "); //To change body of generated methods, choose Tools | Templates.
-        oe.getLeftExpression().accept(this);
-        parsedFilters.add(oe);
-        oe.getRightExpression().accept(this);
+        super.visit(oe);
+        //System.out.println(" "+(++i)+" "+" or "); //To change body of generated methods, choose Tools | Templates.
+        parsedFilters.push(oe);
     }
 
     @Override
     public void visit(Between btwn) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        super.visit(btwn);
     }
 
     @Override
     public void visit(EqualsTo et) {
-        System.out.println(" "+(++i)+" "+" = "); 
-        et.getLeftExpression().accept(this);
-        parsedFilters.add(new Equal());
-        et.getRightExpression().accept(this);
+        super.visit(et);
+        //System.out.println(" "+(++i)+" "+" = "); 
+        parsedFilters.push(new Equal());
     }
 
     @Override
     public void visit(GreaterThan gt) {
-        System.out.println(" "+(++i)+" "+" > ");
-        gt.getLeftExpression().accept(this);
-        parsedFilters.add(new Greater());
-        gt.getRightExpression().accept(this);//To change body of generated methods, choose Tools | Templates.
+        super.visit(gt);
+        //System.out.println(" "+(++i)+" "+" > ");
+        parsedFilters.push(new Greater());
     }
 
     @Override
     public void visit(GreaterThanEquals gte) {
-        gte.getLeftExpression().accept(this);
-        parsedFilters.add(new GreaterEqual());
-        gte.getRightExpression().accept(this);
-        System.out.println(" "+(++i)+" "+" >= "); //To change body of generated methods, choose Tools | Templates.
+        super.visit(gte);
+        parsedFilters.push(new GreaterEqual());
+        //System.out.println(" "+(++i)+" "+" >= "); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
     public void visit(InExpression ie) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        super.visit(ie); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
     public void visit(IsNullExpression ine) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        super.visit(ine);
     }
 
     @Override
     public void visit(LikeExpression le) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        super.visit(le);
     }
 
     @Override
     public void visit(MinorThan mt) {
-        mt.getLeftExpression().accept(this);
-        parsedFilters.add(new Minor());
-        mt.getRightExpression().accept(this);
-        System.out.println(" "+(++i)+" "+" < "); //To change body of generated methods, choose Tools | Templates.
+        super.visit(mt);
+        parsedFilters.push(new Minor());
+        //System.out.println(" "+(++i)+" "+" < "); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
     public void visit(MinorThanEquals mte) {
-        mte.getLeftExpression().accept(this);
-            parsedFilters.add(new MinorEqual());
-        mte.getRightExpression().accept(this);
-        System.out.println(" "+(++i)+" "+" <= "); //To change body of generated methods, choose Tools | Templates.
+        super.visit(mte);
+        parsedFilters.push(new MinorEqual());
+        //System.out.println(" "+(++i)+" "+" <= "); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
     public void visit(NotEqualsTo net) {
         net.getLeftExpression().accept(this);
-        parsedFilters.add(new NotEqual());
+        parsedFilters.push(new NotEqual());
         net.getRightExpression().accept(this);
-        System.out.println(" "+(++i)+" "+" != "); //To change body of generated methods, choose Tools | Templates.
+       // System.out.println(" "+(++i)+" "+" != "); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
     public void visit(Column column) {
-        parsedFilters.add(column);
-        System.out.println(" "+(++i)+" "+" col "+column.getColumnName()+" "); //To change body of generated methods, choose Tools | Templates.
+        super.visit(column);
+        parsedFilters.push(column);
+        //System.out.println(" "+(++i)+" "+" col "+column.getColumnName()+" "); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
     public void visit(SubSelect ss) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        super.visit(ss);
     }
 
     @Override
     public void visit(CaseExpression ce) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        super.visit(ce);
     }
 
     @Override
     public void visit(WhenClause wc) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        super.visit(wc);
     }
 
     @Override
     public void visit(ExistsExpression ee) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        super.visit(ee);
     }
 
-    @Override
-    public void visit(AllComparisonExpression ace) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void visit(AnyComparisonExpression ace) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void visit(Concat concat) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void visit(Matches mtchs) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void visit(BitwiseAnd ba) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void visit(BitwiseOr bo) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void visit(BitwiseXor bx) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void visit(CastExpression ce) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void visit(Modulo modulo) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void visit(AnalyticExpression ae) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void visit(ExtractExpression ee) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void visit(IntervalExpression ie) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void visit(OracleHierarchicalExpression ohe) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void visit(RegExpMatchOperator remo) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    public ArrayList<Object> getParsedFilters() {
+    public Stack<Object> getParsedFilters() {
         return parsedFilters;
     }
     

@@ -8,6 +8,9 @@ package com.lisa.sqltokeynosql.architecture;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Stack;
+import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
+import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.schema.Column;
 import util.BDR;
 import util.DataSet;
@@ -105,7 +108,7 @@ public class ExecutionEngine {
         return result; //To change body of generated methods, choose Tools | Templates.
     }
 
-    DataSet getDataSet(List<String> tablesN, List<String> cols, List<Object> filters) {
+    DataSet getDataSet(List<String> tablesN, List<String> cols, Stack<Object> filters) {
         DataSet result = null;
         HashMap<String, String> aux;
         ArrayList<Table> tables = new <Table>ArrayList();
@@ -118,6 +121,24 @@ public class ExecutionEngine {
             }
             tables.add(t);
         }
+        /*Stack f  =  (Stack) filters.clone();
+         System.out.println("FIltros -- "+f.size());
+         Object o = null;
+         for (;!f.empty(); ) {
+         o = f.pop();
+         System.out.print("-- ");
+         if (o instanceof AndExpression) {
+         System.out.println("AND");
+         } else if (o instanceof OrExpression) {
+         System.out.println("OR");
+         } else {
+         System.out.println(o.toString());
+         }
+
+         }
+         System.out.println("------");
+         */
+
         result = new DataSet();
         for (Table t : tables) {
             if (cols.get(0).equals("*")) {
@@ -128,57 +149,92 @@ public class ExecutionEngine {
                 String[] tuple = new String[cols.size()];
                 //HashMap<String, String> _new = new <String, String>HashMap();
                 aux = t.getTargetDB().getConection().get(1, t.getName(), k);
-                if (applyFilter(filters, aux)) {
-                    for (int i = 0; i < cols.size(); i++) {
-                        tuple[i] = aux.get(cols.get(i));
+                
+                    if (applyFilterR( (filters != null ? (Stack) filters.clone(): null), aux)) {
+                        for (int i = 0; i < cols.size(); i++) {
+                            tuple[i] = aux.get(cols.get(i));
+                        }
+                        result.getData().add(tuple);
                     }
-                    result.getData().add(tuple);
-                }
+                
             }
 
         }
+
         return result; //To change body of generated methods, choose Tools | Templates.
     }
 
     private boolean applyFilter(List<Object> filters, HashMap tuple) {
-        if (filters == null) return true;
+        if (filters == null) {
+            return true;
+        }
         Boolean result = false;
         String col = null;
         Object val = null;
         Operator op = null;
-       // System.out.print("FIltro: "+tuple.get(((Column)filters.get(0)).getColumnName())+" "+ (Operator) filters.get(1)+" "+ filters.get(2));
-        for (Object o: filters){
-            if (o instanceof Column){
-                if (col == null)
+        for (Object o : filters) {
+            if (o instanceof Column) {
+                if (col == null) {
                     col = ((Column) o).getColumnName();
-                else
+                } else {
                     System.out.println("Comparação de colunas;");
-            }else if (o instanceof Operator){
-                if (op == null)
+                }
+            } else if (o instanceof Operator) {
+                if (op == null) {
                     op = ((Operator) o);
-                else
+                } else {
                     System.out.println("Comparação ja setada;");
-            }else{
-                if (val == null)
+                }
+            } else {
+                if (val == null) {
                     val = (o);
-                else
+                } else {
                     System.out.println("Comparação de valores;");
+                }
             }
-            
-            if (col != null && op != null && val != null){
+
+            if (col != null && op != null && val != null) {
                 result = compare((String) tuple.get(col), op, val);
                 col = null;
                 op = null;
                 val = null;
             }
         }
-        
+
+        return result;
+    }
+
+    private boolean applyFilterR(Stack<Object> filters, HashMap tuple) {
+        if (filters == null) {
+            return true;
+        }
+        Boolean result = false;
+        Object o = filters.pop();
+        if (o instanceof AndExpression) {
+            result = applyFilterR(filters, tuple);
+            if (!result) {
+                return false;
+            }
+            result = (result && applyFilterR(filters, tuple));
+        } else if (o instanceof OrExpression) {
+            result = applyFilterR(filters, tuple);
+            result = (result || applyFilterR(filters, tuple));
+        } else {
+            String col = null;
+            Object val = null;
+            Operator op = null;
+            op = ((Operator) o);
+            val = filters.pop();
+            col = ((Column) filters.pop()).getColumnName();
+            result = compare((String) tuple.get(col), op, val);
+        }
         return result;
     }
 
     private boolean compare(String v1, Operator operation, Object val) {
-        if (v1 == null || val == null)
+        if (v1 == null || val == null) {
             return false;
+        }
         return operation.compare(v1, val);
     }
 }

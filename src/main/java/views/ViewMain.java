@@ -137,6 +137,7 @@ public class ViewMain extends javax.swing.JFrame {
         }
         
         jTextAreaInput.setText("");
+        jLabel1.setText(String.valueOf(p.timeToDO));
         
         
     }//GEN-LAST:event_jButton1ActionPerformed
