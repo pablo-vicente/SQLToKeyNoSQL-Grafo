@@ -5,6 +5,10 @@
  */
 package com.lisa.sqltokeynosql.architecture;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -13,23 +17,12 @@ import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.sf.jsqlparser.JSQLParserException;
-import net.sf.jsqlparser.expression.DateValue;
-import net.sf.jsqlparser.expression.DoubleValue;
 import net.sf.jsqlparser.expression.Expression;
-import net.sf.jsqlparser.expression.LongValue;
-import net.sf.jsqlparser.expression.Parenthesis;
-import net.sf.jsqlparser.expression.StringValue;
-import net.sf.jsqlparser.expression.TimeValue;
-import net.sf.jsqlparser.expression.TimestampValue;
-import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
-import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
-import net.sf.jsqlparser.expression.operators.relational.GreaterThan;
-import net.sf.jsqlparser.expression.operators.relational.ItemsList;
 import net.sf.jsqlparser.expression.operators.relational.MultiExpressionList;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
-import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.Statement;
+import net.sf.jsqlparser.statement.Statements;
 import net.sf.jsqlparser.statement.alter.Alter;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 import net.sf.jsqlparser.statement.create.table.CreateTable;
@@ -46,8 +39,8 @@ import net.sf.jsqlparser.util.deparser.ExpressionDeParser;
 import util.DataSet;
 import util.NoSQL;
 import util.Table;
+import util.TimeConter;
 import util.WhereStatment;
-import util.operations.Greater;
 
 /**
  *
@@ -69,13 +62,62 @@ public class Parser {
     }
 
     public boolean run(String sql) {
+        Statement statement;
+        boolean result;
+        try {
+            statement = CCJSqlParserUtil.parse(sql);
+            timeToDO = 0;
+            TimeConter.current = 0;
+            long setTime = new Date().getTime();
+            long resetTime = 0;
+
+            result = this.run(statement);
+            resetTime = new Date().getTime();
+            timeToDO = resetTime - setTime;
+        } catch (JSQLParserException ex) {
+            Logger.getLogger(Parser.class.getName()).log(Level.SEVERE, null, ex);
+            return false;
+        }
+        return result;
+    }
+
+    public boolean run(File script) {
+        FileReader fr;
+        Boolean result = false;
+        try {
+            fr = new FileReader(script);
+            // be sure to not have line starting with "--" or "/*" or any other non aplhabetical character
+
+            BufferedReader br = new BufferedReader(fr);
+            String s;
+            StringBuffer sb = new StringBuffer();
+            while ((s = br.readLine()) != null) {
+                sb.append(s);
+            }
+            br.close();
+            Statements stmt = CCJSqlParserUtil.parseStatements(sb.toString());
+            timeToDO = 0;
+            TimeConter.current = 0;
+            long setTime = new Date().getTime();
+            long resetTime = 0;
+
+            for (Statement st : stmt.getStatements()) {
+                result &= this.run(st);
+            }
+            resetTime = new Date().getTime();
+            timeToDO = resetTime - setTime;
+
+        } catch (Exception ex) {
+            Logger.getLogger(Parser.class.getName()).log(Level.SEVERE, null, ex);
+            return false;
+        }
+        return result;
+    }
+
+    private boolean run(Statement statement) {
         dataSet = null;
         ds = null;
-        timeToDO = 0;
         try {
-
-            Statement statement = CCJSqlParserUtil.parse(sql);
-
             if (statement instanceof Select) {
                 System.out.println("Select");
                 Select selectStatement = (Select) statement;
@@ -174,8 +216,8 @@ public class Parser {
                 for (int i = 0; i < s; i++) {
                     cols.add(ins.getColumns().get(i).getColumnName());
                 }
-                long setTime = new Date().getTime();
-                long resetTime = 0;
+               // long setTime = new Date().getTime();
+                // long resetTime = 0;
 
                 for (ExpressionList e : exList) {
                     List<Expression> values = e.getExpressions();
@@ -194,8 +236,6 @@ public class Parser {
                         return false;
                     }
                 }
-                resetTime = new Date().getTime();
-                timeToDO = resetTime - setTime;
 
                 System.out.println("Inserção executada com sucesso! " + j + " linhas inseridas;");
 
@@ -210,7 +250,7 @@ public class Parser {
             } else {
                 System.out.println("Não suportado!");
             }
-        } catch (JSQLParserException ex) {
+        } catch (Exception ex) {
             System.err.println(ex.getMessage());
             return false;
         }

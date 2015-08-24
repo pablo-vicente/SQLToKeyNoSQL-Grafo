@@ -6,6 +6,7 @@
 package com.lisa.sqltokeynosql.architecture;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
@@ -16,6 +17,7 @@ import util.BDR;
 import util.DataSet;
 import util.Dicionary;
 import util.Table;
+import util.TimeConter;
 import util.operations.Operator;
 
 /**
@@ -66,8 +68,9 @@ public class ExecutionEngine {
                 return false;
             }
         }
-
+        long now = new Date().getTime();
         t.getTargetDB().getConection().put(table, key, columns, values);
+        TimeConter.current+= (new Date().getTime()) - now;
         t.getKeys().add(key);
         return true;
     }
@@ -92,7 +95,9 @@ public class ExecutionEngine {
         for (Table t : tables) {
             for (String k : t.getKeys()) {
                 HashMap<String, String> _new = new <String, String>HashMap();
+                long now = new Date().getTime();
                 aux = t.getTargetDB().getConection().get(1, t.getName(), k);
+                TimeConter.current+= (new Date().getTime()) - now;
                 for (String c : cols) {
                     if (!c.equals("*")) {
                         _new.put(c, aux.get(c));
@@ -148,8 +153,9 @@ public class ExecutionEngine {
             for (String k : t.getKeys()) {
                 String[] tuple = new String[cols.size()];
                 //HashMap<String, String> _new = new <String, String>HashMap();
+                long now = new Date().getTime();
                 aux = t.getTargetDB().getConection().get(1, t.getName(), k);
-                
+                TimeConter.current+= (new Date().getTime()) - now;
                     if (applyFilterR( (filters != null ? (Stack) filters.clone(): null), aux)) {
                         for (int i = 0; i < cols.size(); i++) {
                             tuple[i] = aux.get(cols.get(i));
