@@ -65,6 +65,8 @@ public class CassandraConnector extends Connector {
                 current.put(def.getName(),String.valueOf(row.getInt(def.getName())));
              else if (def.getType().asJavaClass() == Float.class)
                 current.put(def.getName(),String.valueOf(row.getFloat(def.getName())));
+             else if (def.getType().asJavaClass() == Double.class)
+                current.put(def.getName(),String.valueOf(row.getDouble(def.getName())));
              else 
                 current.put(def.getName(),row.getString(def.getName())); 
          }

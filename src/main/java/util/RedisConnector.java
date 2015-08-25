@@ -1,8 +1,13 @@
 package util;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
 import com.lisa.sqltokeynosql.architecture.Connector;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import org.json.JSONObject;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
@@ -21,11 +26,11 @@ public class RedisConnector extends Connector{
     public void connect(String nbd) {
         pool = new JedisPool(new JedisPoolConfig(), "localhost");
         db = nbd;
+        jedis = pool.getResource();
     }
 
     @Override
     public void put(String table, String key, ArrayList<String> cols, ArrayList<String> values) {
-        jedis = pool.getResource();
         if (jedis != null){
             HashMap<String, String> current = new HashMap<>();
             for (int i = 0; i < cols.size(); i++) {
@@ -33,7 +38,7 @@ public class RedisConnector extends Connector{
             }
             String rkey = db+"::"+table+"::"+key;
             jedis.set(rkey, current.toString());
-            jedis.close();
+            //jedis.close();
         }
         
     }
@@ -45,13 +50,15 @@ public class RedisConnector extends Connector{
 
     @Override
     public HashMap<String, String> get(int n, String t, String key) {
+       // jedis = pool.getResource();
          String s = (String) jedis.get(this.db+"::"+t +"::" + key);
         HashMap<String, String> _new = new HashMap<>();
-        s = s.substring(1, s.length()-1);
-        for (String s1 : s.split(",")) {
-            String[] s2 = s1.split("=");
-            _new.put(s2[0].trim(), s2[1].trim());
-        }
+       // JsonObject  obj = new JsonParser().parse(s).getAsJsonObject();
+        Map<String, String> retMap = new Gson().fromJson(s, new TypeToken<HashMap<String, String>>() {}.getType());
+        _new = (HashMap<String, String>) retMap;
+       // jedis.close();
+        
+        
         return _new;
     }
 

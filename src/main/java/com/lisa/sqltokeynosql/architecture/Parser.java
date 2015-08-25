@@ -95,12 +95,12 @@ public class Parser {
                 sb.append(s);
             }
             br.close();
-            Statements stmt = CCJSqlParserUtil.parseStatements(sb.toString());
             timeToDO = 0;
             TimeConter.current = 0;
             long setTime = new Date().getTime();
             long resetTime = 0;
-
+            Statements stmt = CCJSqlParserUtil.parseStatements(sb.toString());
+            
             for (Statement st : stmt.getStatements()) {
                 result &= this.run(st);
             }
@@ -240,7 +240,11 @@ public class Parser {
                 System.out.println("Inserção executada com sucesso! " + j + " linhas inseridas;");
 
             } else if (statement instanceof Delete) {
-                System.out.println("Delete");
+                System.out.println("Delete - ");
+                Delete del = (Delete) statement;
+                String t = del.getTable().getName();
+                ex.deleteData(t);
+                System.out.println("Passou");
             } else if (statement instanceof Update) {
                 System.out.println("Update");
             } else if (statement instanceof Drop) {

@@ -6,7 +6,12 @@
 package util;
 
 import com.lisa.sqltokeynosql.architecture.Connector;
+import com.mongodb.BasicDBObject;
 import com.mongodb.Block;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
@@ -31,7 +36,7 @@ import java.util.List;
 public class MongoConnector extends Connector {
 
     private MongoClient mongoClient;
-    MongoDatabase db;
+    DB db;
 
     public MongoConnector() {
         mongoClient = new MongoClient();
@@ -39,20 +44,17 @@ public class MongoConnector extends Connector {
 
     @Override
     public void connect(String nbd) {
-        db = mongoClient.getDatabase(nbd);
+        db = mongoClient.getDB(nbd);
     }
 
     @Override
     public void put(String table, String key, ArrayList<String> cols, ArrayList<String> values) {
-        if (db.getCollection(table) == null) {
-            db.createCollection(table);
-        }
-        Document current = new Document();
+        BasicDBObject c = new BasicDBObject("_id", key);
         for (int i = 0; i < cols.size(); i++) {
-            current.append(cols.get(i), values.get(i));
+            c.append(cols.get(i), values.get(i));
         }
-        db.getCollection(table).insertOne(new Document(key, current));
-
+        ((DBCollection) db.getCollection(table)).insert(c);
+        System.out.println(c);
     }
 
     @Override
@@ -61,21 +63,11 @@ public class MongoConnector extends Connector {
 
     @Override
     public HashMap<String, String> get(int n, String table, final String key) {
-        HashMap<String, String> result = null; //new <String, String>HashMap();
-        FindIterable<Document> iterable = db.getCollection(table).find();
-        Iterator<Document> docs = iterable.iterator();
-        Document doc;
-        while (docs.hasNext()) {
-            doc = docs.next();
-            if (doc.containsKey(key)) {
-                doc = (Document) doc.get(key);
-                result = new <String, String>HashMap();
-                Iterator<String> i = doc.keySet().iterator();
-                while (i.hasNext()) {
-                    String a = i.next();
-                    result.put(a, (String)doc.getString(a));
-                }
-            }
+        HashMap<String, String> result = null;
+        DBCursor cursor = db.getCollection(table).find(new BasicDBObject("_id", key));
+        if (cursor.hasNext()) {
+            DBObject current = cursor.one();
+            result = new HashMap<>(current.toMap());    
         }
         return result;
     }

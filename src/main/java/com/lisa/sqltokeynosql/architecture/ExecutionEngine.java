@@ -112,6 +112,15 @@ public class ExecutionEngine {
         }
         return result; //To change body of generated methods, choose Tools | Templates.
     }
+    
+    void deleteData(String table){
+        //ArrayList<Table> tables = new <Table>ArrayList();
+
+            Table t = bd.getTable(table);
+            System.out.print("Table: "+table+", r: "+t.getKeys().size());
+            t.setKeys(new ArrayList<String>());
+            System.out.println(" new: "+t.getKeys().size());
+    }
 
     DataSet getDataSet(List<String> tablesN, List<String> cols, Stack<Object> filters) {
         DataSet result = null;

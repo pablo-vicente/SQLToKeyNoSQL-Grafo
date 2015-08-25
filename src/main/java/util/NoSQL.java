@@ -23,7 +23,7 @@ public class NoSQL {
         this.user = user;
         this.password = password;
         this.url = url;
-        conection = new CassandraConnector();
+        conection = new MongoConnector();
         conection.connect(alias);
     }
 

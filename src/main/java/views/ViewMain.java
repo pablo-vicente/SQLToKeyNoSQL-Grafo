@@ -187,6 +187,7 @@ public class ViewMain extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+       if (!jTextAreaInput.getText().isEmpty()){
         for (String s : jTextAreaInput.getText().split(";")) {
             if (s.length() > 2) {
                 p.run(s);
@@ -199,7 +200,7 @@ public class ViewMain extends javax.swing.JFrame {
         jTextAreaInput.selectAll();
         jLabel1.setText(String.valueOf(p.timeToDO));
         jLabelNoSQL.setText(String.valueOf(TimeConter.current));
-
+    }
 
     }//GEN-LAST:event_jButton1ActionPerformed
 
