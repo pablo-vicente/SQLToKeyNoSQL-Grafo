@@ -54,7 +54,6 @@ public class MongoConnector extends Connector {
             c.append(cols.get(i), values.get(i));
         }
         ((DBCollection) db.getCollection(table)).insert(c);
-        System.out.println(c);
     }
 
     @Override
@@ -64,11 +63,17 @@ public class MongoConnector extends Connector {
     @Override
     public HashMap<String, String> get(int n, String table, final String key) {
         HashMap<String, String> result = null;
-        DBCursor cursor = db.getCollection(table).find(new BasicDBObject("_id", key));
-        if (cursor.hasNext()) {
-            DBObject current = cursor.one();
-            result = new HashMap<>(current.toMap());    
+        DBObject cursor = db.getCollection(table).findOne(key);
+        if (cursor != null){
+                result = new HashMap<>(cursor.toMap());    
         }
         return result;
     }
+
+    @Override
+    public String toString() {
+        return "MongoDB";
+    }
+    
+    
 }

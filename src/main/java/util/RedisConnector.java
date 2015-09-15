@@ -61,5 +61,10 @@ public class RedisConnector extends Connector{
         
         return _new;
     }
+    
+    @Override
+    public String toString() {
+        return "Redis";
+    }
 
 }

@@ -72,5 +72,8 @@ public class CassandraConnector extends Connector {
          }
         return current;
     }
-
+@Override
+    public String toString() {
+        return "Cassandra";
+    }
 }

@@ -27,6 +27,16 @@ public class NoSQL {
         conection.connect(alias);
     }
 
+    public NoSQL(String alias, String user, String password, String url, Connector conection) {
+        this.alias = alias;
+        this.user = user;
+        this.password = password;
+        this.url = url;
+        this.conection = conection;
+        this.conection.connect(alias);
+    }
+    
+
     public String getAlias() {
         return alias;
     }
@@ -66,5 +76,11 @@ public class NoSQL {
     public void setConection(Connector conection) {
         this.conection = conection;
     }
+
+    @Override
+    public String toString() {
+        return alias;
+    }
+    
     
 }

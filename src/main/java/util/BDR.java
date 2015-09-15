@@ -46,6 +46,11 @@ public class BDR {
     public void setTables(ArrayList<Table> tables) {
         this.tables = tables;
     }
+
+    @Override
+    public String toString() {
+        return name;
+    }
     
     
     

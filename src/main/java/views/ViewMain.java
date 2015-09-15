@@ -52,10 +52,19 @@ public class ViewMain extends javax.swing.JFrame {
         jMenuItem3 = new javax.swing.JMenuItem();
         jMenu2 = new javax.swing.JMenu();
         jMenuItem1 = new javax.swing.JMenuItem();
+        jMenuItem4 = new javax.swing.JMenuItem();
         jMenuItem2 = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("SQLToKeyNoSQL");
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowOpened(java.awt.event.WindowEvent evt) {
+                formWindowOpened(evt);
+            }
+            public void windowActivated(java.awt.event.WindowEvent evt) {
+                formWindowActivated(evt);
+            }
+        });
 
         jButton1.setText("Submit");
         jButton1.addActionListener(new java.awt.event.ActionListener() {
@@ -108,9 +117,22 @@ public class ViewMain extends javax.swing.JFrame {
         jMenu2.setText("Edit");
 
         jMenuItem1.setText("Current RDB");
+        jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem1ActionPerformed(evt);
+            }
+        });
         jMenu2.add(jMenuItem1);
 
-        jMenuItem2.setText("jMenuItem2");
+        jMenuItem4.setText("Print Tables");
+        jMenuItem4.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem4ActionPerformed(evt);
+            }
+        });
+        jMenu2.add(jMenuItem4);
+
+        jMenuItem2.setText("NoSQL Targets");
         jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jMenuItem2ActionPerformed(evt);
@@ -187,25 +209,27 @@ public class ViewMain extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-       if (!jTextAreaInput.getText().isEmpty()){
-        for (String s : jTextAreaInput.getText().split(";")) {
-            if (s.length() > 2) {
-                p.run(s);
+        if (!jTextAreaInput.getText().isEmpty()) {
+            for (String s : jTextAreaInput.getText().split(";")) {
+                if (s.length() > 2) {
+                    p.run(s);
+                }
             }
-        }
-        if (p.ds != null) {
-            montaDataSet();
-        }
+            if (p.ds != null) {
+                montaDataSet();
+            }
 
-        jTextAreaInput.selectAll();
-        jLabel1.setText(String.valueOf(p.timeToDO));
-        jLabelNoSQL.setText(String.valueOf(TimeConter.current));
-    }
+            jTextAreaInput.selectAll();
+            jLabel1.setText(String.valueOf(p.timeToDO));
+            jLabelNoSQL.setText(String.valueOf(TimeConter.current));
+        }
 
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
-        // TODO add your handling code here:
+        NoSQLTargets n = new NoSQLTargets(this, true);
+        n.dic = p.getDic();
+        n.setVisible(true);
     }//GEN-LAST:event_jMenuItem2ActionPerformed
 
     private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed
@@ -222,6 +246,38 @@ public class ViewMain extends javax.swing.JFrame {
         jLabel1.setText(String.valueOf(p.timeToDO));
         jLabelNoSQL.setText(String.valueOf(TimeConter.current));
     }//GEN-LAST:event_jMenuItem3ActionPerformed
+
+    private void jMenuItem4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem4ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jMenuItem4ActionPerformed
+
+    private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
+        if (p.getDic().getTargets().size() < 1) {
+            NoSQLTargets n = new NoSQLTargets(this, true);
+            n.dic = p.getDic();
+            n.setVisible(true);
+        }
+        if (p.getDic().getCurrent_db() == null || p.getDic().getCurrent_db().isEmpty()) {
+            RDBs rdb = new RDBs(this, true);
+            rdb.dic = p.getDic();
+            rdb.setVisible(true);
+            p.getDic().setCurrent_db(rdb.selected_DB);
+            p.changeCurrentDB();
+        }
+    }//GEN-LAST:event_formWindowOpened
+
+    private void formWindowActivated(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowActivated
+
+        // if (p.getDic().)
+    }//GEN-LAST:event_formWindowActivated
+
+    private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
+        RDBs rdb = new RDBs(this, true);
+        rdb.dic = p.getDic();
+        rdb.setVisible(true);
+        p.getDic().setCurrent_db(rdb.selected_DB);
+        p.changeCurrentDB();
+    }//GEN-LAST:event_jMenuItem1ActionPerformed
 
     private void montaDataSet() {
         String[][] data = new String[p.ds.getData().size()][p.ds.getColumns().size()];// p.ds.getData().toArray();
@@ -281,6 +337,7 @@ public class ViewMain extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JMenuItem jMenuItem2;
     private javax.swing.JMenuItem jMenuItem3;
+    private javax.swing.JMenuItem jMenuItem4;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JTable jTable1;

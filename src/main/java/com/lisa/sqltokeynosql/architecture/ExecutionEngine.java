@@ -27,15 +27,28 @@ import util.operations.Operator;
 public class ExecutionEngine {
 
     private BDR bd;
+    private final Dicionary dic;
 
     public ExecutionEngine() {
-        //bd = new BDR("teste", null)
+        dic = loadDictionary();
+    }
+    
+    private Dicionary loadDictionary(){
+        return new Dicionary();
     }
 
-    public void createDBR(String name) {
-        Dicionary dicionary = new Dicionary();
-        bd = new BDR("teste", new ArrayList<Table>());
-        dicionary.getBdrs().add(bd);
+    private void createDBR(String name) {
+        bd = new BDR(name, new ArrayList<Table>());
+        dic.getBdrs().add(bd);
+    }
+    
+    public void changeCurrentDB (String name){
+        bd = dic.getRBD(name);
+        if (bd == null){
+            System.out.println("New RDB created!");
+           this.createDBR(name);
+        }
+        dic.setCurrent_db(name);
     }
 
     public boolean createTable(Table t) {
@@ -251,5 +264,17 @@ public class ExecutionEngine {
             return false;
         }
         return operation.compare(v1, val);
+    }
+
+    public BDR getBd() {
+        return bd;
+    }
+
+    public void setBd(BDR bd) {
+        this.bd = bd;
+    }
+
+    public Dicionary getDic() {
+        return dic;
     }
 }

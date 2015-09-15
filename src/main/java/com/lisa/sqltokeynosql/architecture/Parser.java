@@ -37,6 +37,7 @@ import net.sf.jsqlparser.statement.update.Update;
 import net.sf.jsqlparser.util.TablesNamesFinder;
 import net.sf.jsqlparser.util.deparser.ExpressionDeParser;
 import util.DataSet;
+import util.Dicionary;
 import util.NoSQL;
 import util.Table;
 import util.TimeConter;
@@ -56,7 +57,7 @@ public class Parser {
 
     public Parser() {
         ex = new ExecutionEngine();
-        ex.createDBR("teste");
+        //ex.createDBR("teste");
         stak = new Stack<>();
         stak.push(1);
     }
@@ -194,7 +195,7 @@ public class Parser {
                         //System.out.print("n: "+index.getName()+", tipo: "+index.getType()+ ", col: "+ index.getColumnsNames()+" o:"+index.toString());
                     }
                 }
-                Table dt = new Table(schemaT.getName(), new NoSQL("teste", "user", "senha", "endereço"), pk, null, cols);
+                Table dt = new Table(schemaT.getName(), ex.getDic().getTarget(null), pk, null, cols);
                 if (ex.createTable(dt)) {
                     System.out.println("Tabela Criada");
                 } else {
@@ -260,6 +261,14 @@ public class Parser {
         }
 
         return true;
+    }
+    
+    public Dicionary getDic (){
+        return ex.getDic();
+    }
+
+    public void changeCurrentDB() {
+        ex.changeCurrentDB(ex.getDic().getCurrent_db());
     }
 
 }
