@@ -5,13 +5,14 @@
  */
 package util;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
  *
  * @author geomar
  */
-public class BDR {
+public class BDR implements Serializable{
     private String name;
     private ArrayList<Table> tables;
 

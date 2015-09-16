@@ -37,7 +37,7 @@ import net.sf.jsqlparser.statement.update.Update;
 import net.sf.jsqlparser.util.TablesNamesFinder;
 import net.sf.jsqlparser.util.deparser.ExpressionDeParser;
 import util.DataSet;
-import util.Dicionary;
+import util.Dictionary;
 import util.NoSQL;
 import util.Table;
 import util.TimeConter;
@@ -263,7 +263,7 @@ public class Parser {
         return true;
     }
     
-    public Dicionary getDic (){
+    public Dictionary getDic (){
         return ex.getDic();
     }
 

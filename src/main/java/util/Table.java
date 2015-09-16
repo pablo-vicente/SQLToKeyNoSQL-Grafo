@@ -84,7 +84,6 @@ public class Table {
         this.fks = fks;
         this.attributes = attributes;
         this.keys = keys;
-    }
-    
+    }  
     
 }

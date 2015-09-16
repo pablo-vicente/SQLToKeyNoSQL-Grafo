@@ -10,14 +10,14 @@ import javax.swing.DefaultListModel;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import util.BDR;
-import util.Dicionary;
+import util.Dictionary;
 
 /**
  *
  * @author geomar
  */
 public class RDBs extends javax.swing.JDialog {
-    Dicionary dic;
+    Dictionary dic;
     String selected_DB;
     /**
      * Creates new form RDBs

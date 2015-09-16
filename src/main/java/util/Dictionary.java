@@ -5,19 +5,20 @@
  */
 package util;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
  *
  * @author geomar
  */
-public class Dicionary {
+public class Dictionary implements Serializable{
 
     private String current_db = null;
     ArrayList<BDR> Bdrs;
     ArrayList<NoSQL> targets;
 
-    public Dicionary() {
+    public Dictionary() {
         this.Bdrs = new <BDR> ArrayList();
         this.targets = new <NoSQL> ArrayList();
     }

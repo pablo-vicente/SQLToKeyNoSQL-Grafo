@@ -15,7 +15,7 @@ import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.schema.Column;
 import util.BDR;
 import util.DataSet;
-import util.Dicionary;
+import util.Dictionary;
 import util.Table;
 import util.TimeConter;
 import util.operations.Operator;
@@ -27,14 +27,14 @@ import util.operations.Operator;
 public class ExecutionEngine {
 
     private BDR bd;
-    private final Dicionary dic;
+    private final Dictionary dic;
 
     public ExecutionEngine() {
         dic = loadDictionary();
     }
     
-    private Dicionary loadDictionary(){
-        return new Dicionary();
+    private Dictionary loadDictionary(){
+        return new Dictionary();
     }
 
     private void createDBR(String name) {
@@ -274,7 +274,7 @@ public class ExecutionEngine {
         this.bd = bd;
     }
 
-    public Dicionary getDic() {
+    public Dictionary getDic() {
         return dic;
     }
 }

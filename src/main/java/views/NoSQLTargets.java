@@ -11,7 +11,7 @@ import javax.swing.DefaultListModel;
 import org.apache.cassandra.thrift.Cassandra;
 import util.Cassandra2Connector;
 import util.CassandraConnector;
-import util.Dicionary;
+import util.Dictionary;
 import util.MongoConnector;
 import util.NoSQL;
 import util.RedisConnector;
@@ -21,7 +21,7 @@ import util.RedisConnector;
  * @author geomar
  */
 public class NoSQLTargets extends javax.swing.JDialog {
-    public Dicionary dic;
+    public Dictionary dic;
     private NoSQL _new;
     /**
      * Creates new form NoSQLTargets

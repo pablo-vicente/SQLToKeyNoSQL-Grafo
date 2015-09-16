@@ -6,12 +6,13 @@
 package util;
 
 import com.lisa.sqltokeynosql.architecture.Connector;
+import java.io.Serializable;
 
 /**
  *
  * @author geomar
  */
-public class NoSQL {
+public class NoSQL implements Serializable{
     private String alias;
     private String user;
     private String password;
