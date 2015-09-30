@@ -24,6 +24,7 @@ import util.JoinStatment;
 import util.Table;
 import util.TimeConter;
 import util.WhereStatment;
+import util.joins.HashJoin;
 import util.joins.InMemoryJoins;
 import util.joins.NestedLoop;
 import util.operations.Operator;
@@ -162,23 +163,6 @@ public class ExecutionEngine {
             }
             tables.add(t);
         }
-        /*Stack f  =  (Stack) filters.clone();
-         System.out.println("FIltros -- "+f.size());
-         Object o = null;
-         for (;!f.empty(); ) {
-         o = f.pop();
-         System.out.print("-- ");
-         if (o instanceof AndExpression) {
-         System.out.println("AND");
-         } else if (o instanceof OrExpression) {
-         System.out.println("OR");
-         } else {
-         System.out.println(o.toString());
-         }
-
-         }
-         System.out.println("------");
-         */
 
         result = new DataSet();
         for (Table t : tables) {
@@ -339,7 +323,7 @@ public class ExecutionEngine {
         }
         innerData.setColumns(innerCols);
         //fim inner
-        InMemoryJoins join = new NestedLoop();
+        InMemoryJoins join = new HashJoin();
         
         for (Join j : joins) {
             DataSet outerData = new DataSet();
@@ -385,6 +369,7 @@ public class ExecutionEngine {
                     //}
 
                 }
+                outerData.setTable_n(outer.getName());
                 outerData.setColumns(outerCols);
             } else {
                 System.out.println("Problemas no JOIN!");

@@ -14,6 +14,7 @@ import java.util.ArrayList;
 public class DataSet {
     private ArrayList<String> columns;
     private ArrayList<String[]> data; 
+    private String table_n;
 
     public ArrayList<String> getColumns() {
         return columns;
@@ -31,9 +32,20 @@ public class DataSet {
         this.data = data;
     }
 
+    public String getTable_n() {
+        return table_n;
+    }
+
+    public void setTable_n(String table_n) {
+        this.table_n = table_n;
+    }
+
+    
+    
     public DataSet() {
         this.columns = new <String> ArrayList();
         this.data = new <String[]> ArrayList();
+        table_n = null;
     }
     
     
