@@ -34,7 +34,7 @@ public class NoSQL implements Serializable{
         this.password = password;
         this.url = url;
         this.conection = conection;
-        this.conection.connect(alias);
+        //this.conection.connect(alias);
     }
     
 

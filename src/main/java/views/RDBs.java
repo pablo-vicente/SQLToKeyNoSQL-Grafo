@@ -18,7 +18,7 @@ import util.Dictionary;
  */
 public class RDBs extends javax.swing.JDialog {
     Dictionary dic;
-    String selected_DB;
+    //public static String selected_DB = "";
     /**
      * Creates new form RDBs
      */
@@ -45,6 +45,9 @@ public class RDBs extends javax.swing.JDialog {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                formWindowClosing(evt);
+            }
             public void windowClosed(java.awt.event.WindowEvent evt) {
                 formWindowClosed(evt);
             }
@@ -150,16 +153,20 @@ public class RDBs extends javax.swing.JDialog {
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed
-        selected_DB = new String(((BDR)jList1.getSelectedValue()).getName());
-        JOptionPane.showMessageDialog(new JFrame(),
-        "The current DB is now '" + (dic.getCurrent_db()) + "'.",
-        "Warning",
-        JOptionPane.INFORMATION_MESSAGE);
+        
     }//GEN-LAST:event_formWindowClosed
 
     private void formWindowActivated(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowActivated
        loadRDB();
     }//GEN-LAST:event_formWindowActivated
+
+    private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
+        this.dic.setCurrent_db(((BDR)jList1.getSelectedValue()).getName());
+        JOptionPane.showMessageDialog(new JFrame(),
+        "The current DB is now '" + (dic.getCurrent_db().getName()) + "'.",
+        "Warning",
+        JOptionPane.INFORMATION_MESSAGE);
+    }//GEN-LAST:event_formWindowClosing
 
     private void loadRDB(){
         DefaultListModel listModel = new DefaultListModel();

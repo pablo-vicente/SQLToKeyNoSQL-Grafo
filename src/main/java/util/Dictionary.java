@@ -14,9 +14,9 @@ import java.util.ArrayList;
  */
 public class Dictionary implements Serializable{
 
-    private String current_db = null;
-    ArrayList<BDR> Bdrs;
-    ArrayList<NoSQL> targets;
+    private BDR current_db = null;
+    private ArrayList<BDR> Bdrs;
+    private ArrayList<NoSQL> targets;
 
     public Dictionary() {
         this.Bdrs = new <BDR> ArrayList();
@@ -63,12 +63,15 @@ public class Dictionary implements Serializable{
         return null;
     }
 
-    public String getCurrent_db() {
+    public BDR getCurrent_db() {
         return current_db;
     }
 
     public void setCurrent_db(String current_db) {
-        this.current_db = (current_db);
+        this.current_db = this.getRBD(current_db);
+        for (NoSQL n: targets){
+            n.getConection().connect(current_db);
+        }
     }
 
 }

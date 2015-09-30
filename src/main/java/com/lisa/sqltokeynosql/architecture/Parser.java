@@ -26,10 +26,12 @@ import net.sf.jsqlparser.statement.Statements;
 import net.sf.jsqlparser.statement.alter.Alter;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 import net.sf.jsqlparser.statement.create.table.CreateTable;
+import net.sf.jsqlparser.statement.create.table.ForeignKeyIndex;
 import net.sf.jsqlparser.statement.create.table.Index;
 import net.sf.jsqlparser.statement.delete.Delete;
 import net.sf.jsqlparser.statement.drop.Drop;
 import net.sf.jsqlparser.statement.insert.Insert;
+import net.sf.jsqlparser.statement.select.Join;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.select.SelectItem;
@@ -38,6 +40,7 @@ import net.sf.jsqlparser.util.TablesNamesFinder;
 import net.sf.jsqlparser.util.deparser.ExpressionDeParser;
 import util.DataSet;
 import util.Dictionary;
+import util.ForeignKey;
 import util.NoSQL;
 import util.Table;
 import util.TimeConter;
@@ -101,7 +104,7 @@ public class Parser {
             long setTime = new Date().getTime();
             long resetTime = 0;
             Statements stmt = CCJSqlParserUtil.parseStatements(sb.toString());
-            
+
             for (Statement st : stmt.getStatements()) {
                 result &= this.run(st);
             }
@@ -120,39 +123,36 @@ public class Parser {
         ds = null;
         try {
             if (statement instanceof Select) {
-                System.out.println("Select");
                 Select selectStatement = (Select) statement;
                 TablesNamesFinder tablesNamesFinder = new TablesNamesFinder();
                 List<String> tableList = tablesNamesFinder.getTableList(selectStatement);
+                
                 ArrayList<String> cols = new ArrayList();
                 PlainSelect ps = (PlainSelect) selectStatement.getSelectBody();
                 for (SelectItem si : ps.getSelectItems()) {
                     cols.add(si.toString());
                 }
+                //ps.getFromItem().
                 Stack<Object> filters = null;
-                System.out.println("-> " + ps.getWhere());
                 if (ps.getWhere() != null) {
                     Expression e = ps.getWhere();
                     ExpressionDeParser deparser = new WhereStatment();
                     StringBuilder b = new StringBuilder();
                     deparser.setBuffer(b);
                     e.accept(deparser);
-                    //WhereStatment ws = new WhereStatment();
-                    //ps.getWhere().accept(ws);
                     filters = ((WhereStatment) deparser).getParsedFilters();
                 }
-
-                //dataSet = ex.getData(tableList, cols, null);
-                ds = ex.getDataSet(tableList, cols, filters);;
-                /* ds.setColumns(cols);
-                 for (HashMap<String, String> a: dataSet){
-                 String []v = new String[cols.size()];
-                 for (int i=0; i<cols.size();i++){
-                 v[i] = a.get(cols.get(i));
-                 }
-                 ds.getData().add(v);
-                 }
-                 */
+                
+                if (ps.getJoins() != null && !ps.getJoins().isEmpty()){
+                  List <Join> joins = ps.getJoins();
+                  for(int i = 0; i< joins.size();i++){
+                      Join j = joins.get(i);
+                      System.out.println("\t-> "+tableList.get(i)+"- "+j.toString());
+                  }
+                  ds = ex.getDataSet(tableList, cols, filters, joins);
+                }else{
+                    ds = ex.getDataSet(tableList, cols, filters);;
+                }
                 if (ds == null) {
                     System.out.println("Ocorreu algum erro!");
                 } else {
@@ -165,7 +165,7 @@ public class Parser {
                 List<ColumnDefinition> cl = ct.getColumnDefinitions();
                 ArrayList<String> cols = new ArrayList();
                 ArrayList<String> pk = new ArrayList();
-                ArrayList<String> fk = new ArrayList();
+                ArrayList<ForeignKey> fk = new ArrayList();
                 net.sf.jsqlparser.schema.Table schemaT = ct.getTable();
                 System.out.print("\n" + schemaT.getName() + "\n");
                 for (ColumnDefinition c : cl) {
@@ -189,13 +189,22 @@ public class Parser {
                             for (String c : index.getColumnsNames()) {
                                 pk.add(c);
                             }
-                        } else if (index.getType().equals("PRIMARY KEY")) {
-
+                        } else if (index.getType().equals("FOREIGN KEY")) {
+                             ForeignKeyIndex new_fk = (ForeignKeyIndex) index;
+                             for (int i = 0; i<new_fk.getReferencedColumnNames().size();i++ ){
+                                 fk.add(new ForeignKey(new_fk.getColumnsNames().get(i), new_fk.getReferencedColumnNames().get(i), new_fk.getTable().getName()));
+                             }
                         }
                         //System.out.print("n: "+index.getName()+", tipo: "+index.getType()+ ", col: "+ index.getColumnsNames()+" o:"+index.toString());
                     }
                 }
-                Table dt = new Table(schemaT.getName(), ex.getDic().getTarget(null), pk, null, cols);
+                Table dt;
+                //String [] table = (schemaT.getName()).split(".");
+                if (schemaT.getSchemaName() != null) {
+                    dt = new Table(schemaT.getName(), ex.getDic().getTarget(schemaT.getSchemaName()), pk, fk, cols);
+                } else {
+                    dt = new Table(schemaT.getName(), ex.getDic().getTarget(null), pk, fk, cols);
+                }
                 if (ex.createTable(dt)) {
                     System.out.println("Tabela Criada");
                 } else {
@@ -217,7 +226,7 @@ public class Parser {
                 for (int i = 0; i < s; i++) {
                     cols.add(ins.getColumns().get(i).getColumnName());
                 }
-               // long setTime = new Date().getTime();
+                // long setTime = new Date().getTime();
                 // long resetTime = 0;
 
                 for (ExpressionList e : exList) {
@@ -262,13 +271,13 @@ public class Parser {
 
         return true;
     }
-    
-    public Dictionary getDic (){
+
+    public Dictionary getDic() {
         return ex.getDic();
     }
 
-    public void changeCurrentDB() {
-        ex.changeCurrentDB(ex.getDic().getCurrent_db());
+    public void changeCurrentDB(String db) {
+        ex.changeCurrentDB(db);
     }
 
 }

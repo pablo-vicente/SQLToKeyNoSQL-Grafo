@@ -16,7 +16,7 @@ public class Table {
     private String name;
     private NoSQL targetDB ;
     private ArrayList<String> pks;
-    private ArrayList<String> fks;
+    private ArrayList<ForeignKey> fks;
     private ArrayList<String> attributes;
     private ArrayList<String> keys;
 
@@ -44,11 +44,11 @@ public class Table {
         this.pks = pks;
     }
 
-    public ArrayList<String> getFks() {
+    public ArrayList<ForeignKey> getFks() {
         return fks;
     }
 
-    public void setFks(ArrayList<String> fks) {
+    public void setFks(ArrayList<ForeignKey> fks) {
         this.fks = fks;
     }
 
@@ -68,7 +68,7 @@ public class Table {
         this.keys = keys;
     }
 
-    public Table(String name, NoSQL targetDB, ArrayList<String> pks, ArrayList<String> fks, ArrayList<String> attributes) {
+    public Table(String name, NoSQL targetDB, ArrayList<String> pks, ArrayList<ForeignKey> fks, ArrayList<String> attributes) {
         this.name = name;
         this.targetDB = targetDB;
         this.pks = pks;
@@ -77,7 +77,7 @@ public class Table {
         this.keys = new ArrayList<String>();
     }
 
-    public Table(String name, NoSQL targetDB, ArrayList<String> pks, ArrayList<String> fks, ArrayList<String> attributes, ArrayList<String> keys) {
+    public Table(String name, NoSQL targetDB, ArrayList<String> pks, ArrayList<ForeignKey> fks, ArrayList<String> attributes, ArrayList<String> keys) {
         this.name = name;
         this.targetDB = targetDB;
         this.pks = pks;

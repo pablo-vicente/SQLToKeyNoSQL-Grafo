@@ -17,6 +17,7 @@ public class BDR implements Serializable{
     private ArrayList<Table> tables;
 
     public BDR() {
+        tables = new ArrayList<>();
     }
 
     public BDR(String name, ArrayList<Table> tables) {

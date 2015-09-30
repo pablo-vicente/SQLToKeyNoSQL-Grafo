@@ -170,7 +170,7 @@ public class NoSQLTargets extends javax.swing.JDialog {
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed
-        System.out.println("saiu\n");
+        
     }//GEN-LAST:event_formWindowClosed
 
     private void loadNoSQL(NoSQL n){

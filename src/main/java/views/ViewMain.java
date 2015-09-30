@@ -10,6 +10,7 @@ import java.io.File;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
+import util.DictionaryDAO;
 import util.TimeConter;
 
 /**
@@ -43,12 +44,11 @@ public class ViewMain extends javax.swing.JFrame {
         jTable1 = new javax.swing.JTable();
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
-        jLabel3 = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
-        jLabel5 = new javax.swing.JLabel();
         jLabelNoSQL = new javax.swing.JLabel();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
+        jMenuItem5 = new javax.swing.JMenuItem();
         jMenuItem3 = new javax.swing.JMenuItem();
         jMenu2 = new javax.swing.JMenu();
         jMenuItem1 = new javax.swing.JMenuItem();
@@ -94,15 +94,19 @@ public class ViewMain extends javax.swing.JFrame {
 
         jLabel2.setText("Tempo T:");
 
-        jLabel3.setText("0");
-
         jLabel4.setText("Tempo NoSQL:");
-
-        jLabel5.setText("0");
 
         jLabelNoSQL.setText("0");
 
         jMenu1.setText("File");
+
+        jMenuItem5.setText("Save Dic");
+        jMenuItem5.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem5ActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItem5);
 
         jMenuItem3.setText("Load Script");
         jMenuItem3.addActionListener(new java.awt.event.ActionListener() {
@@ -166,26 +170,16 @@ public class ViewMain extends javax.swing.JFrame {
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)))))
                 .addContainerGap())
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(layout.createSequentialGroup()
-                    .addGap(0, 0, Short.MAX_VALUE)
-                    .addComponent(jLabel3)
-                    .addGap(0, 0, Short.MAX_VALUE)))
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(layout.createSequentialGroup()
-                    .addGap(0, 0, Short.MAX_VALUE)
-                    .addComponent(jLabel5)
-                    .addGap(0, 0, Short.MAX_VALUE)))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jButton1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 141, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 183, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
@@ -193,16 +187,6 @@ public class ViewMain extends javax.swing.JFrame {
                     .addComponent(jLabel4)
                     .addComponent(jLabelNoSQL))
                 .addGap(6, 6, 6))
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(layout.createSequentialGroup()
-                    .addGap(0, 0, Short.MAX_VALUE)
-                    .addComponent(jLabel3)
-                    .addGap(0, 0, Short.MAX_VALUE)))
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(layout.createSequentialGroup()
-                    .addGap(0, 0, Short.MAX_VALUE)
-                    .addComponent(jLabel5)
-                    .addGap(0, 0, Short.MAX_VALUE)))
         );
 
         pack();
@@ -257,12 +241,12 @@ public class ViewMain extends javax.swing.JFrame {
             n.dic = p.getDic();
             n.setVisible(true);
         }
-        if (p.getDic().getCurrent_db() == null || p.getDic().getCurrent_db().isEmpty()) {
+        if (p.getDic().getCurrent_db() == null) {
             RDBs rdb = new RDBs(this, true);
             rdb.dic = p.getDic();
             rdb.setVisible(true);
-            p.getDic().setCurrent_db(rdb.selected_DB);
-            p.changeCurrentDB();
+           // p.getDic().setCurrent_db(RDBs.selected_DB);
+            p.changeCurrentDB(p.getDic().getCurrent_db().getName());
         }
     }//GEN-LAST:event_formWindowOpened
 
@@ -275,9 +259,13 @@ public class ViewMain extends javax.swing.JFrame {
         RDBs rdb = new RDBs(this, true);
         rdb.dic = p.getDic();
         rdb.setVisible(true);
-        p.getDic().setCurrent_db(rdb.selected_DB);
-        p.changeCurrentDB();
+        //p.getDic().setCurrent_db(RDBs.selected_DB);
+        p.changeCurrentDB(p.getDic().getCurrent_db().getName());
     }//GEN-LAST:event_jMenuItem1ActionPerformed
+
+    private void jMenuItem5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem5ActionPerformed
+        DictionaryDAO.storeDictionary(p.getDic());
+    }//GEN-LAST:event_jMenuItem5ActionPerformed
 
     private void montaDataSet() {
         String[][] data = new String[p.ds.getData().size()][p.ds.getColumns().size()];// p.ds.getData().toArray();
@@ -327,9 +315,7 @@ public class ViewMain extends javax.swing.JFrame {
     private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
-    private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabelNoSQL;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
@@ -338,6 +324,7 @@ public class ViewMain extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItem2;
     private javax.swing.JMenuItem jMenuItem3;
     private javax.swing.JMenuItem jMenuItem4;
+    private javax.swing.JMenuItem jMenuItem5;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JTable jTable1;
