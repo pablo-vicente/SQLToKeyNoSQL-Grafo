@@ -15,6 +15,7 @@ import util.Dictionary;
 import util.MongoConnector;
 import util.NoSQL;
 import util.RedisConnector;
+import util.SimpleDBConnector;
 
 /**
  *
@@ -193,6 +194,7 @@ public class NoSQLTargets extends javax.swing.JDialog {
         jComboBoxTarget.addItem(new RedisConnector());
         jComboBoxTarget.addItem(new CassandraConnector());
         jComboBoxTarget.addItem(new Cassandra2Connector());
+        jComboBoxTarget.addItem(new SimpleDBConnector());
     }//GEN-LAST:event_formWindowActivated
 
     private void jListAliasValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_jListAliasValueChanged

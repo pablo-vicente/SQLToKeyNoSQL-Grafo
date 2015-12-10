@@ -42,6 +42,8 @@ public class DictionaryDAO {
                 con = 3;
             } else if (n.getConection() instanceof RedisConnector) {
                 con = 4;
+            } else if (n.getConection() instanceof SimpleDBConnector) {
+                con = 5;
             }
             aux.append("connector", con);
             targets.append(n.getAlias(), aux);
@@ -119,6 +121,10 @@ public class DictionaryDAO {
                             n.setConection(new RedisConnector());
                             break;
                         }
+                        case 5: {
+                            n.setConection(new SimpleDBConnector());
+                            break;
+                        }
                         default: {
                             n.setConection(new MongoConnector());
                         }
@@ -141,8 +147,16 @@ public class DictionaryDAO {
                             tableD = (Document) tableIterator.next();
                             Table t = new Table(tableD.getString("name"), _new.getTarget(tableD.getString("target")), null, null, null);
                             t.setAttributes(new ArrayList<>(Arrays.asList(tableD.getString("att").replace(" ", "").split(","))));
-                            t.setKeys(new ArrayList<>(Arrays.asList(tableD.getString("key").replace(" ", "").split(","))));
-                            t.setPks(new ArrayList<>(Arrays.asList(tableD.getString("pk").replace(" ", "").split(","))));
+                            if (tableD.getString("key").isEmpty()) {
+                                t.setKeys(new ArrayList<>());
+                            } else {
+                                t.setKeys(new ArrayList<>(Arrays.asList(tableD.getString("key").replace(" ", "").split(","))));
+                            }
+                            if (tableD.getString("pk").isEmpty()) {
+                                t.setPks(new ArrayList<>());
+                            } else {
+                                t.setPks(new ArrayList<>(Arrays.asList(tableD.getString("pk").replace(" ", "").split(","))));
+                            }
                             Document fks = (Document) tableD.get("fk");
                             if (fks != null) {
                                 t.setFks(new ArrayList<ForeignKey>());
@@ -151,7 +165,7 @@ public class DictionaryDAO {
                                     Document fkD = (Document) fkIterator.next();
                                     t.getFks().add(new ForeignKey(fkD.getString("att"), fkD.getString("attR"), fkD.getString("tableR")));
                                 }
-                                
+
                             } else {
                                 t.setFks(new ArrayList<ForeignKey>());
                             }
