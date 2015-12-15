@@ -6,6 +6,7 @@
 package com.lisa.sqltokeynosql.architecture;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -141,12 +142,51 @@ public class ExecutionEngine {
         return result; //To change body of generated methods, choose Tools | Templates.
     }
 
-    void deleteData(String table) {
+    void deleteData(String table, Stack<Object> filters) {
         //ArrayList<Table> tables = new <Table>ArrayList();
 
         Table t = dic.getCurrent_db().getTable(table);
         System.out.print("Table: " + table + ", r: " + t.getKeys().size());
-        t.setKeys(new ArrayList<String>());
+        //t.setKeys(new ArrayList<String>());
+        ArrayList <String> cols = new ArrayList();
+        ArrayList <String> tables = new ArrayList();
+        tables.add(table);
+        cols.add("_key");
+        DataSet ds = getDataSetBl(tables, cols, filters);
+        for(String [] tuple : ds.getData()){
+            t.getTargetDB().getConection().delete(table, tuple[0]);
+            t.getKeys().remove(tuple[0]);
+        }
+        
+        System.out.println(" new: " + t.getKeys().size());
+    }
+    
+    void updateData(String table, ArrayList acls, ArrayList avl,Stack<Object> filters) {
+        //ArrayList<Table> tables = new <Table>ArrayList();
+
+        Table t = dic.getCurrent_db().getTable(table);
+        System.out.print("Table: " + table + ", r: " + t.getKeys().size());
+        //t.setKeys(new ArrayList<String>());
+        ArrayList <String> cols = t.getAttributes();
+        ArrayList <String> tables = new ArrayList();
+        tables.add(table);
+        cols.add("_key");
+        DataSet ds = getDataSetBl(tables, cols, filters);
+        for(String [] tuple : ds.getData()){
+            ArrayList<String> val = new ArrayList();
+            for(int i=0;i<acls.size();i++){
+                tuple[cols.indexOf(acls.get(i))] = (String) avl.get(i);
+            }
+            for (int i = 0; i<cols.size()-1;i++){
+                val.add(tuple[i]);
+            }
+            String k = tuple[cols.size()-1];
+            t.getTargetDB().getConection().delete(table, k);
+            //tuple[cols.indexOf()]
+            cols.remove("_key");
+            t.getTargetDB().getConection().put(table, k, cols, val);
+        }
+        
         System.out.println(" new: " + t.getKeys().size());
     }
 
@@ -190,6 +230,50 @@ public class ExecutionEngine {
         return result; //To change body of generated methods, choose Tools | Templates.
     }
 
+    DataSet getDataSetBl(List<String> tablesN, List<String> cols, Stack<Object> filters) {
+        DataSet result = null;
+        ArrayList<HashMap<String, String>> tuples;
+        HashMap<String, String> aux;
+        ArrayList<Table> tables = new <Table>ArrayList();
+
+        for (String s : tablesN) {
+            Table t = dic.getCurrent_db().getTable(s);
+            if (t == null) {
+                System.out.println("Tabela: " + s + " não existe!");
+                return null;
+            }
+            tables.add(t);
+        }
+
+        result = new DataSet();
+        for (Table t : tables) {
+            if (cols.get(0).equals("*")) {
+                cols = t.getAttributes();
+            }
+            result.setColumns((ArrayList) cols);
+            long now = new Date().getTime();
+            tuples = t.getTargetDB().getConection().getN(1, t.getName(), t.getKeys());
+            TimeConter.current += (new Date().getTime()) - now;
+                
+            for (HashMap<String, String> tpl: tuples) {
+                String[] tuple = new String[cols.size()];
+                //HashMap<String, String> _new = new <String, String>HashMap();
+                aux = tpl;
+                if (applyFilterR((filters != null ? (Stack) filters.clone() : null), aux)) {
+                    for (int i = 0; i < cols.size(); i++) {
+                        tuple[i] = aux.get(cols.get(i));
+                    }
+                    result.getData().add(tuple);
+                }
+
+            }
+
+        }
+
+        return result; //To change body of generated methods, choose Tools | Templates.
+    }
+
+    
     private boolean applyFilter(List<Object> filters, HashMap tuple) {
         if (filters == null) {
             return true;

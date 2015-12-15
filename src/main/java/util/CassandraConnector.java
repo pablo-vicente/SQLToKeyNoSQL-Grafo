@@ -9,6 +9,7 @@ import com.lisa.sqltokeynosql.architecture.Connector;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  *
@@ -48,32 +49,67 @@ public class CassandraConnector extends Connector {
     }
 
     @Override
-    public void delete() {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public void delete(String t, String k) {
+        String cql = "DELETE FROM "+t+" WHERE key='"+k+"'";
+        session.execute(cql);
     }
 
     @Override
     public HashMap<String, String> get(int n, String t, String key) {
         HashMap<String, String> current = new HashMap<>();
-        ResultSet results = session.execute("SELECT * FROM "+t+" WHERE key='"+key+"'");
+        ResultSet results = session.execute("SELECT * FROM " + t + " WHERE key='" + key + "'");
         Row row = results.one();
-         Iterator<ColumnDefinitions.Definition> i =  row.getColumnDefinitions().iterator();
-         while (i.hasNext()){
-             ColumnDefinitions.Definition def = i.next();
-             
-             if (def.getType().asJavaClass() == Integer.class)
-                current.put(def.getName(),String.valueOf(row.getInt(def.getName())));
-             else if (def.getType().asJavaClass() == Float.class)
-                current.put(def.getName(),String.valueOf(row.getFloat(def.getName())));
-             else if (def.getType().asJavaClass() == Double.class)
-                current.put(def.getName(),String.valueOf(row.getDouble(def.getName())));
-             else 
-                current.put(def.getName(),row.getString(def.getName())); 
-         }
+        Iterator<ColumnDefinitions.Definition> i = row.getColumnDefinitions().iterator();
+        while (i.hasNext()) {
+            ColumnDefinitions.Definition def = i.next();
+
+            if (def.getType().asJavaClass() == Integer.class) {
+                current.put(def.getName(), String.valueOf(row.getInt(def.getName())));
+            } else if (def.getType().asJavaClass() == Float.class) {
+                current.put(def.getName(), String.valueOf(row.getFloat(def.getName())));
+            } else if (def.getType().asJavaClass() == Double.class) {
+                current.put(def.getName(), String.valueOf(row.getDouble(def.getName())));
+            } else {
+                current.put(def.getName(), row.getString(def.getName()));
+            }
+        }
         return current;
     }
-@Override
+
+    @Override
     public String toString() {
         return "Cassandra";
+    }
+
+    @Override
+    public ArrayList<HashMap<String, String>> getN(int n, String t, ArrayList<String> keys) {
+        ArrayList<HashMap<String, String>> result = new ArrayList();
+        HashMap<String, String> current;
+        ResultSet results = session.execute("SELECT * FROM " + t + " limit 1000000");
+        List<Row> rows = results.all();
+        Iterator<ColumnDefinitions.Definition> i;
+        for (Row row : rows) {
+            current = new HashMap<>();
+            i = row.getColumnDefinitions().iterator();
+            while (i.hasNext()) {
+                ColumnDefinitions.Definition def = i.next();
+                String cName = def.getName();
+                if (cName.equals("key")){
+                    cName = "_key";
+                }
+                if (def.getType().asJavaClass() == Integer.class) {
+                    current.put(cName, String.valueOf(row.getInt(def.getName())));
+                } else if (def.getType().asJavaClass() == Float.class) {
+                    current.put(cName, String.valueOf(row.getFloat(def.getName())));
+                } else if (def.getType().asJavaClass() == Double.class) {
+                    current.put(cName, String.valueOf(row.getDouble(def.getName())));
+                } else {
+                    current.put(cName, row.getString(def.getName()));
+                }
+            }
+            result.add(current);
+        }
+        System.out.println("Cassandra Linhas:" + result.size());
+        return result;
     }
 }

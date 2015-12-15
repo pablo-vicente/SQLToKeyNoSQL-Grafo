@@ -6,11 +6,15 @@ import com.amazonaws.auth.policy.actions.SimpleDBActions;
 import com.amazonaws.services.simpledb.AmazonSimpleDBClient;
 import com.amazonaws.services.simpledb.model.Attribute;
 import com.amazonaws.services.simpledb.model.CreateDomainRequest;
+import com.amazonaws.services.simpledb.model.DeleteAttributesRequest;
 import com.amazonaws.services.simpledb.model.GetAttributesRequest;
+import com.amazonaws.services.simpledb.model.Item;
 import com.amazonaws.services.simpledb.model.ListDomainsRequest;
 import com.amazonaws.services.simpledb.model.ListDomainsResult;
 import com.amazonaws.services.simpledb.model.PutAttributesRequest;
 import com.amazonaws.services.simpledb.model.ReplaceableAttribute;
+import com.amazonaws.services.simpledb.model.SelectRequest;
+import com.amazonaws.services.simpledb.model.SelectResult;
 import com.lisa.sqltokeynosql.architecture.Connector;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,8 +45,9 @@ public class SimpleDBConnector extends Connector {
             //this.client.setEndpoint("sdb.amazonaws.com");
             return;
         }
-        if (!doesDomainExist(table))
-            this.client.createDomain(new CreateDomainRequest(table));
+        //if (!doesDomainExist(table)) {
+        //  this.client.createDomain(new CreateDomainRequest(table));
+        //}
 
         ArrayList<ReplaceableAttribute> attributes = new ArrayList<ReplaceableAttribute>();
         ReplaceableAttribute att;
@@ -80,8 +85,9 @@ public class SimpleDBConnector extends Connector {
     }
 
     @Override
-    public void delete() {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public void delete(String t, String key) {
+        DeleteAttributesRequest del = new DeleteAttributesRequest(t, key);
+        this.client.deleteAttributes(del);
     }
 
     @Override
@@ -93,10 +99,50 @@ public class SimpleDBConnector extends Connector {
         HashMap<String, String> result = new HashMap();
 
         GetAttributesRequest gar = new GetAttributesRequest(t, key).withConsistentRead(Boolean.TRUE);
-        System.out.println(">>" + gar.toString());
         List<Attribute> data = this.client.getAttributes(gar).getAttributes();
         for (Attribute att : data) {
             result.put(att.getName(), att.getValue());
+        }
+        result.put("_key", key);
+        return result;
+    }
+
+    @Override
+    public ArrayList<HashMap<String, String>> getN(int n, String t, ArrayList<String> keys) {
+        if (keys != null && keys.isEmpty()) {
+            System.err.println("Chave veio vazia!");
+            return null;
+        }
+        ArrayList<HashMap<String, String>> result = new ArrayList();
+        HashMap<String, String> aux;
+        SelectRequest s = new SelectRequest("SELECT * FROM " + t + " limit 2500");
+        SelectResult sr = null;
+        sr = this.client.select(s);
+        for (Item item : sr.getItems()) {
+            String it = item.getName();
+            aux = new HashMap<>();
+            List<Attribute> attr = item.getAttributes();
+            for (Attribute a : attr) {
+                aux.put(a.getName(), a.getValue());
+            }
+            aux.put("_key", it);
+            result.add(aux);
+        }
+        String token = sr.getNextToken();
+        while (token != null) {
+            s.setNextToken(token);
+            sr = this.client.select(s);
+            for (Item item : sr.getItems()) {
+                String it = item.getName();
+                aux = new HashMap<>();
+                List<Attribute> attr = item.getAttributes();
+                for (Attribute a : attr) {
+                    aux.put(a.getName(), a.getValue());
+                }
+                aux.put("_key", it);
+                result.add(aux);
+            }
+            token = sr.getNextToken();
         }
         return result;
     }

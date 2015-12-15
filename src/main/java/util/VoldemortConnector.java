@@ -43,8 +43,8 @@ public class VoldemortConnector extends Connector {
     }
 
     @Override
-    public void delete() {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public void delete(String t, String k) {
+        
     }
 
     @Override

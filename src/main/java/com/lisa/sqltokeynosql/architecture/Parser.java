@@ -21,6 +21,7 @@ import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.expression.operators.relational.MultiExpressionList;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
+import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.Statements;
 import net.sf.jsqlparser.statement.alter.Alter;
@@ -151,7 +152,7 @@ public class Parser {
                   }
                   ds = ex.getDataSet(tableList, cols, filters, joins);
                 }else{
-                    ds = ex.getDataSet(tableList, cols, filters);;
+                    ds = ex.getDataSetBl(tableList, cols, filters);;
                 }
                 if (ds == null) {
                     System.out.println("Ocorreu algum erro!");
@@ -253,10 +254,42 @@ public class Parser {
                 System.out.println("Delete - ");
                 Delete del = (Delete) statement;
                 String t = del.getTable().getName();
-                ex.deleteData(t);
-                System.out.println("Passou");
+                Stack<Object> filters = null;
+                if (del.getWhere() != null) {
+                    Expression e = del.getWhere();
+                    ExpressionDeParser deparser = new WhereStatment();
+                    StringBuilder b = new StringBuilder();
+                    deparser.setBuffer(b);
+                    e.accept(deparser);
+                    filters = ((WhereStatment) deparser).getParsedFilters();
+                }
+                ex.deleteData(t, filters);
             } else if (statement instanceof Update) {
                 System.out.println("Update");
+                 Update update = (Update) statement;
+                String t = update.getTable().getName();
+                
+                ArrayList<String> cols = new ArrayList();
+                //PlainSelect ps = (PlainSelect) update.getWhere();
+                for (Column col : update.getColumns()) {
+                    cols.add(col.getColumnName());
+                }
+                ArrayList <String> vals = new <String> ArrayList();
+                for (Expression e : update.getExpressions()){
+                    vals.add(e.toString());
+                }
+                //ps.getFromItem().
+                Stack<Object> filters = null;
+                if (update.getWhere() != null) {
+                    Expression e = update.getWhere();
+                    ExpressionDeParser deparser = new WhereStatment();
+                    StringBuilder b = new StringBuilder();
+                    deparser.setBuffer(b);
+                    e.accept(deparser);
+                    filters = ((WhereStatment) deparser).getParsedFilters();
+                }
+                ex.updateData(t, cols, vals, filters);
+                
             } else if (statement instanceof Drop) {
                 System.out.println("Drop table");
             } else if (statement instanceof Alter) {

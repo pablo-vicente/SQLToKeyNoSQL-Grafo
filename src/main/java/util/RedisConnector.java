@@ -44,8 +44,8 @@ public class RedisConnector extends Connector{
     }
 
     @Override
-    public void delete() {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public void delete(String t, String k) {
+        jedis.del(db+"::"+t+"::"+k);
     }
 
     @Override
@@ -57,7 +57,7 @@ public class RedisConnector extends Connector{
         Map<String, String> retMap = new Gson().fromJson(s, new TypeToken<HashMap<String, String>>() {}.getType());
         _new = (HashMap<String, String>) retMap;
        // jedis.close();
-        
+        _new.put("_key", key);
         
         return _new;
     }

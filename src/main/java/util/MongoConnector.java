@@ -57,7 +57,8 @@ public class MongoConnector extends Connector {
     }
 
     @Override
-    public void delete() {
+    public void delete(String table, String key) {
+        DBObject cursor = db.getCollection(table).findAndRemove(new BasicDBObject("_id", key));
     }
 
     @Override
@@ -65,10 +66,25 @@ public class MongoConnector extends Connector {
         HashMap<String, String> result = null;
         DBObject cursor = db.getCollection(table).findOne(key);
         if (cursor != null){
-                result = new HashMap<>(cursor.toMap());    
+                HashMap h = new HashMap<>(cursor.toMap());
+                h.put("_key", h);
+                result = h;    
         }
         return result;
     }
+
+     public ArrayList<HashMap<String, String>> getN(int n, String t,ArrayList<String> keys){
+        ArrayList<HashMap<String, String>> result = new ArrayList();
+        DBCursor cursor = db.getCollection(t).find();
+        while(cursor.hasNext()){
+            DBObject obj = cursor.next();
+            HashMap hash = new HashMap<>(obj.toMap());
+            hash.put("_key", obj.get("_id"));
+            result.add(hash);
+        }
+        return result;
+    }
+    
 
     @Override
     public String toString() {
