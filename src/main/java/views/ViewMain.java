@@ -10,6 +10,7 @@ import java.io.File;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
+import util.Constants;
 import util.DictionaryDAO;
 import util.TimeConter;
 
@@ -268,8 +269,10 @@ public class ViewMain extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItem5ActionPerformed
 
     private void montaDataSet() {
-        String[][] data = new String[p.ds.getData().size()][p.ds.getColumns().size()];// p.ds.getData().toArray();
-        for (int i = 0; i < p.ds.getData().size(); i++) {
+        int l = (p.ds.getData().size()>Constants.MAX_VIEW_LINE ? Constants.MAX_VIEW_LINE : p.ds.getData().size());
+        String[][] data = new String[l][p.ds.getColumns().size()];// p.ds.getData().toArray();
+        
+        for (int i = 0; i < (l) ; i++) {
             data[i] = p.ds.getData().get(i);
         }
         // String [] cols;

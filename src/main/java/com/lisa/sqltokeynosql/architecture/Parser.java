@@ -96,22 +96,26 @@ public class Parser {
             BufferedReader br = new BufferedReader(fr);
             String s;
             StringBuffer sb = new StringBuffer();
+                timeToDO = 0;
             while ((s = br.readLine()) != null) {
                 sb.append(s);
+                
+                if (sb.toString().contains(";")){
+                    TimeConter.current = 0;
+                    long setTime = new Date().getTime();
+                    long resetTime = 0;
+                    Statements stmt = CCJSqlParserUtil.parseStatements(sb.toString());
+
+                    for (Statement st : stmt.getStatements()) {
+                        result &= this.run(st);
+                    }
+                    resetTime = new Date().getTime();
+                    timeToDO += resetTime - setTime;
+                    sb = new StringBuffer();
+                }
             }
             br.close();
-            timeToDO = 0;
-            TimeConter.current = 0;
-            long setTime = new Date().getTime();
-            long resetTime = 0;
-            Statements stmt = CCJSqlParserUtil.parseStatements(sb.toString());
-
-            for (Statement st : stmt.getStatements()) {
-                result &= this.run(st);
-            }
-            resetTime = new Date().getTime();
-            timeToDO = resetTime - setTime;
-
+            
         } catch (Exception ex) {
             Logger.getLogger(Parser.class.getName()).log(Level.SEVERE, null, ex);
             return false;

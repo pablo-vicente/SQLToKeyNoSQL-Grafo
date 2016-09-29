@@ -115,7 +115,7 @@ public class SimpleDBConnector extends Connector {
         }
         ArrayList<HashMap<String, String>> result = new ArrayList();
         HashMap<String, String> aux;
-        SelectRequest s = new SelectRequest("SELECT * FROM " + t + " limit 2500");
+        SelectRequest s = new SelectRequest("SELECT * FROM " + t + " LIMIT 2500");
         SelectResult sr = null;
         sr = this.client.select(s);
         for (Item item : sr.getItems()) {
@@ -142,7 +142,11 @@ public class SimpleDBConnector extends Connector {
                 aux.put("_key", it);
                 result.add(aux);
             }
-            token = sr.getNextToken();
+            if (sr.getItems().size() <= 3)
+                token = null;
+            else 
+                token = sr.getNextToken();
+                
         }
         return result;
     }
