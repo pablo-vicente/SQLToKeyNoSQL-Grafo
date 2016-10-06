@@ -28,6 +28,7 @@ import static java.util.Arrays.asList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Stack;
 
 /**
  *
@@ -75,7 +76,7 @@ public class MongoConnector extends Connector {
 
      public ArrayList<HashMap<String, String>> getN(int n, String t,ArrayList<String> keys){
         ArrayList<HashMap<String, String>> result = new ArrayList();
-        DBCursor cursor = db.getCollection(t).find();
+        DBCursor cursor = db.getCollection(t).find(new BasicDBObject("_id", keys.toArray()));
         while(cursor.hasNext()){
             DBObject obj = cursor.next();
             HashMap hash = new HashMap<>(obj.toMap());
@@ -84,6 +85,22 @@ public class MongoConnector extends Connector {
         }
         return result;
     }
+
+    @Override
+    public ArrayList<HashMap<String, String>> getN(int n, String t, ArrayList<String> keys, Stack<Object> filters) {
+        ArrayList<HashMap<String, String>> result = new ArrayList();
+        DBCursor cursor = db.getCollection(t).find(new BasicDBObject("_id", keys.toArray()));
+        while(cursor.hasNext()){
+            DBObject obj = cursor.next();
+            HashMap hash = new HashMap<>(obj.toMap());
+            hash.put("_key", obj.get("_id"));
+            if (applyFilterR(filters, hash))
+                result.add(hash);
+        }
+        return result;
+    }
+     
+     
     
 
     @Override

@@ -252,19 +252,19 @@ public class ExecutionEngine {
             }
             result.setColumns((ArrayList) cols);
             long now = new Date().getTime();
-            tuples = t.getTargetDB().getConection().getN(1, t.getName(), t.getKeys());
+            tuples = t.getTargetDB().getConection().getN(1, t.getName(), t.getKeys(),filters);
             TimeConter.current += (new Date().getTime()) - now;
                 
             for (HashMap<String, String> tpl: tuples) {
                 String[] tuple = new String[cols.size()];
                 //HashMap<String, String> _new = new <String, String>HashMap();
                 aux = tpl;
-                if (applyFilterR((filters != null ? (Stack) filters.clone() : null), aux)) {
+               // if (applyFilterR((filters != null ? (Stack) filters.clone() : null), aux)) {
                     for (int i = 0; i < cols.size(); i++) {
                         tuple[i] = aux.get(cols.get(i));
                     }
                     result.getData().add(tuple);
-                }
+               // }
 
             }
 
