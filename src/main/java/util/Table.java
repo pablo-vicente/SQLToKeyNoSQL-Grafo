@@ -6,6 +6,7 @@
 package util;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 /**
  *
@@ -17,7 +18,7 @@ public class Table {
     private NoSQL targetDB ;
     private ArrayList<String> pks;
     private ArrayList<ForeignKey> fks;
-    private ArrayList<String> attributes;
+    private LinkedList<String> attributes;
     private ArrayList<String> keys;
 
     public String getName() {
@@ -52,11 +53,11 @@ public class Table {
         this.fks = fks;
     }
 
-    public ArrayList<String> getAttributes() {
+    public LinkedList<String> getAttributes() {
         return attributes;
     }
 
-    public void setAttributes(ArrayList<String> attributes) {
+    public void setAttributes(LinkedList<String> attributes) {
         this.attributes = attributes;
     }
 
@@ -68,7 +69,7 @@ public class Table {
         this.keys = keys;
     }
 
-    public Table(String name, NoSQL targetDB, ArrayList<String> pks, ArrayList<ForeignKey> fks, ArrayList<String> attributes) {
+    public Table(String name, NoSQL targetDB, ArrayList<String> pks, ArrayList<ForeignKey> fks, LinkedList<String> attributes) {
         this.name = name;
         this.targetDB = targetDB;
         this.pks = pks;
@@ -77,7 +78,7 @@ public class Table {
         this.keys = new ArrayList<String>();
     }
 
-    public Table(String name, NoSQL targetDB, ArrayList<String> pks, ArrayList<ForeignKey> fks, ArrayList<String> attributes, ArrayList<String> keys) {
+    public Table(String name, NoSQL targetDB, ArrayList<String> pks, ArrayList<ForeignKey> fks, LinkedList<String> attributes, ArrayList<String> keys) {
         this.name = name;
         this.targetDB = targetDB;
         this.pks = pks;

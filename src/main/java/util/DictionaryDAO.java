@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedList;
 import javax.swing.text.StyledEditorKit;
 import org.bson.Document;
 
@@ -146,7 +147,7 @@ public class DictionaryDAO {
                         while (tableIterator.hasNext()) {
                             tableD = (Document) tableIterator.next();
                             Table t = new Table(tableD.getString("name"), _new.getTarget(tableD.getString("target")), null, null, null);
-                            t.setAttributes(new ArrayList<>(Arrays.asList(tableD.getString("att").replace(" ", "").split(","))));
+                            t.setAttributes(new LinkedList<>(Arrays.asList(tableD.getString("att").replace(" ", "").split(","))));
                             if (tableD.getString("key").isEmpty()) {
                                 t.setKeys(new ArrayList<>());
                             } else {

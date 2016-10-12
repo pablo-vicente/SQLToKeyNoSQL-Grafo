@@ -9,6 +9,7 @@ import com.lisa.sqltokeynosql.architecture.Connector;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -30,7 +31,7 @@ public class CassandraConnector extends Connector {
     }
 
     @Override
-    public void put(String table, String key, ArrayList<String> cols, ArrayList<String> values) {
+    public void put(String table, String key, LinkedList<String> cols, ArrayList<String> values) {
         String cql = "INSERT INTO " + table + " ";
         String c = "(key, ", v = "('" + key + "', ";
         for (int i = 0; i < cols.size(); i++) {

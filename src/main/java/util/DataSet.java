@@ -6,21 +6,22 @@
 package util;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 /**
  *
  * @author geomar
  */
 public class DataSet {
-    private ArrayList<String> columns;
+    private LinkedList<String> columns;
     private ArrayList<String[]> data; 
     private String table_n;
 
-    public ArrayList<String> getColumns() {
+    public LinkedList<String> getColumns() {
         return columns;
     }
 
-    public void setColumns(ArrayList<String> columns) {
+    public void setColumns(LinkedList<String> columns) {
         this.columns = columns;
     }
 
@@ -43,7 +44,7 @@ public class DataSet {
     
     
     public DataSet() {
-        this.columns = new <String> ArrayList();
+        this.columns = new <String> LinkedList();
         this.data = new <String[]> ArrayList();
         table_n = null;
     }

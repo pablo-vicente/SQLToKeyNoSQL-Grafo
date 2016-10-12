@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;
 import net.sf.jsqlparser.expression.Expression;
@@ -75,7 +76,7 @@ public class ExecutionEngine {
         return false;
     }
 
-    public boolean insertData(String table, ArrayList<String> columns, ArrayList<String> values) {
+    public boolean insertData(String table, LinkedList<String> columns, ArrayList<String> values) {
         Table t = dic.getCurrent_db().getTable(table);
         if (t == null) {
             System.out.println("Tabela não Existe!");
@@ -148,7 +149,7 @@ public class ExecutionEngine {
         Table t = dic.getCurrent_db().getTable(table);
         System.out.print("Table: " + table + ", r: " + t.getKeys().size());
         //t.setKeys(new ArrayList<String>());
-        ArrayList <String> cols = new ArrayList();
+        LinkedList <String> cols = new LinkedList();
         ArrayList <String> tables = new ArrayList();
         tables.add(table);
         cols.add("_key");
@@ -167,7 +168,7 @@ public class ExecutionEngine {
         Table t = dic.getCurrent_db().getTable(table);
         System.out.print("Table: " + table + ", r: " + t.getKeys().size());
         //t.setKeys(new ArrayList<String>());
-        ArrayList <String> cols = t.getAttributes();
+        LinkedList <String> cols = t.getAttributes();
         ArrayList <String> tables = new ArrayList();
         tables.add(table);
         cols.add("_key");
@@ -209,7 +210,7 @@ public class ExecutionEngine {
             if (cols.get(0).equals("*")) {
                 cols = t.getAttributes();
             }
-            result.setColumns((ArrayList) cols);
+            result.setColumns((LinkedList) cols);
             for (String k : t.getKeys()) {
                 String[] tuple = new String[cols.size()];
                 //HashMap<String, String> _new = new <String, String>HashMap();
@@ -250,23 +251,23 @@ public class ExecutionEngine {
             if (cols.get(0).equals("*")) {
                 cols = t.getAttributes();
             }
-            result.setColumns((ArrayList) cols);
+            result.setColumns((LinkedList<String>)cols);
             long now = new Date().getTime();
-            tuples = t.getTargetDB().getConection().getN(1, t.getName(), t.getKeys(),filters);
+            result.setData(t.getTargetDB().getConection().getN(1, t.getName(), t.getKeys(),filters, (LinkedList) cols));
             TimeConter.current += (new Date().getTime()) - now;
                 
-            for (HashMap<String, String> tpl: tuples) {
-                String[] tuple = new String[cols.size()];
-                //HashMap<String, String> _new = new <String, String>HashMap();
-                aux = tpl;
-               // if (applyFilterR((filters != null ? (Stack) filters.clone() : null), aux)) {
-                    for (int i = 0; i < cols.size(); i++) {
-                        tuple[i] = aux.get(cols.get(i));
-                    }
-                    result.getData().add(tuple);
-               // }
-
-            }
+//            for (HashMap<String, String> tpl: tuples) {
+//                String[] tuple = new String[cols.size()];
+//                //HashMap<String, String> _new = new <String, String>HashMap();
+//                aux = tpl;
+//               // if (applyFilterR((filters != null ? (Stack) filters.clone() : null), aux)) {
+//                    for (int i = 0; i < cols.size(); i++) {
+//                        tuple[i] = aux.get(cols.get(i));
+//                    }
+//                    result.getData().add(tuple);
+//               // }
+//
+//            }
 
         }
 
@@ -356,7 +357,7 @@ public class ExecutionEngine {
         return dic;
     }
 
-    DataSet getDataSet(List<String> tablesN, ArrayList<String> cols, Stack<Object> filters, List<Join> joins) {
+    DataSet getDataSet(List<String> tablesN, LinkedList<String> cols, Stack<Object> filters, List<Join> joins) {
         DataSet innerData, result = null;
         HashMap<String, String> aux;
         ArrayList<Table> tables = new <Table>ArrayList();
@@ -373,7 +374,7 @@ public class ExecutionEngine {
         innerData = new DataSet();
         //buscando e manipulando só a inner table (mais da esquerda...)
         Table inner = tables.get(0);
-        ArrayList<String> innerCols = new ArrayList();
+        LinkedList<String> innerCols = new LinkedList();
         for (String col : cols) {
             String[] c = col.split("\\.");
             if (c.length > 0) {
@@ -421,7 +422,7 @@ public class ExecutionEngine {
                 on = ((JoinStatment) deparser).getParsedFilters();
                 Table outer = dic.getCurrent_db().getTable(((net.sf.jsqlparser.schema.Table) j.getRightItem()).getName());
 
-                    ArrayList<String> outerCols = new ArrayList();
+                    LinkedList<String> outerCols = new LinkedList();
                 for (String col : cols) {
                     String[] c = col.split("\\.");
                     if (c.length > 0) {

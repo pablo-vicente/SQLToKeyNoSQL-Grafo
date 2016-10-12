@@ -7,6 +7,7 @@ package com.lisa.sqltokeynosql.architecture;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
@@ -23,7 +24,7 @@ public abstract class Connector {
     
     public abstract void connect(String nbd);
     
-    public abstract  void put (String table, String key, ArrayList<String>cols, ArrayList<String>values);
+    public abstract  void put (String table, String key, LinkedList<String>cols, ArrayList<String>values);
     
     public abstract void delete(String table, String key);
     
@@ -43,6 +44,21 @@ public abstract class Connector {
             HashMap<String, String> tuple = get(n, t, key);
             if (applyFilterR(filters, tuple))
               result.add(tuple);
+        }
+        return result;
+    }
+    
+    public ArrayList getN(int n, String t,ArrayList<String> keys, Stack<Object> filters, LinkedList<String> cols){
+        ArrayList<String[]> result = new ArrayList();
+        for(String key: keys){
+            HashMap<String, String> tuple = get(n, t, key);
+            if (applyFilterR(filters, tuple)){
+                String[] tupleR = new String[cols.size()];
+                for(int i = 0; i < cols.size();i++){
+                    tupleR[i] = (String)tuple.get(cols.get(i));
+                }
+                result.add(tupleR);
+            }
         }
         return result;
     }

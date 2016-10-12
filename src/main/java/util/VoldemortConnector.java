@@ -5,6 +5,7 @@ import com.mongodb.util.JSON;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.json.JSONObject;
@@ -33,7 +34,7 @@ public class VoldemortConnector extends Connector {
     }
 
     @Override
-    public void put(String table, String key, ArrayList<String> cols, ArrayList<String> values) {
+    public void put(String table, String key, LinkedList<String> cols, ArrayList<String> values) {
         HashMap<String, String> current = new HashMap<>();
         for (int i = 0; i < cols.size(); i++) {
             current.put(cols.get(i), values.get(i));

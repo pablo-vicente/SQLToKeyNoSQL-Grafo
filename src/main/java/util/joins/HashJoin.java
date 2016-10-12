@@ -2,6 +2,7 @@ package util.joins;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Stack;
 import net.sf.jsqlparser.schema.Column;
 import util.DataSet;
@@ -16,7 +17,7 @@ public class HashJoin extends InMemoryJoins {
     @Override
     public DataSet join(DataSet inner, DataSet outer, Stack join) {
         DataSet result = new DataSet();
-        ArrayList<String> cols = new ArrayList();
+        LinkedList<String> cols = new LinkedList();
         for (String c : inner.getColumns()) {
             cols.add(c);
         }

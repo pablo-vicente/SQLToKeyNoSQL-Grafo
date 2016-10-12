@@ -12,6 +12,7 @@ import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;
 import java.util.logging.Level;
@@ -132,7 +133,7 @@ public class Parser {
                 TablesNamesFinder tablesNamesFinder = new TablesNamesFinder();
                 List<String> tableList = tablesNamesFinder.getTableList(selectStatement);
                 
-                ArrayList<String> cols = new ArrayList();
+                LinkedList<String> cols = new LinkedList<>();
                 PlainSelect ps = (PlainSelect) selectStatement.getSelectBody();
                 for (SelectItem si : ps.getSelectItems()) {
                     cols.add(si.toString());
@@ -156,7 +157,7 @@ public class Parser {
                   }
                   ds = ex.getDataSet(tableList, cols, filters, joins);
                 }else{
-                    ds = ex.getDataSetBl(tableList, cols, filters);;
+                    ds = ex.getDataSetBl(tableList, cols, filters);
                 }
                 if (ds == null) {
                     System.out.println("Ocorreu algum erro!");
@@ -168,7 +169,7 @@ public class Parser {
                 System.out.println("Create table");
                 CreateTable ct = (CreateTable) statement;
                 List<ColumnDefinition> cl = ct.getColumnDefinitions();
-                ArrayList<String> cols = new ArrayList();
+                LinkedList<String> cols = new LinkedList();
                 ArrayList<String> pk = new ArrayList();
                 ArrayList<ForeignKey> fk = new ArrayList();
                 net.sf.jsqlparser.schema.Table schemaT = ct.getTable();
@@ -226,8 +227,9 @@ public class Parser {
                     exList.add((ExpressionList) ins.getItemsList());
                 }
                 int s = ins.getColumns().size(), j = 0;
-                ArrayList<String> cols, vals;
-                cols = new <String> ArrayList();
+                LinkedList<String> cols;
+                        ArrayList vals;
+                cols = new <String> LinkedList();
                 for (int i = 0; i < s; i++) {
                     cols.add(ins.getColumns().get(i).getColumnName());
                 }

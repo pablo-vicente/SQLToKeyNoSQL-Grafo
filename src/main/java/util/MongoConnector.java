@@ -27,6 +27,7 @@ import java.util.Locale;
 import static java.util.Arrays.asList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;
 
@@ -38,6 +39,7 @@ public class MongoConnector extends Connector {
 
     private MongoClient mongoClient;
     DB db;
+    MongoDatabase db2;
 
     public MongoConnector() {
         mongoClient = new MongoClient();
@@ -46,10 +48,11 @@ public class MongoConnector extends Connector {
     @Override
     public void connect(String nbd) {
         db = mongoClient.getDB(nbd);
+        db2 = mongoClient.getDatabase(nbd);
     }
 
     @Override
-    public void put(String table, String key, ArrayList<String> cols, ArrayList<String> values) {
+    public void put(String table, String key, LinkedList<String> cols, ArrayList<String> values) {
         BasicDBObject c = new BasicDBObject("_id", key);
         for (int i = 0; i < cols.size(); i++) {
             c.append(cols.get(i), values.get(i));
@@ -86,20 +89,42 @@ public class MongoConnector extends Connector {
         return result;
     }
 
+//    @Override
+//    public ArrayList<HashMap<String, String>> getN(int n, String t, ArrayList<String> keys, Stack<Object> filters) {
+//        ArrayList<HashMap<String, String>> result = new ArrayList();
+//        DBCursor cursor = db.getCollection(t).find(new BasicDBObject("_id", keys.toArray()));
+//        while(cursor.hasNext()){
+//            DBObject obj = cursor.next();
+//            HashMap hash = new HashMap<>(obj.toMap());
+//            hash.put("_key", obj.get("_id"));
+//            if (applyFilterR(filters, hash)) {
+//                result.add(hash);
+//            }
+//        }
+//        return result;
+//    }
+     
     @Override
-    public ArrayList<HashMap<String, String>> getN(int n, String t, ArrayList<String> keys, Stack<Object> filters) {
-        ArrayList<HashMap<String, String>> result = new ArrayList();
-        DBCursor cursor = db.getCollection(t).find(new BasicDBObject("_id", keys.toArray()));
-        while(cursor.hasNext()){
-            DBObject obj = cursor.next();
-            HashMap hash = new HashMap<>(obj.toMap());
-            hash.put("_key", obj.get("_id"));
-            if (applyFilterR(filters, hash))
-                result.add(hash);
-        }
+    public ArrayList getN(int n, String t, ArrayList<String> keys, Stack<Object> filters, LinkedList<String> cols) {
+        ArrayList<String[]> result = new ArrayList<String[]>();
+        FindIterable<Document> iterable = db2.getCollection(t).find();
+        iterable.forEach(new Block<Document>() {
+            @Override
+            public void apply(final Document document) {
+                HashMap hash = new HashMap<>(document);
+                //hash.put("_key", document.get("_id"));
+                if (applyFilterR((filters != null ? (Stack) filters.clone() : null), hash)) {
+                    String[] tuple = new String[cols.size()];
+                    for (int i=0;i<cols.size();i++){
+                        tuple[i] = String.valueOf(hash.get(cols.get(i)));
+                    }
+                    result.add(tuple);
+                }
+            }
+        });
+
         return result;
     }
-     
      
     
 

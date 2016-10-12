@@ -18,6 +18,7 @@ import com.amazonaws.services.simpledb.model.SelectResult;
 import com.lisa.sqltokeynosql.architecture.Connector;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -38,7 +39,7 @@ public class SimpleDBConnector extends Connector {
     }
 
     @Override
-    public void put(String table, String key, ArrayList<String> cols, ArrayList<String> values) {
+    public void put(String table, String key, LinkedList<String> cols, ArrayList<String> values) {
 
         if (null == this.client) {
             System.err.println("Problemas na conexão com o SimpleDB");
