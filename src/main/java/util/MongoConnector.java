@@ -16,6 +16,7 @@ import com.mongodb.MongoClient;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
 import org.bson.Document;
 
 import java.text.DateFormat;
@@ -30,6 +31,17 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;
+import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
+import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
+import net.sf.jsqlparser.schema.Column;
+import org.bson.BSON;
+import org.bson.conversions.Bson;
+import util.operations.Equal;
+import util.operations.Greater;
+import util.operations.GreaterEqual;
+import util.operations.Minor;
+import util.operations.MinorEqual;
+import util.operations.Operator;
 
 /**
  *
@@ -103,25 +115,56 @@ public class MongoConnector extends Connector {
 //        }
 //        return result;
 //    }
+
+
      
+//    @Override
+//    public ArrayList getN(int n, String t, ArrayList<String> keys, Stack<Object> filters, LinkedList<String> cols) {
+//        ArrayList<String[]> result = new ArrayList<String[]>();
+//       // FindIterable<Document> iterable = db2.getCollection(t).find();
+//        
+//        DBCursor cursor = db.getCollection(t).find();
+//        cursor.batchSize(5000000);
+//        while(cursor.hasNext()){
+//            DBObject obj = cursor.next();
+//            HashMap hash = new HashMap<>(obj.toMap());
+//            if (applyFilterR((filters != null ? (Stack) filters.clone() : null), hash)) {
+//                    String[] tuple = new String[cols.size()];
+//                    for (int i=0;i<cols.size();i++){
+//                        tuple[i] = String.valueOf(hash.get(cols.get(i)));
+//                    }
+//                    result.add(tuple);
+//                }
+//        }
+//
+//        return result;
+//    }
+//    
     @Override
     public ArrayList getN(int n, String t, ArrayList<String> keys, Stack<Object> filters, LinkedList<String> cols) {
         ArrayList<String[]> result = new ArrayList<String[]>();
-        FindIterable<Document> iterable = db2.getCollection(t).find();
-        iterable.forEach(new Block<Document>() {
-            @Override
-            public void apply(final Document document) {
-                HashMap hash = new HashMap<>(document);
-                //hash.put("_key", document.get("_id"));
-                if (applyFilterR((filters != null ? (Stack) filters.clone() : null), hash)) {
+         DBCursor cursor;
+        
+        if (filters == null)
+            cursor = db.getCollection(t).find(null, columns(cols));
+        else{
+            DBObject query = this.filter(filters);
+            cursor = db.getCollection(t).find(query,columns(cols));
+        }
+        cursor.batchSize(5000000);
+       while(cursor.hasNext()){
+            
+                DBObject obj = cursor.next();
+            HashMap hash = new HashMap<>(obj.toMap());
+//            
                     String[] tuple = new String[cols.size()];
                     for (int i=0;i<cols.size();i++){
                         tuple[i] = String.valueOf(hash.get(cols.get(i)));
                     }
                     result.add(tuple);
-                }
+                //}
             }
-        });
+        
 
         return result;
     }
@@ -131,6 +174,53 @@ public class MongoConnector extends Connector {
     @Override
     public String toString() {
         return "MongoDB";
+    }
+    
+    private DBObject columns(LinkedList<String> cols){
+        BasicDBObject result = new BasicDBObject();
+        for (String col: cols){
+            result.put(col, 1);
+        }
+        return result;
+    }
+    
+    private DBObject filter(Stack filters){
+        if (filters == null) {
+            return null;
+        }
+        
+        BasicDBObject result = new BasicDBObject();
+        //BSON result = new Document();
+        Object o = filters.pop();
+        if (o instanceof AndExpression) {
+            List<DBObject> obj = new ArrayList<DBObject>();
+            obj.add(filter(filters));
+            obj.add(filter(filters));
+            result.put("$and", obj);
+            
+          //  result = (result && applyFilterR(filters, tuple));
+    //    } else if (o instanceof OrExpression) {
+  //          result = applyFilterR(filters, tuple);
+   //         result = (result || applyFilterR(filters, tuple));
+        } else {
+            String col = null;
+            Object val = null;
+            Operator op = null;
+            op = ((Operator) o);
+            val = filters.pop().toString();
+            col = ((Column) filters.pop()).getColumnName();
+            if (o instanceof Equal)
+                result.put(col, val);
+            else if (o instanceof Greater)
+                result.put(col, new BasicDBObject("$gt",val));
+            else if (o instanceof Minor)
+                result.put(col, new BasicDBObject("$lt",val));
+            else if (o instanceof GreaterEqual)
+                result.put(col, new BasicDBObject("$gte",val));
+            else if (o instanceof MinorEqual)
+                result.put(col, new BasicDBObject("$lte",val));
+        }
+        return  result;
     }
     
     
