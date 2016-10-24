@@ -374,6 +374,7 @@ public class ExecutionEngine {
         innerData = new DataSet();
         //buscando e manipulando só a inner table (mais da esquerda...)
         Table inner = tables.get(0);
+        innerData.setTable_n(inner.getName());
         LinkedList<String> innerCols = new LinkedList();
         for (String col : cols) {
             String[] c = col.split("\\.");
@@ -381,10 +382,10 @@ public class ExecutionEngine {
                 if (c[0].equals(inner.getName())) {
                     if (c[1].equals("*")) {
                         for (String a : inner.getAttributes()) {
-                            innerCols.add(c[0] + "." + a);
+                            innerCols.add(a);
                         }
                     } else {
-                        innerCols.add(col);
+                        innerCols.add(c[1]);
                     }
                 }
             } else {
@@ -392,20 +393,22 @@ public class ExecutionEngine {
                 return null;
             }
         }
-        for (String k : inner.getKeys()) {
-            String[] tuple = new String[innerCols.size()];
-            //HashMap<String, String> _new = new <String, String>HashMap();
-            long now = new Date().getTime();
-            aux = inner.getTargetDB().getConection().get(1, inner.getName(), k);
-            TimeConter.current += (new Date().getTime()) - now;
-            // if (applyFilterR((filters != null ? (Stack) filters.clone() : null), aux)) {
-            for (int i = 0; i < innerCols.size(); i++) {
-                tuple[i] = aux.get((innerCols.get(i).split("\\.")[1]));
-            }
-            innerData.getData().add(tuple);
-            //}
+//        for (String k : inner.getKeys()) {
+//            String[] tuple = new String[innerCols.size()];
+//            //HashMap<String, String> _new = new <String, String>HashMap();
+//            long now = new Date().getTime();
+//            aux = inner.getTargetDB().getConection().get(1, inner.getName(), k);
+//            TimeConter.current += (new Date().getTime()) - now;
+//            // if (applyFilterR((filters != null ? (Stack) filters.clone() : null), aux)) {
+//            for (int i = 0; i < innerCols.size(); i++) {
+//                tuple[i] = aux.get((innerCols.get(i).split("\\.")[1]));
+//            }
+//            innerData.getData().add(tuple);
+//            //}
+//
+//        }
 
-        }
+        innerData.setData(inner.getTargetDB().getConection().getN(0, inner.getName(), inner.getKeys(), (Stack)filters.clone(), innerCols));
         innerData.setColumns(innerCols);
         //fim inner
         InMemoryJoins join = new HashJoin();
@@ -429,10 +432,10 @@ public class ExecutionEngine {
                         if (c[0].equals(outer.getName())) {
                             if (c[1].equals("*")) {
                                 for (String a : outer.getAttributes()) {
-                                    outerCols.add(c[0] + "." + a);
+                                    outerCols.add( a);
                                 }
                             } else {
-                                outerCols.add(col);
+                                outerCols.add(c[1]);
                             }
                         }
                     } else {
@@ -440,20 +443,21 @@ public class ExecutionEngine {
                         return null;
                     }
                 }
-                for (String k : outer.getKeys()) {
-                    String[] tuple = new String[outerCols.size()];
-                    //HashMap<String, String> _new = new <String, String>HashMap();
-                    long now = new Date().getTime();
-                    aux = outer.getTargetDB().getConection().get(1, outer.getName(), k);
-                    TimeConter.current += (new Date().getTime()) - now;
-                    // if (applyFilterR((filters != null ? (Stack) filters.clone() : null), aux)) {
-                    for (int i = 0; i < outerCols.size(); i++) {
-                        tuple[i] = aux.get((outerCols.get(i).split("\\.")[1]));
-                    }
-                    outerData.getData().add(tuple);
-                    //}
-
-                }
+//                for (String k : outer.getKeys()) {
+//                    String[] tuple = new String[outerCols.size()];
+//                    //HashMap<String, String> _new = new <String, String>HashMap();
+//                    long now = new Date().getTime();
+//                    aux = outer.getTargetDB().getConection().get(1, outer.getName(), k);
+//                    TimeConter.current += (new Date().getTime()) - now;
+//                    // if (applyFilterR((filters != null ? (Stack) filters.clone() : null), aux)) {
+//                    for (int i = 0; i < outerCols.size(); i++) {
+//                        tuple[i] = aux.get((outerCols.get(i).split("\\.")[1]));
+//                    }
+//                    outerData.getData().add(tuple);
+//                    //}
+//
+//                }
+                outerData.setData(outer.getTargetDB().getConection().getN(0, outer.getName(), outer.getKeys(), (Stack)filters.clone(), outerCols));
                 outerData.setTable_n(outer.getName());
                 outerData.setColumns(outerCols);
             } else {

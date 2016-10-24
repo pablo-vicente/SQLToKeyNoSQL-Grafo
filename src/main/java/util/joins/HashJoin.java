@@ -19,10 +19,10 @@ public class HashJoin extends InMemoryJoins {
         DataSet result = new DataSet();
         LinkedList<String> cols = new LinkedList();
         for (String c : inner.getColumns()) {
-            cols.add(c);
+            cols.add(inner.getTable_n()+"."+c);
         }
         for (String c : outer.getColumns()) {
-            cols.add(c);
+            cols.add(outer.getTable_n()+"."+c);
         }
         result.setColumns(cols);
 
@@ -42,7 +42,7 @@ public class HashJoin extends InMemoryJoins {
         }
         HashMap<String, ArrayList<String[]>> hash = new HashMap();
         String key;
-        int index = outer.getColumns().indexOf(outerColumn);
+        int index = outer.getColumns().indexOf(outerColumn.split("\\.")[1]);
         for (String[] tOuter : outer.getData()) {
             key = tOuter[index];
             if (!hash.containsKey(key)) {
@@ -54,7 +54,7 @@ public class HashJoin extends InMemoryJoins {
             }
         }
 
-        index = inner.getColumns().indexOf(innerColumn);
+        index = inner.getColumns().indexOf(innerColumn.split("\\.")[1]);
         for (String[] tInner : inner.getData()) {
             key = tInner[index];
             if (hash.containsKey(key)) {

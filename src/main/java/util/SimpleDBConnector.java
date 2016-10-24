@@ -110,10 +110,10 @@ public class SimpleDBConnector extends Connector {
 
     @Override
     public ArrayList<HashMap<String, String>> getN(int n, String t, ArrayList<String> keys) {
-        if (keys != null && keys.isEmpty()) {
-            System.err.println("Chave veio vazia!");
-            return null;
-        }
+        //if (keys != null && keys.isEmpty()) {
+         //   System.err.println("Chave veio vazia!");
+         //   return null;
+       // }
         ArrayList<HashMap<String, String>> result = new ArrayList();
         HashMap<String, String> aux;
         SelectRequest s = new SelectRequest("SELECT * FROM " + t + " LIMIT 2500");

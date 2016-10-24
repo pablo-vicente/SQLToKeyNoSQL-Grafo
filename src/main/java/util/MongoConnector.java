@@ -7,35 +7,19 @@ package util;
 
 import com.lisa.sqltokeynosql.architecture.Connector;
 import com.mongodb.BasicDBObject;
-import com.mongodb.Block;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.Filters;
-import org.bson.Document;
-
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Locale;
-
-import static java.util.Arrays.asList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
-import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.schema.Column;
-import org.bson.BSON;
-import org.bson.conversions.Bson;
 import util.operations.Equal;
 import util.operations.Greater;
 import util.operations.GreaterEqual;
@@ -148,6 +132,7 @@ public class MongoConnector extends Connector {
         if (filters == null)
             cursor = db.getCollection(t).find(null, columns(cols));
         else{
+            filters = this.resumeFilter(filters,t);
             DBObject query = this.filter(filters);
             cursor = db.getCollection(t).find(query,columns(cols));
         }
@@ -221,6 +206,36 @@ public class MongoConnector extends Connector {
                 result.put(col, new BasicDBObject("$lte",val));
         }
         return  result;
+    }
+
+    private Stack<Object> resumeFilter(Stack<Object> filters, String table) {
+        Stack<Object> resumed_filters = null;
+        Object t = filters.pop();
+        
+        //if (t instanceof AndExpression) {
+         //   resumed_filters.a
+        //}else 
+            if (t instanceof Operator){
+            Operator o = (Operator)t;
+            //Object val = 
+            Object val = filters.pop();
+            Column tab = (Column) filters.pop();
+            if (tab.getTable().getName().equals(table)){
+                if (filters.empty()){
+                    resumed_filters = new Stack();
+                }else{
+                    resumed_filters = resumeFilter(filters, table);
+                    if (resumed_filters == null)
+                        new Stack();
+                }
+                resumed_filters.add(tab);
+                resumed_filters.add(val);
+                resumed_filters.add(o);
+            }    
+            
+        }
+            
+        return resumed_filters;
     }
     
     
