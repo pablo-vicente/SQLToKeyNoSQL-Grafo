@@ -408,7 +408,11 @@ public class ExecutionEngine {
 //
 //        }
 
-        innerData.setData(inner.getTargetDB().getConection().getN(0, inner.getName(), inner.getKeys(), (Stack)filters.clone(), innerCols));
+        if (filters != null)
+            innerData.setData(inner.getTargetDB().getConection().getN(0, inner.getName(), inner.getKeys(), (Stack)filters.clone(), innerCols));
+        else
+            innerData.setData(inner.getTargetDB().getConection().getN(0, inner.getName(), inner.getKeys(), null, innerCols));
+        
         innerData.setColumns(innerCols);
         //fim inner
         InMemoryJoins join = new HashJoin();
@@ -457,7 +461,12 @@ public class ExecutionEngine {
 //                    //}
 //
 //                }
-                outerData.setData(outer.getTargetDB().getConection().getN(0, outer.getName(), outer.getKeys(), (Stack)filters.clone(), outerCols));
+
+                if (filters != null)
+                    outerData.setData(outer.getTargetDB().getConection().getN(0, outer.getName(), outer.getKeys(), (Stack)filters.clone(), outerCols));
+                else
+                    outerData.setData(outer.getTargetDB().getConection().getN(0, outer.getName(), outer.getKeys(), null, outerCols));
+                
                 outerData.setTable_n(outer.getName());
                 outerData.setColumns(outerCols);
             } else {

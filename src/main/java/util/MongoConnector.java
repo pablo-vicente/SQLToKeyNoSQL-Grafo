@@ -33,7 +33,7 @@ import util.operations.Operator;
  */
 public class MongoConnector extends Connector {
 
-    private MongoClient mongoClient;
+    private final MongoClient mongoClient;
     DB db;
     MongoDatabase db2;
 
@@ -126,7 +126,7 @@ public class MongoConnector extends Connector {
 //    
     @Override
     public ArrayList getN(int n, String t, ArrayList<String> keys, Stack<Object> filters, LinkedList<String> cols) {
-        ArrayList<String[]> result = new ArrayList<String[]>();
+        ArrayList<String[]> result = new ArrayList<>();
          DBCursor cursor;
         
         if (filters == null)
@@ -163,9 +163,9 @@ public class MongoConnector extends Connector {
     
     private DBObject columns(LinkedList<String> cols){
         BasicDBObject result = new BasicDBObject();
-        for (String col: cols){
+        cols.stream().forEach((col) -> {
             result.put(col, 1);
-        }
+        });
         return result;
     }
     
@@ -220,7 +220,7 @@ public class MongoConnector extends Connector {
             //Object val = 
             Object val = filters.pop();
             Column tab = (Column) filters.pop();
-            if (tab.getTable().getName().equals(table)){
+            if ( tab.getTable().getName() == null || tab.getTable().getName().equals(table)){
                 if (filters.empty()){
                     resumed_filters = new Stack();
                 }else{
