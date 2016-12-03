@@ -170,10 +170,11 @@ public class SimpleDBConnector extends Connector {
         String[] aux;
         String s_cols = cols.toString().replace("[", "").replace("]", "");
         SelectRequest s;
+        filters = this.resumeFilter(filters, t);
        if (filters == null)
            s = new SelectRequest("SELECT "+s_cols+" FROM " + t + " LIMIT 2500");
        else
-              s = new SelectRequest("SELECT "+s_cols+" FROM " + t + " WHERE "+this.filter(this.resumeFilter(filters, t))+" LIMIT 2500");
+              s = new SelectRequest("SELECT "+s_cols+" FROM " + t + " WHERE "+this.filter(filters)+" LIMIT 2500");
         
         SelectResult sr = null;
         sr = this.client.select(s);
@@ -254,23 +255,31 @@ public class SimpleDBConnector extends Connector {
         Stack<Object> resumed_filters = null;
         Object t = filters.pop();
 
-        //if (t instanceof AndExpression) {
-        //   resumed_filters.a
-        //}else 
+        if (t instanceof AndExpression) {
+           resumed_filters = resumeFilter(filters, table);
+           if (resumed_filters == null){
+               return resumeFilter(filters, table);
+           }else{
+               Stack<Object> aux = resumeFilter(filters, table);
+               for (int i=0; i<aux.size();i++)
+                   resumed_filters.add(aux.get(i));
+               resumed_filters.add(t);
+           }
+        }else 
         if (t instanceof Operator) {
             Operator o = (Operator) t;
             //Object val = 
             Object val = filters.pop();
             Column tab = (Column) filters.pop();
             if (tab.getTable().getName() == null || tab.getTable().getName().equals(table)) {
-                if (filters.empty()) {
+                //if (filters.empty()) {
                     resumed_filters = new Stack();
-                } else {
-                    resumed_filters = resumeFilter(filters, table);
-                    if (resumed_filters == null) {
-                        new Stack();
-                    }
-                }
+                //} else {
+                 //   resumed_filters = resumeFilter(filters, table);
+                  //  if (resumed_filters == null) {
+                   //     new Stack();
+                    //}
+                //}
                 resumed_filters.add(tab);
                 resumed_filters.add(val);
                 resumed_filters.add(o);
