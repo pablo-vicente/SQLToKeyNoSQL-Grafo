@@ -1,4 +1,4 @@
-package util;
+package util.connectors;
 
 import com.lisa.sqltokeynosql.architecture.Connector;
 import com.mongodb.util.JSON;

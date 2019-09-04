@@ -1,4 +1,4 @@
-package util;
+package util.connectors;
 
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.BasicAWSCredentials;

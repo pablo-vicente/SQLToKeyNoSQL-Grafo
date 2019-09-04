@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package util;
+package util.SQL;
 
 import java.util.Stack;
 import net.sf.jsqlparser.expression.CaseExpression;

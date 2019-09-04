@@ -1,4 +1,4 @@
-package util;
+package util.connectors;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;

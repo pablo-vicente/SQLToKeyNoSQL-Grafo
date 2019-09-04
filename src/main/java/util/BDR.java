@@ -5,6 +5,7 @@
  */
 package util;
 
+import util.SQL.Table;
 import java.io.Serializable;
 import java.util.ArrayList;
 

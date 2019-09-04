@@ -1,4 +1,4 @@
-package util;
+package util.SQL;
 
 import java.util.Stack;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;

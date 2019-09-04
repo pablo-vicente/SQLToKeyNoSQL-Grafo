@@ -1,4 +1,4 @@
-package util;
+package util.connectors;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ColumnDefinitions;

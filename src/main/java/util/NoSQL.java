@@ -5,6 +5,7 @@
  */
 package util;
 
+import util.connectors.MongoConnector;
 import com.lisa.sqltokeynosql.architecture.Connector;
 import java.io.Serializable;
 

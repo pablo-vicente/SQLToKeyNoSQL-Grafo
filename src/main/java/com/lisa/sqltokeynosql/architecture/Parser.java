@@ -42,11 +42,11 @@ import net.sf.jsqlparser.util.TablesNamesFinder;
 import net.sf.jsqlparser.util.deparser.ExpressionDeParser;
 import util.DataSet;
 import util.Dictionary;
-import util.ForeignKey;
+import util.SQL.ForeignKey;
 import util.NoSQL;
-import util.Table;
+import util.SQL.Table;
 import util.TimeConter;
-import util.WhereStatment;
+import util.SQL.WhereStatment;
 
 /**
  *

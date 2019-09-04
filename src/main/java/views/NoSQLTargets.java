@@ -9,13 +9,13 @@ import com.lisa.sqltokeynosql.architecture.Connector;
 import java.util.Vector;
 import javax.swing.DefaultListModel;
 import org.apache.cassandra.thrift.Cassandra;
-import util.Cassandra2Connector;
-import util.CassandraConnector;
+import util.connectors.Cassandra2Connector;
+import util.connectors.CassandraConnector;
 import util.Dictionary;
-import util.MongoConnector;
+import util.connectors.MongoConnector;
 import util.NoSQL;
-import util.RedisConnector;
-import util.SimpleDBConnector;
+import util.connectors.RedisConnector;
+import util.connectors.SimpleDBConnector;
 
 /**
  *
