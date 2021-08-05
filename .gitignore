@@ -10,6 +10,11 @@
 
 # AWS User-specific
 .idea/**/aws.xml
+.idea
+target
+nbactions.xml
+dependency-reduced-pom.xml
+*.iml
 
 # Generated files
 .idea/**/contentModel.xml
@@ -37,7 +42,6 @@
  .idea/modules.xml
  .idea/*.iml
  .idea/modules
- *.iml
  *.ipr
 
 # CMake
