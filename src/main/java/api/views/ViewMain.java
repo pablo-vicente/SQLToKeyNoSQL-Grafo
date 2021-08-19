@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package views;
+package api.views;
 
 import com.lisa.sqltokeynosql.architecture.Parser;
 import java.io.File;
@@ -20,12 +20,10 @@ import util.TimeConter;
  */
 public class ViewMain extends javax.swing.JFrame {
 
-    /**
-     * Creates new form ViewMain
-     */
-    private Parser p = new Parser();
+    private final Parser parser;
 
     public ViewMain() {
+        parser = new Parser();
         initComponents();
     }
 
@@ -197,15 +195,15 @@ public class ViewMain extends javax.swing.JFrame {
         if (!jTextAreaInput.getText().isEmpty()) {
             for (String s : jTextAreaInput.getText().split(";")) {
                 if (s.length() > 2) {
-                    p.run(s);
+                    parser.run(s);
                 }
             }
-            if (p.ds != null) {
+            if (parser.resultSet != null) {
                 montaDataSet();
             }
 
             jTextAreaInput.selectAll();
-            jLabel1.setText(String.valueOf(p.timeToDO));
+            jLabel1.setText(String.valueOf(parser.timeToDO));
             jLabelNoSQL.setText(String.valueOf(TimeConter.current));
         }
 
@@ -213,7 +211,7 @@ public class ViewMain extends javax.swing.JFrame {
 
     private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
         NoSQLTargets n = new NoSQLTargets(this, true);
-        n.dic = p.getDic();
+        n.dic = parser.getDic();
         n.setVisible(true);
     }//GEN-LAST:event_jMenuItem2ActionPerformed
 
@@ -226,9 +224,9 @@ public class ViewMain extends javax.swing.JFrame {
         int result = fileChooser.showOpenDialog(this);
         if (result == JFileChooser.APPROVE_OPTION) {
             File selectedFile = fileChooser.getSelectedFile();
-            p.run(selectedFile);
+            parser.run(selectedFile);
         }
-        jLabel1.setText(String.valueOf(p.timeToDO));
+        jLabel1.setText(String.valueOf(parser.timeToDO));
         jLabelNoSQL.setText(String.valueOf(TimeConter.current));
     }//GEN-LAST:event_jMenuItem3ActionPerformed
 
@@ -237,17 +235,17 @@ public class ViewMain extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItem4ActionPerformed
 
     private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
-        if (p.getDic().getTargets().size() < 1) {
+        if (parser.getDic().getTargets().size() < 1) {
             NoSQLTargets n = new NoSQLTargets(this, true);
-            n.dic = p.getDic();
+            n.dic = parser.getDic();
             n.setVisible(true);
         }
-        if (p.getDic().getCurrent_db() == null) {
+        if (parser.getDic().getCurrent_db() == null) {
             RDBs rdb = new RDBs(this, true);
-            rdb.dic = p.getDic();
+            rdb.dic = parser.getDic();
             rdb.setVisible(true);
            // p.getDic().setCurrent_db(RDBs.selected_DB);
-            p.changeCurrentDB(p.getDic().getCurrent_db().getName());
+            parser.changeCurrentDB(parser.getDic().getCurrent_db().getName());
         }
     }//GEN-LAST:event_formWindowOpened
 
@@ -258,60 +256,31 @@ public class ViewMain extends javax.swing.JFrame {
 
     private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
         RDBs rdb = new RDBs(this, true);
-        rdb.dic = p.getDic();
+        rdb.dic = parser.getDic();
         rdb.setVisible(true);
         //p.getDic().setCurrent_db(RDBs.selected_DB);
-        p.changeCurrentDB(p.getDic().getCurrent_db().getName());
+        parser.changeCurrentDB(parser.getDic().getCurrent_db().getName());
     }//GEN-LAST:event_jMenuItem1ActionPerformed
 
     private void jMenuItem5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem5ActionPerformed
-        DictionaryDAO.storeDictionary(p.getDic());
+        DictionaryDAO.storeDictionary(parser.getDic());
     }//GEN-LAST:event_jMenuItem5ActionPerformed
 
     private void montaDataSet() {
-        int l = (p.ds.getData().size()>Constants.MAX_VIEW_LINE ? Constants.MAX_VIEW_LINE : p.ds.getData().size());
-        String[][] data = new String[l][p.ds.getColumns().size()];// p.ds.getData().toArray();
+        int l = (parser.resultSet.getData().size()>Constants.MAX_VIEW_LINE ? Constants.MAX_VIEW_LINE : parser.resultSet.getData().size());
+        String[][] data = new String[l][parser.resultSet.getColumns().size()];// p.ds.getData().toArray();
         
         for (int i = 0; i < (l) ; i++) {
-            data[i] = p.ds.getData().get(i);
+            data[i] = parser.resultSet.getData().get(i);
         }
-        // String [] cols;
-        jTable1.setModel(new DefaultTableModel(data, p.ds.getColumns().toArray()));
+        jTable1.setModel(new DefaultTableModel(data, parser.resultSet.getColumns().toArray()));
     }
 
     /**
      * @param args the command line arguments
      */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(ViewMain.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(ViewMain.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(ViewMain.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(ViewMain.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
-
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new ViewMain().setVisible(true);
-            }
-        });
+    public static void main(String[] args) {
+        java.awt.EventQueue.invokeLater(() -> new ViewMain().setVisible(true));
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

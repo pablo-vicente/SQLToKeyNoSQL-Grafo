@@ -3,12 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package views;
+package api.views;
 
 import com.lisa.sqltokeynosql.architecture.Connector;
-import java.util.Vector;
+
 import javax.swing.DefaultListModel;
-import org.apache.cassandra.thrift.Cassandra;
+
 import util.connectors.Cassandra2Connector;
 import util.connectors.CassandraConnector;
 import util.Dictionary;
@@ -248,17 +248,15 @@ public class NoSQLTargets extends javax.swing.JDialog {
         //</editor-fold>
 
         /* Create and display the dialog */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                NoSQLTargets dialog = new NoSQLTargets(new javax.swing.JFrame(), true);
-                dialog.addWindowListener(new java.awt.event.WindowAdapter() {
-                    @Override
-                    public void windowClosing(java.awt.event.WindowEvent e) {
-                        System.exit(0);
-                    }
-                });
-                dialog.setVisible(true);
-            }
+        java.awt.EventQueue.invokeLater(() -> {
+            NoSQLTargets dialog = new NoSQLTargets(new javax.swing.JFrame(), true);
+            dialog.addWindowListener(new java.awt.event.WindowAdapter() {
+                @Override
+                public void windowClosing(java.awt.event.WindowEvent e) {
+                    System.exit(0);
+                }
+            });
+            dialog.setVisible(true);
         });
     }
 

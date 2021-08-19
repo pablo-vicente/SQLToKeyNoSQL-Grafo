@@ -49,13 +49,13 @@ import util.operations.NotEqual;
  *
  * @author geomar
  */
-public class WhereStatment extends ExpressionDeParser{
+public class WhereStatement extends ExpressionDeParser{
     public int i = 0;
     private Stack<Object> parsedFilters;
 
-    public WhereStatment() {
+    public WhereStatement() {
         super();
-        parsedFilters = new Stack();        
+        parsedFilters = new Stack();
     }
     
     @Override

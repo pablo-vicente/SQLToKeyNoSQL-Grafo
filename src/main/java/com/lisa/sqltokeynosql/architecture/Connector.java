@@ -1,68 +1,58 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.lisa.sqltokeynosql.architecture;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Stack;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.schema.Column;
-import org.bson.Document;
 import util.operations.Operator;
 
+import java.util.*;
+
 /**
- *
  * @author geomar
  */
 public abstract class Connector {
-    
+
     public abstract void connect(String nbd);
-    
-    public abstract  void put (String table, String key, LinkedList<String>cols, ArrayList<String>values);
-    
+
+    public abstract void put(String table, String key, LinkedList<String> cols, ArrayList<String> values);
+
     public abstract void delete(String table, String key);
-    
-    public abstract HashMap<String, String> get(int n, String t,String key);
-    
-    public ArrayList<HashMap<String, String>> getN(int n, String t,ArrayList<String> keys){
+
+    public abstract HashMap<String, String> get(int n, String t, String key);
+
+    public ArrayList<HashMap<String, String>> getN(int n, String t, ArrayList<String> keys) {
         ArrayList<HashMap<String, String>> result = new ArrayList();
-        for(String key: keys){
+        for (String key : keys) {
             result.add(get(n, t, key));
         }
         return result;
     }
-    
-    public ArrayList<HashMap<String, String>> getN(int n, String t,ArrayList<String> keys, Stack<Object> filters){
+
+    public ArrayList<HashMap<String, String>> getN(int n, String t, ArrayList<String> keys, Stack<Object> filters) {
         ArrayList<HashMap<String, String>> result = new ArrayList();
-        for(String key: keys){
+        for (String key : keys) {
             HashMap<String, String> tuple = get(n, t, key);
             if (applyFilterR(filters, tuple))
-              result.add(tuple);
+                result.add(tuple);
         }
         return result;
     }
-    
-    public ArrayList getN(int n, String t,ArrayList<String> keys, Stack<Object> filters, LinkedList<String> cols){
+
+    public ArrayList getN(int n, String t, ArrayList<String> keys, Stack<Object> filters, LinkedList<String> cols) {
         ArrayList<String[]> result = new ArrayList();
-        for(String key: keys){
+        for (String key : keys) {
             HashMap<String, String> tuple = get(n, t, key);
-            if (applyFilterR(filters, tuple)){
+            if (applyFilterR(filters, tuple)) {
                 String[] tupleR = new String[cols.size()];
-                for(int i = 0; i < cols.size();i++){
-                    tupleR[i] = (String)tuple.get(cols.get(i));
+                for (int i = 0; i < cols.size(); i++) {
+                    tupleR[i] = tuple.get(cols.get(i));
                 }
                 result.add(tupleR);
             }
         }
         return result;
     }
-    
+
     protected boolean applyFilter(List<Object> filters, HashMap tuple) {
         if (filters == null) {
             return true;
@@ -107,7 +97,7 @@ public abstract class Connector {
         if (filters == null) {
             return true;
         }
-        Boolean result = false;
+        boolean result;
         Object o = filters.pop();
         if (o instanceof AndExpression) {
             result = applyFilterR(filters, tuple);
@@ -129,8 +119,8 @@ public abstract class Connector {
         }
         return result;
     }
-    
-        protected boolean compare(String v1, Operator operation, Object val) {
+
+    protected boolean compare(String v1, Operator operation, Object val) {
         if (v1 == null || val == null) {
             return false;
         }

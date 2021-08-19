@@ -1,28 +1,17 @@
 package util;
 
-import util.SQL.ForeignKey;
-import util.SQL.Table;
-import util.connectors.Cassandra2Connector;
-import util.connectors.CassandraConnector;
-import util.connectors.MongoConnector;
-import util.connectors.RedisConnector;
-import util.connectors.SimpleDBConnector;
-import com.google.gson.Gson;
 import com.mongodb.Block;
 import com.mongodb.MongoClient;
-import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedList;
-import javax.swing.text.StyledEditorKit;
 import org.bson.Document;
+import util.SQL.ForeignKey;
+import util.SQL.Table;
+import util.connectors.*;
+
+import java.util.*;
 
 /**
- *
  * @author geomar
  */
 public class DictionaryDAO {
@@ -31,7 +20,6 @@ public class DictionaryDAO {
         MongoClient mongoClient = new MongoClient();
         MongoDatabase db = mongoClient.getDatabase("_dictionary");
         Document dictionary = new Document("_id", "_dictionary");
-        //Document dictionary = new Document();
         Document bdrs = new Document();
         Document targets = new Document();
         Document aux;
@@ -75,9 +63,8 @@ public class DictionaryDAO {
                         fks.append(f.getAtt() + "_fk", fk);
                     }
                     auxTable.append("fk", fks);
-                } else {
-                    //auxTable.append("fk", "");
                 }
+
                 auxTable.append("pk", t.getPks().toString().replace("[", "").replace("]", ""));
                 auxTable.append("att", t.getAttributes().toString().replace("[", "").replace("]", ""));
                 auxTable.append("key", t.getKeys().toString().replace("[", "").replace("]", ""));
@@ -101,92 +88,85 @@ public class DictionaryDAO {
             return null;
         }
         Dictionary _new = new Dictionary();
-        db.getCollection("_dictionary").find().forEach(new Block<Document>() {
-            @Override
-            public void apply(final Document document) {
-                //if (document.get("_id").equals("_dictionary")) {
-                System.out.println("Dictionary was founded!!");
-                Collection<Object> targets = ((Document) document.get("targets")).values();
-                Iterator<Object> iteratorTarget = targets.iterator();
-                Document aux;
-                while (iteratorTarget.hasNext()) {
-                    aux = (Document) iteratorTarget.next();
-                    NoSQL n = new NoSQL(aux.getString("alias"), aux.getString("user"), aux.getString("psw"), aux.getString("url"));
-                    switch (aux.getInteger("connector")) {
-                        case 1: {
-                            n.setConection(new MongoConnector());
-                            break;
-                        }
-                        case 2: {
-                            n.setConection(new Cassandra2Connector());
-                            break;
-                        }
-                        case 3: {
-                            n.setConection(new CassandraConnector());
-                            break;
-                        }
-                        case 4: {
-                            n.setConection(new RedisConnector());
-                            break;
-                        }
-                        case 5: {
-                            n.setConection(new SimpleDBConnector());
-                            break;
-                        }
-                        default: {
-                            n.setConection(new MongoConnector());
-                        }
+        db.getCollection("_dictionary").find().forEach((Block<Document>) document -> {
+            System.out.println("Dictionary was founded!!");
+            Collection<Object> targets = ((Document) document.get("targets")).values();
+            Iterator<Object> iteratorTarget = targets.iterator();
+            Document aux;
+            while (iteratorTarget.hasNext()) {
+                aux = (Document) iteratorTarget.next();
+                NoSQL n = new NoSQL(aux.getString("alias"), aux.getString("user"), aux.getString("psw"), aux.getString("url"));
+                switch (aux.getInteger("connector")) {
+                    case 1: {
+                        n.setConection(new MongoConnector());
+                        break;
                     }
-                    _new.getTargets().add(n);
-                }
-
-                System.out.println("loading... RDBs!!");
-                Collection<Object> bdrs = ((Document) document.get("bdrs")).values();
-                Iterator iteratorRBD = bdrs.iterator();
-                BDR bd;
-                Document tableD;
-                while (iteratorRBD.hasNext()) {
-                    aux = (Document) iteratorRBD.next();
-                    bd = new BDR();
-                    bd.setName(aux.getString("name"));
-                    if (aux.get("tables") != null && !((Document) aux.get("tables")).values().isEmpty()) {
-                        Iterator tableIterator = ((Document) aux.get("tables")).values().iterator();
-                        while (tableIterator.hasNext()) {
-                            tableD = (Document) tableIterator.next();
-                            Table t = new Table(tableD.getString("name"), _new.getTarget(tableD.getString("target")), null, null, null);
-                            t.setAttributes(new LinkedList<>(Arrays.asList(tableD.getString("att").replace(" ", "").split(","))));
-                            if (tableD.getString("key").isEmpty()) {
-                                t.setKeys(new ArrayList<>());
-                            } else {
-                                t.setKeys(new ArrayList<>(Arrays.asList(tableD.getString("key").replace(" ", "").split(","))));
-                            }
-                            if (tableD.getString("pk").isEmpty()) {
-                                t.setPks(new ArrayList<>());
-                            } else {
-                                t.setPks(new ArrayList<>(Arrays.asList(tableD.getString("pk").replace(" ", "").split(","))));
-                            }
-                            Document fks = (Document) tableD.get("fk");
-                            if (fks != null) {
-                                t.setFks(new ArrayList<ForeignKey>());
-                                Iterator fkIterator = fks.values().iterator();
-                                while (fkIterator.hasNext()) {
-                                    Document fkD = (Document) fkIterator.next();
-                                    t.getFks().add(new ForeignKey(fkD.getString("att"), fkD.getString("attR"), fkD.getString("tableR")));
-                                }
-
-                            } else {
-                                t.setFks(new ArrayList<ForeignKey>());
-                            }
-                            bd.getTables().add(t);
-                        }
+                    case 2: {
+                        n.setConection(new Cassandra2Connector());
+                        break;
                     }
-                    _new.getBdrs().add(bd);
+                    case 3: {
+                        n.setConection(new CassandraConnector());
+                        break;
+                    }
+                    case 4: {
+                        n.setConection(new RedisConnector());
+                        break;
+                    }
+                    case 5: {
+                        n.setConection(new SimpleDBConnector());
+                        break;
+                    }
+                    default: {
+                        n.setConection(new MongoConnector());
+                    }
                 }
-                _new.setCurrent_db(document.getString("current_db"));
-
+                _new.getTargets().add(n);
             }
 
-            //}
+            System.out.println("loading... RDBs!!");
+            Collection<Object> bdrs = ((Document) document.get("bdrs")).values();
+            Iterator iteratorRBD = bdrs.iterator();
+            BDR bd;
+            Document tableD;
+            while (iteratorRBD.hasNext()) {
+                aux = (Document) iteratorRBD.next();
+                bd = new BDR();
+                bd.setName(aux.getString("name"));
+                if (aux.get("tables") != null && !((Document) aux.get("tables")).values().isEmpty()) {
+                    Iterator tableIterator = ((Document) aux.get("tables")).values().iterator();
+                    while (tableIterator.hasNext()) {
+                        tableD = (Document) tableIterator.next();
+                        Table t = new Table(tableD.getString("name"), _new.getTarget(tableD.getString("target")), null, null, null);
+                        t.setAttributes(new LinkedList<>(Arrays.asList(tableD.getString("att").replace(" ", "").split(","))));
+                        if (tableD.getString("key").isEmpty()) {
+                            t.setKeys(new ArrayList<>());
+                        } else {
+                            t.setKeys(new ArrayList<>(Arrays.asList(tableD.getString("key").replace(" ", "").split(","))));
+                        }
+                        if (tableD.getString("pk").isEmpty()) {
+                            t.setPks(new ArrayList<>());
+                        } else {
+                            t.setPks(new ArrayList<>(Arrays.asList(tableD.getString("pk").replace(" ", "").split(","))));
+                        }
+                        Document fks = (Document) tableD.get("fk");
+                        if (fks != null) {
+                            t.setFks(new ArrayList<>());
+                            Iterator fkIterator = fks.values().iterator();
+                            while (fkIterator.hasNext()) {
+                                Document fkD = (Document) fkIterator.next();
+                                t.getFks().add(new ForeignKey(fkD.getString("att"), fkD.getString("attR"), fkD.getString("tableR")));
+                            }
+
+                        } else {
+                            t.setFks(new ArrayList<>());
+                        }
+                        bd.getTables().add(t);
+                    }
+                }
+                _new.getBdrs().add(bd);
+            }
+            _new.setCurrent_db(document.getString("current_db"));
         });
 
         mongoClient.close();
