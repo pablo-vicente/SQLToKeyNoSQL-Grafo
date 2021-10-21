@@ -100,19 +100,11 @@ public class ViewMain extends javax.swing.JFrame {
         jMenu1.setText("File");
 
         jMenuItem5.setText("Save Dic");
-        jMenuItem5.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem5ActionPerformed(evt);
-            }
-        });
+        jMenuItem5.addActionListener(this::jMenuItem5ActionPerformed);
         jMenu1.add(jMenuItem5);
 
         jMenuItem3.setText("Load Script");
-        jMenuItem3.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem3ActionPerformed(evt);
-            }
-        });
+        jMenuItem3.addActionListener(this::jMenuItem3ActionPerformed);
         jMenu1.add(jMenuItem3);
 
         jMenuBar1.add(jMenu1);
@@ -120,27 +112,15 @@ public class ViewMain extends javax.swing.JFrame {
         jMenu2.setText("Edit");
 
         jMenuItem1.setText("Current RDB");
-        jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem1ActionPerformed(evt);
-            }
-        });
+        jMenuItem1.addActionListener(this::jMenuItem1ActionPerformed);
         jMenu2.add(jMenuItem1);
 
         jMenuItem4.setText("Print Tables");
-        jMenuItem4.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem4ActionPerformed(evt);
-            }
-        });
+        jMenuItem4.addActionListener(this::jMenuItem4ActionPerformed);
         jMenu2.add(jMenuItem4);
 
         jMenuItem2.setText("NoSQL Targets");
-        jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem2ActionPerformed(evt);
-            }
-        });
+        jMenuItem2.addActionListener(this::jMenuItem2ActionPerformed);
         jMenu2.add(jMenuItem2);
 
         jMenuBar1.add(jMenu2);
@@ -240,18 +220,15 @@ public class ViewMain extends javax.swing.JFrame {
             n.dic = parser.getDic();
             n.setVisible(true);
         }
-        if (parser.getDic().getCurrent_db() == null) {
+        if (parser.getDic().getCurrentDb() == null) {
             RDBs rdb = new RDBs(this, true);
             rdb.dic = parser.getDic();
             rdb.setVisible(true);
-           // p.getDic().setCurrent_db(RDBs.selected_DB);
-            parser.changeCurrentDB(parser.getDic().getCurrent_db().getName());
+            parser.changeCurrentDB(parser.getDic().getCurrentDb().getName());
         }
     }//GEN-LAST:event_formWindowOpened
 
     private void formWindowActivated(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowActivated
-
-        // if (p.getDic().)
     }//GEN-LAST:event_formWindowActivated
 
     private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
@@ -259,7 +236,7 @@ public class ViewMain extends javax.swing.JFrame {
         rdb.dic = parser.getDic();
         rdb.setVisible(true);
         //p.getDic().setCurrent_db(RDBs.selected_DB);
-        parser.changeCurrentDB(parser.getDic().getCurrent_db().getName());
+        parser.changeCurrentDB(parser.getDic().getCurrentDb().getName());
     }//GEN-LAST:event_jMenuItem1ActionPerformed
 
     private void jMenuItem5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem5ActionPerformed

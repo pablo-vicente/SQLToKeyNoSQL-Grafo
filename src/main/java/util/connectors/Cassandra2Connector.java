@@ -32,10 +32,10 @@ public class Cassandra2Connector extends Connector {
     Keyspace keyspace;
 
     @Override
-    public void connect(String nbd) {
+    public void connect(String nameDB) {
         this.context = new AstyanaxContext.Builder()
                 .forCluster("ClusterName")
-                .forKeyspace(nbd)
+                .forKeyspace(nameDB)
                 .withAstyanaxConfiguration(new AstyanaxConfigurationImpl()
                         .setDiscoveryType(NodeDiscoveryType.RING_DESCRIBE)
                 )

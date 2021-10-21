@@ -119,7 +119,7 @@ public class RDBs extends javax.swing.JDialog {
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
         BDR bd = new BDR(jTextFieldName.getText(), new ArrayList<>());
-        dic.getBdrs().add(bd);
+        dic.getRdbms().add(bd);
         jTextFieldName.setText(null);
         loadRDB();
     }//GEN-LAST:event_jButton2ActionPerformed
@@ -134,7 +134,7 @@ public class RDBs extends javax.swing.JDialog {
                     "We just are removing RDB '" + ((BDR) jList1.getSelectedValue()).getName() + "'. \n DATA WILL BE ORPHAN!!",
                     "Warning",
                     JOptionPane.WARNING_MESSAGE);
-            dic.getBdrs().remove(((BDR) jList1.getSelectedValue()));
+            dic.getRdbms().remove(((BDR) jList1.getSelectedValue()));
         }
         loadRDB();
     }//GEN-LAST:event_jButton1ActionPerformed
@@ -148,9 +148,9 @@ public class RDBs extends javax.swing.JDialog {
     }//GEN-LAST:event_formWindowActivated
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
-        this.dic.setCurrent_db(((BDR) jList1.getSelectedValue()).getName());
+        this.dic.setCurrentDb(((BDR) jList1.getSelectedValue()).getName());
         JOptionPane.showMessageDialog(new JFrame(),
-                "The current DB is now '" + (dic.getCurrent_db().getName()) + "'.",
+                "The current DB is now '" + (dic.getCurrentDb().getName()) + "'.",
                 "Warning",
                 JOptionPane.INFORMATION_MESSAGE);
     }//GEN-LAST:event_formWindowClosing
@@ -158,7 +158,7 @@ public class RDBs extends javax.swing.JDialog {
     private void loadRDB() {
         DefaultListModel listModel = new DefaultListModel();
 
-        for (BDR db : dic.getBdrs()) {
+        for (BDR db : dic.getRdbms()) {
             listModel.addElement(db);
         }
         jList1.setModel(listModel);

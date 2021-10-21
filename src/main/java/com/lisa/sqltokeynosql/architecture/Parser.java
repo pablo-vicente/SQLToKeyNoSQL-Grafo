@@ -26,12 +26,11 @@ import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.update.Update;
 import net.sf.jsqlparser.util.TablesNamesFinder;
-import net.sf.jsqlparser.util.deparser.ExpressionDeParser;
 import util.DataSet;
 import util.Dictionary;
-import util.SQL.ForeignKey;
-import util.SQL.Table;
-import util.SQL.WhereStatement;
+import util.sql.ForeignKey;
+import util.sql.Table;
+import util.sql.WhereStatement;
 import util.TimeConter;
 
 import java.io.BufferedReader;
@@ -40,7 +39,8 @@ import java.io.FileReader;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toCollection;
 
 /**
  *
@@ -60,7 +60,7 @@ public class Parser {
         stack.push(1);
     }
 
-    public boolean run(String sql) {
+    public boolean run(final String sql) {
         try {
             Statement statement = CCJSqlParserUtil.parse(sql);
             long setTime = new Date().getTime();
@@ -75,7 +75,7 @@ public class Parser {
         }
     }
 
-    public boolean run(File script) {
+    public boolean run(final File script) {
         FileReader fr;
         boolean result = false;
         try {
@@ -110,7 +110,7 @@ public class Parser {
         return result;
     }
 
-    private boolean run(Statement statement) {
+    private boolean run(final Statement statement) {
         dataSet = null;
         resultSet = null;
         try {
@@ -132,19 +132,19 @@ public class Parser {
                 System.out.println("Não suportado!");
             }
         } catch (Exception ex) {
-            System.err.println(ex.getMessage());
+            ex.printStackTrace();
             return false;
         }
         return true;
     }
 
-    private void select(Select statement) {
-        PlainSelect plainSelect = (PlainSelect) statement.getSelectBody();
-        List<String> tableList = new TablesNamesFinder().getTableList(statement);
+    private void select(final Select statement) {
+        final PlainSelect plainSelect = (PlainSelect) statement.getSelectBody();
+        final List<String> tableList = new TablesNamesFinder().getTableList(statement);
 
-        LinkedList<String> cols = extractColumns(plainSelect);
+        final LinkedList<String> cols = extractColumns(plainSelect);
 
-        Stack<Object> filters = extractFilters(plainSelect);
+        final Stack<Object> filters = extractFilters(plainSelect.getWhere());
 
         if (areThereJoins(plainSelect)){
             printJoins(tableList, plainSelect.getJoins());
@@ -159,105 +159,85 @@ public class Parser {
         }
     }
 
-    private LinkedList<String> extractColumns(PlainSelect plainSelect) {
+    private LinkedList<String> extractColumns(final PlainSelect plainSelect) {
         return plainSelect.getSelectItems()
                 .stream()
                 .map(Object::toString)
-                .collect(Collectors.toCollection(LinkedList::new));
+                .collect(toCollection(LinkedList::new));
     }
 
-    private boolean areThereJoins(PlainSelect plainSelect) {
+    private boolean areThereJoins(final PlainSelect plainSelect) {
         return plainSelect.getJoins() != null && !plainSelect.getJoins().isEmpty();
     }
 
-    private void printJoins(List<String> tableList, List<Join> joins) {
+    private void printJoins(final List<String> tableList, final List<Join> joins) {
         for(int i = 0; i< joins.size(); i++){
             Join join = joins.get(i);
             System.out.println("\t-> "+ tableList.get(i)+"- "+join.toString());
         }
     }
 
-    private Stack<Object> extractFilters(PlainSelect plainSelect) {
-        if (plainSelect.getWhere() == null) {
-            return null;
-        }
-        WhereStatement whereStatement = new WhereStatement();
-        StringBuilder stringBuilder = new StringBuilder();
-        whereStatement.setBuffer(stringBuilder);
-        Expression expression = plainSelect.getWhere();
-        expression.accept(whereStatement);
-        return whereStatement.getParsedFilters();
-    }
-
-    private void update(Update statement) {
+    private void update(final Update statement) {
         System.out.println("Update");
-        Update update = statement;
-        String t = update.getTable().getName();
+        final String tableName = statement.getTable().getName();
 
-        ArrayList<String> cols = new ArrayList();
-        for (Column col : update.getColumns()) {
+        ArrayList<String> cols = new ArrayList<>();
+        for (final Column col : statement.getColumns()) {
             cols.add(col.getColumnName());
         }
-        ArrayList <String> vals = new <String> ArrayList();
-        for (Expression e : update.getExpressions()){
-            vals.add(e.toString());
-        }
-        Stack<Object> filters = null;
-        if (update.getWhere() != null) {
-            Expression e = update.getWhere();
-            ExpressionDeParser deparser = new WhereStatement();
-            StringBuilder b = new StringBuilder();
-            deparser.setBuffer(b);
-            e.accept(deparser);
-            filters = ((WhereStatement) deparser).getParsedFilters();
-        }
-        executionEngine.updateData(t, cols, vals, filters);
+        final ArrayList<String> values = statement
+                .getExpressions()
+                .stream()
+                .map(Object::toString)
+                .collect(toCollection(ArrayList::new));
+
+        Stack<Object> filters = extractFilters(statement.getWhere());
+        executionEngine.updateData(tableName, cols, values, filters);
+    }
+
+    private Stack<Object> extractFilters(Expression where) {
+        if (where == null) return null;
+        WhereStatement whereStatement = new WhereStatement();
+        StringBuilder buffer = new StringBuilder();
+        whereStatement.setBuffer(buffer);
+        where.accept(whereStatement);
+        return whereStatement.getParsedFilters();
     }
 
     private void delete(Delete statement) {
         System.out.println("Delete - ");
-        Delete del = statement;
-        String t = del.getTable().getName();
-        Stack<Object> filters = null;
-        if (del.getWhere() != null) {
-            Expression e = del.getWhere();
-            ExpressionDeParser deparser = new WhereStatement();
-            StringBuilder b = new StringBuilder();
-            deparser.setBuffer(b);
-            e.accept(deparser);
-            filters = ((WhereStatement) deparser).getParsedFilters();
-        }
-        executionEngine.deleteData(t, filters);
+        String tableName = statement.getTable().getName();
+        Stack<Object> filters = extractFilters(statement.getWhere());
+        executionEngine.deleteData(tableName, filters);
     }
 
     private boolean insertInto(Insert statement) {
-        Insert ins = statement;
+        Insert insert = statement;
         List<ExpressionList> exList;
-        if (ins.getItemsList() instanceof MultiExpressionList) {
-            exList = ((MultiExpressionList) ins.getItemsList()).getExprList();
+        if (insert.getItemsList() instanceof MultiExpressionList) {
+            exList = ((MultiExpressionList) insert.getItemsList()).getExprList();
         } else {
-            exList = new <ExpressionList>ArrayList();
-            exList.add((ExpressionList) ins.getItemsList());
+            exList = new ArrayList<>();
+            exList.add((ExpressionList) insert.getItemsList());
         }
-        int s = ins.getColumns().size(), j = 0;
+        int s = insert.getColumns().size(), j = 0;
         LinkedList<String> cols;
-        ArrayList vals;
-        cols = new <String> LinkedList();
+        cols = new LinkedList<>();
         for (int i = 0; i < s; i++) {
-            cols.add(ins.getColumns().get(i).getColumnName());
+            cols.add(insert.getColumns().get(i).getColumnName());
         }
 
         for (ExpressionList e : exList) {
             List<Expression> values = e.getExpressions();
-            if (ins.getColumns().size() != values.size()) {
+            if (valuesDifferFromColumns(insert, values)) {
                 System.err.println("Problemas no insert colunas e valores diferentes");
                 return true;
             }
-            vals = new <String> ArrayList();
+            List<String> vals = new ArrayList<>();
             for (int i = 0; i < s; i++) {
                 vals.add(values.get(i).toString());
             }
-            if (executionEngine.insertData(ins.getTable().getName(), cols, vals)) {
+            if (executionEngine.insertData(insert.getTable().getName(), cols, (ArrayList<String>) vals)) {
                 j++;
             } else {
                 System.out.println("Problemas na inserção! " + j + " linhas inseridas;");
@@ -267,6 +247,10 @@ public class Parser {
 
         System.out.println("Inserção executada com sucesso! " + j + " linhas inseridas;");
         return false;
+    }
+
+    private boolean valuesDifferFromColumns(Insert insert, List<Expression> values) {
+        return insert.getColumns().size() != values.size();
     }
 
     private void createTable(CreateTable statement) {
@@ -326,5 +310,4 @@ public class Parser {
     public void changeCurrentDB(String db) {
         executionEngine.changeCurrentDB(db);
     }
-
 }

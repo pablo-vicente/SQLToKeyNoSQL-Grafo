@@ -26,8 +26,8 @@ public class CassandraConnector extends Connector {
     }
 
     @Override
-    public void connect(String nbd) {
-        session = cluster.connect(nbd);
+    public void connect(String nameDB) {
+        session = cluster.connect(nameDB);
     }
 
     @Override
@@ -82,7 +82,6 @@ public class CassandraConnector extends Connector {
         return "Cassandra";
     }
 
-    @Override
     public ArrayList<HashMap<String, String>> getN(int n, String t, ArrayList<String> keys) {
         ArrayList<HashMap<String, String>> result = new ArrayList();
         HashMap<String, String> current;

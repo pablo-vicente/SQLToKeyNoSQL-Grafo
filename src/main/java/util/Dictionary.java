@@ -5,49 +5,46 @@
  */
 package util;
 
+import util.sql.Table;
+
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 /**
- *
  * @author geomar
  */
-public class Dictionary implements Serializable{
+public final class Dictionary implements Serializable {
 
-    private BDR current_db = null;
-    private ArrayList<BDR> Bdrs;
-    private ArrayList<NoSQL> targets;
+    private static final int DB = 0;
+    private static final int TABLE = 1;
+    private BDR currentDb = null;
+    private List<BDR> rdbms;
+    private List<NoSQL> targets;
 
     public Dictionary() {
-        this.Bdrs = new <BDR> ArrayList();
-        this.targets = new <NoSQL> ArrayList();
+        this.rdbms = new ArrayList<>();
+        this.targets = new ArrayList<>();
     }
 
-    public ArrayList<BDR> getBdrs() {
-        return Bdrs;
+    public List<BDR> getRdbms() {
+        return rdbms;
     }
 
-    public void setBdrs(ArrayList<BDR> Bdrs) {
-        this.Bdrs = Bdrs;
-    }
-
-    public ArrayList<NoSQL> getTargets() {
+    public List<NoSQL> getTargets() {
         return targets;
     }
 
-    public void setTargets(ArrayList<NoSQL> targets) {
-        this.targets = targets;
-    }
+    public Optional<BDR> getBDR(String dbName) {
 
-    public BDR getRBD(String dbn) {
-        if (dbn != null) {
-            for (BDR db : Bdrs) {
-                if (dbn.equals(db.getName())) {
-                    return db;
-                }
+        for (BDR db : rdbms) {
+            if (dbName.equals(db.getName())) {
+                return Optional.of(db);
             }
         }
-        return null;
+
+        return Optional.empty();
     }
 
     public NoSQL getTarget(String alias) {
@@ -55,23 +52,41 @@ public class Dictionary implements Serializable{
             return targets.get(0);
         }
 
-        for (NoSQL t : targets) {
-            if (t.getAlias().equals(alias)) {
-                return t;
+        for (NoSQL noSQL : targets) {
+            if (noSQL.getAlias().equals(alias)) {
+                return noSQL;
             }
         }
         return null;
     }
 
-    public BDR getCurrent_db() {
-        return current_db;
+    public BDR getCurrentDb() {
+        return currentDb;
     }
 
-    public void setCurrent_db(String current_db) {
-        this.current_db = this.getRBD(current_db);
-        for (NoSQL n: targets){
-            n.getConection().connect(current_db);
+    public void setCurrentDb(String currentDb) {
+        getBDR(currentDb).ifPresent(dbr -> this.currentDb = dbr);
+        targets.forEach(noSQL -> noSQL.getConnection().connect(currentDb));
+    }
+
+    public Optional<Table> getTable(String tableName) {
+        if (tableSpecifiesDB(tableName)) {
+            return getTableFromDB(tableName);
         }
+
+        return this.currentDb.getTable(tableName);
+    }
+
+    private Optional<Table> getTableFromDB(String tableReference) {
+        String[] split = tableReference.split("\\.");
+        String dbName = split[DB];
+        String tableName = split[TABLE];
+        return getBDR(dbName)
+                .flatMap(dbr -> getTable(tableName));
+    }
+
+    private static boolean tableSpecifiesDB(String tableName) {
+        return tableName.contains(".");
     }
 
 }

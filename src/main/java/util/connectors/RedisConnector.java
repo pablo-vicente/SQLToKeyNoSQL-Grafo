@@ -24,9 +24,9 @@ public class RedisConnector extends Connector{
     String db;
 
     @Override
-    public void connect(String nbd) {
+    public void connect(String nameDB) {
         pool = new JedisPool(new JedisPoolConfig(), "localhost");
-        db = nbd;
+        db = nameDB;
         jedis = pool.getResource();
     }
 

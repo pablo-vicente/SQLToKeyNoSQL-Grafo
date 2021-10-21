@@ -7,46 +7,47 @@ package util;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 
 /**
  *
  * @author geomar
  */
 public class DataSet {
-    private LinkedList<String> columns;
-    private ArrayList<String[]> data; 
-    private String table_n;
+    private List<String> columns;
+    private List<String[]> data;
+    private String tableName;
 
-    public LinkedList<String> getColumns() {
+    public List<String> getColumns() {
         return columns;
     }
 
-    public void setColumns(LinkedList<String> columns) {
+    public void setColumns(List<String> columns) {
         this.columns = columns;
     }
 
-    public ArrayList<String[]> getData() {
+    public List<String[]> getData() {
         return data;
     }
 
-    public void setData(ArrayList<String[]> data) {
+    public void setData(List<String[]> data) {
         this.data = data;
     }
 
-    public String getTable_n() {
-        return table_n;
+    public String getTableName() {
+        return tableName;
     }
 
-    public void setTable_n(String table_n) {
-        this.table_n = table_n;
+    public void setTableName(String tableName) {
+        this.tableName = tableName;
     }
 
     
     
     public DataSet() {
-        this.columns = new <String> LinkedList();
-        this.data = new <String[]> ArrayList();
-        table_n = null;
+        this.columns = new LinkedList<>();
+        this.data = new ArrayList<>();
+        tableName = null;
     }
     
     

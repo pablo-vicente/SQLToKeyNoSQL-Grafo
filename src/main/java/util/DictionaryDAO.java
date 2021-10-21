@@ -5,9 +5,9 @@ import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
-import util.SQL.ForeignKey;
-import util.SQL.Table;
 import util.connectors.*;
+import util.sql.ForeignKey;
+import util.sql.Table;
 
 import java.util.*;
 
@@ -30,22 +30,22 @@ public class DictionaryDAO {
             aux.append("user", n.getUser());
             aux.append("psw", n.getPassword());
             int con = 1;
-            if (n.getConection() instanceof MongoConnector) {
+            if (n.getConnection() instanceof MongoConnector) {
                 con = 1;
-            } else if (n.getConection() instanceof Cassandra2Connector) {
+            } else if (n.getConnection() instanceof Cassandra2Connector) {
                 con = 2;
-            } else if (n.getConection() instanceof CassandraConnector) {
+            } else if (n.getConnection() instanceof CassandraConnector) {
                 con = 3;
-            } else if (n.getConection() instanceof RedisConnector) {
+            } else if (n.getConnection() instanceof RedisConnector) {
                 con = 4;
-            } else if (n.getConection() instanceof SimpleDBConnector) {
+            } else if (n.getConnection() instanceof SimpleDBConnector) {
                 con = 5;
             }
             aux.append("connector", con);
             targets.append(n.getAlias(), aux);
         }
         Document auxTable, tables;
-        for (BDR bd : dic.getBdrs()) {
+        for (BDR bd : dic.getRdbms()) {
             aux = new Document();
             aux.append("name", bd.getName());
             tables = new Document();
@@ -74,7 +74,7 @@ public class DictionaryDAO {
             bdrs.append(bd.getName(), aux);
         }
         db.getCollection("_dictionary").drop();
-        db.getCollection("_dictionary").insertOne(dictionary.append("targets", targets).append("current_db", dic.getCurrent_db().getName()).append("bdrs", bdrs));
+        db.getCollection("_dictionary").insertOne(dictionary.append("targets", targets).append("current_db", dic.getCurrentDb().getName()).append("bdrs", bdrs));
         mongoClient.close();
     }
 
@@ -98,27 +98,27 @@ public class DictionaryDAO {
                 NoSQL n = new NoSQL(aux.getString("alias"), aux.getString("user"), aux.getString("psw"), aux.getString("url"));
                 switch (aux.getInteger("connector")) {
                     case 1: {
-                        n.setConection(new MongoConnector());
+                        n.setConnection(new MongoConnector());
                         break;
                     }
                     case 2: {
-                        n.setConection(new Cassandra2Connector());
+                        n.setConnection(new Cassandra2Connector());
                         break;
                     }
                     case 3: {
-                        n.setConection(new CassandraConnector());
+                        n.setConnection(new CassandraConnector());
                         break;
                     }
                     case 4: {
-                        n.setConection(new RedisConnector());
+                        n.setConnection(new RedisConnector());
                         break;
                     }
                     case 5: {
-                        n.setConection(new SimpleDBConnector());
+                        n.setConnection(new SimpleDBConnector());
                         break;
                     }
                     default: {
-                        n.setConection(new MongoConnector());
+                        n.setConnection(new MongoConnector());
                     }
                 }
                 _new.getTargets().add(n);
@@ -164,9 +164,9 @@ public class DictionaryDAO {
                         bd.getTables().add(t);
                     }
                 }
-                _new.getBdrs().add(bd);
+                _new.getRdbms().add(bd);
             }
-            _new.setCurrent_db(document.getString("current_db"));
+            _new.setCurrentDb(document.getString("current_db"));
         });
 
         mongoClient.close();

@@ -1,4 +1,4 @@
-package util.SQL;
+package util.sql;
 
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;

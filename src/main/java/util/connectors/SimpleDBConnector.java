@@ -44,7 +44,7 @@ public class SimpleDBConnector extends Connector {
     String ndb;
 
     @Override
-    public void connect(String nbd) {
+    public void connect(String nameDB) {
         this.ndb = ndb;
         this.client = new AmazonSimpleDBClient(new BasicAWSCredentials(AWSAccessKeyID, AWSSecretKey), new ClientConfiguration());
     }
@@ -119,7 +119,6 @@ public class SimpleDBConnector extends Connector {
         return result;
     }
 
-    @Override
     public ArrayList<HashMap<String, String>> getN(int n, String t, ArrayList<String> keys) {
         //if (keys != null && keys.isEmpty()) {
         //   System.err.println("Chave veio vazia!");

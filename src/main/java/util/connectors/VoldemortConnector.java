@@ -1,21 +1,17 @@
 package util.connectors;
 
 import com.lisa.sqltokeynosql.architecture.Connector;
-import com.mongodb.util.JSON;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.stream.Collectors;
 import org.json.JSONObject;
 import voldemort.client.ClientConfig;
 import voldemort.client.SocketStoreClientFactory;
 import voldemort.client.StoreClient;
 import voldemort.client.StoreClientFactory;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+
 /**
- *
  * @author geomar
  */
 public class VoldemortConnector extends Connector {
@@ -29,8 +25,8 @@ public class VoldemortConnector extends Connector {
     }
 
     @Override
-    public void connect(String nbd) {
-        client = factory.getStoreClient(nbd);
+    public void connect(String nameDB) {
+        client = factory.getStoreClient(nameDB);
     }
 
     @Override
@@ -45,7 +41,7 @@ public class VoldemortConnector extends Connector {
 
     @Override
     public void delete(String t, String k) {
-        
+
     }
 
     @Override

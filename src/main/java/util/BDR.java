@@ -5,27 +5,29 @@
  */
 package util;
 
-import util.SQL.Table;
+import util.sql.Table;
+
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 /**
- *
  * @author geomar
  */
-public class BDR implements Serializable{
+public class BDR implements Serializable {
     private String name;
-    private ArrayList<Table> tables;
+    private List<Table> tables;
 
     public BDR() {
         tables = new ArrayList<>();
     }
 
-    public BDR(String name, ArrayList<Table> tables) {
+    public BDR(String name, List<Table> tables) {
         this.name = name;
         this.tables = tables;
     }
-    
+
     public String getName() {
         return name;
     }
@@ -34,27 +36,18 @@ public class BDR implements Serializable{
         this.name = name;
     }
 
-    public ArrayList<Table> getTables() {
+    public List<Table> getTables() {
         return tables;
     }
-    
-     public Table getTable(String t) {
-         for (Table table: tables){
-             if (t.equals(table.getName()))
-                 return table;
-         }
-        return null;
-    }
 
-    public void setTables(ArrayList<Table> tables) {
-        this.tables = tables;
+    public Optional<Table> getTable(String tableName) {
+        return tables.stream()
+                .filter(table -> table.getName().equals(tableName))
+                .findFirst();
     }
 
     @Override
     public String toString() {
         return name;
     }
-    
-    
-    
 }

@@ -19,10 +19,10 @@ public class HashJoin extends InMemoryJoins {
         DataSet result = new DataSet();
         LinkedList<String> cols = new LinkedList();
         for (String c : inner.getColumns()) {
-            cols.add(inner.getTable_n()+"."+c);
+            cols.add(inner.getTableName()+"."+c);
         }
         for (String c : outer.getColumns()) {
-            cols.add(outer.getTable_n()+"."+c);
+            cols.add(outer.getTableName()+"."+c);
         }
         result.setColumns(cols);
 
@@ -32,7 +32,7 @@ public class HashJoin extends InMemoryJoins {
         while (!joinS.empty()) {
             item = joinS.pop();
             if (item instanceof Column) {
-                if (((Column) item).getTable().getName().equals(outer.getTable_n())) {
+                if (((Column) item).getTable().getName().equals(outer.getTableName())) {
                     outerColumn = ((Column) item).getTable().getName() + "." + ((Column) item).getColumnName();
                     //break;
                 } else {

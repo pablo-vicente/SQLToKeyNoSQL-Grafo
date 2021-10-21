@@ -177,7 +177,7 @@ public class NoSQLTargets extends javax.swing.JDialog {
     private void loadNoSQL(NoSQL n){
         jTextFieldAlias.setText(n.getAlias());
         jTextFieldHost.setText(n.getUrl());
-        jComboBoxTarget.setSelectedItem(n.getConection());
+        jComboBoxTarget.setSelectedItem(n.getConnection());
     }
     
     private void loadList (){

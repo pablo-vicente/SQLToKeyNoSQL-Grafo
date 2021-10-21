@@ -5,92 +5,39 @@ import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.schema.Column;
 import util.operations.Operator;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Stack;
+
+import static java.util.stream.Collectors.toCollection;
 
 /**
  * @author geomar
  */
 public abstract class Connector {
 
-    public abstract void connect(String nbd);
+    public abstract void connect(String nameDB);
 
     public abstract void put(String table, String key, LinkedList<String> cols, ArrayList<String> values);
 
     public abstract void delete(String table, String key);
 
-    public abstract HashMap<String, String> get(int n, String t, String key);
+    public abstract HashMap<String, String> get(int n, String table, String key);
 
-    public ArrayList<HashMap<String, String>> getN(int n, String t, ArrayList<String> keys) {
-        ArrayList<HashMap<String, String>> result = new ArrayList();
-        for (String key : keys) {
-            result.add(get(n, t, key));
-        }
-        return result;
-    }
-
-    public ArrayList<HashMap<String, String>> getN(int n, String t, ArrayList<String> keys, Stack<Object> filters) {
-        ArrayList<HashMap<String, String>> result = new ArrayList();
-        for (String key : keys) {
-            HashMap<String, String> tuple = get(n, t, key);
-            if (applyFilterR(filters, tuple))
-                result.add(tuple);
-        }
-        return result;
-    }
-
-    public ArrayList getN(int n, String t, ArrayList<String> keys, Stack<Object> filters, LinkedList<String> cols) {
-        ArrayList<String[]> result = new ArrayList();
-        for (String key : keys) {
-            HashMap<String, String> tuple = get(n, t, key);
-            if (applyFilterR(filters, tuple)) {
-                String[] tupleR = new String[cols.size()];
-                for (int i = 0; i < cols.size(); i++) {
-                    tupleR[i] = tuple.get(cols.get(i));
-                }
-                result.add(tupleR);
-            }
-        }
-        return result;
-    }
-
-    protected boolean applyFilter(List<Object> filters, HashMap tuple) {
-        if (filters == null) {
-            return true;
-        }
-        Boolean result = false;
-        String col = null;
-        Object val = null;
-        Operator op = null;
-        for (Object o : filters) {
-            if (o instanceof Column) {
-                if (col == null) {
-                    col = ((Column) o).getColumnName();
-                } else {
-                    System.out.println("Comparação de colunas;");
-                }
-            } else if (o instanceof Operator) {
-                if (op == null) {
-                    op = ((Operator) o);
-                } else {
-                    System.out.println("Comparação ja setada;");
-                }
-            } else {
-                if (val == null) {
-                    val = (o);
-                } else {
-                    System.out.println("Comparação de valores;");
-                }
-            }
-
-            if (col != null && op != null && val != null) {
-                result = compare((String) tuple.get(col), op, val);
-                col = null;
-                op = null;
-                val = null;
-            }
-        }
-
-        return result;
+    public ArrayList getN(final int n, final String table, final ArrayList<String> keys, final Stack<Object> filters, final LinkedList<String> cols) {
+        return keys
+                .stream()
+                .map(key -> get(n, table, key))
+                .filter(tuple -> applyFilterR(filters, tuple))
+                .map(tuple -> {
+                    String[] tupleR = new String[cols.size()];
+                    for (int i = 0; i < cols.size(); i++) {
+                        tupleR[i] = tuple.get(cols.get(i));
+                    }
+                    return tupleR;
+                })
+                .collect(toCollection(ArrayList::new));
     }
 
     protected boolean applyFilterR(Stack<Object> filters, HashMap tuple) {
