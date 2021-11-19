@@ -12,7 +12,6 @@ import net.sf.jsqlparser.expression.operators.relational.MultiExpressionList;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.Statement;
-import net.sf.jsqlparser.statement.Statements;
 import net.sf.jsqlparser.statement.alter.Alter;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 import net.sf.jsqlparser.statement.create.table.CreateTable;
@@ -26,16 +25,14 @@ import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.update.Update;
 import net.sf.jsqlparser.util.TablesNamesFinder;
-import util.DataSet;
-import util.Dictionary;
-import util.sql.ForeignKey;
-import util.sql.Table;
-import util.sql.WhereStatement;
-import util.TimeConter;
+import org.springframework.stereotype.Service;
+import com.lisa.sqltokeynosql.util.BDR;
+import com.lisa.sqltokeynosql.util.DataSet;
+import com.lisa.sqltokeynosql.util.NoSQL;
+import com.lisa.sqltokeynosql.util.sql.ForeignKey;
+import com.lisa.sqltokeynosql.util.sql.Table;
+import com.lisa.sqltokeynosql.util.sql.WhereStatement;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -46,12 +43,10 @@ import static java.util.stream.Collectors.toCollection;
  *
  * @author geomar
  */
+@Service
 public class Parser {
 
     private final ExecutionEngine executionEngine;
-    public ArrayList<HashMap<String, String>> dataSet;
-    public DataSet resultSet;
-    public long timeToDO;
     public final Stack<Integer> stack;
 
     public Parser() {
@@ -60,70 +55,33 @@ public class Parser {
         stack.push(1);
     }
 
-    public boolean run(final String sql) {
+    public Optional<DataSet> run(final String sql) {
         try {
             Statement statement = CCJSqlParserUtil.parse(sql);
-            long setTime = new Date().getTime();
 
-            boolean result = this.run(statement);
-            long resetTime = new Date().getTime();
-            timeToDO = resetTime - setTime;
-            return result;
+            return run(statement);
         } catch (JSQLParserException ex) {
             Logger.getLogger(Parser.class.getName()).log(Level.SEVERE, null, ex);
-            return false;
+            return Optional.empty();
         }
     }
 
-    public boolean run(final File script) {
-        FileReader fr;
-        boolean result = false;
-        try {
-            fr = new FileReader(script);
-            BufferedReader br = new BufferedReader(fr);
-            String s;
-            StringBuilder sb = new StringBuilder();
-                timeToDO = 0;
-            while ((s = br.readLine()) != null) {
-                sb.append(s);
-                
-                if (sb.toString().contains(";")){
-                    TimeConter.current = 0;
-                    long setTime = new Date().getTime();
-                    long resetTime = 0;
-                    Statements stmt = CCJSqlParserUtil.parseStatements(sb.toString());
-
-                    for (Statement st : stmt.getStatements()) {
-                        result &= this.run(st);
-                    }
-                    resetTime = new Date().getTime();
-                    timeToDO += resetTime - setTime;
-                    sb = new StringBuilder();
-                }
-            }
-            br.close();
-            
-        } catch (Exception ex) {
-            Logger.getLogger(Parser.class.getName()).log(Level.SEVERE, null, ex);
-            return false;
-        }
-        return result;
-    }
-
-    private boolean run(final Statement statement) {
-        dataSet = null;
-        resultSet = null;
+    private Optional<DataSet> run(final Statement statement) {
         try {
             if (statement instanceof Select) {
-                select((Select) statement);
+                return Optional.ofNullable(select((Select) statement));
             } else if (statement instanceof CreateTable) {
                 createTable((CreateTable) statement);
+                return Optional.empty();
             } else if (statement instanceof Insert) {
-                if (insertInto((Insert) statement)) return false;
+                insertInto((Insert) statement);
+                return Optional.empty();
             } else if (statement instanceof Delete) {
                 delete((Delete) statement);
+                return Optional.empty();
             } else if (statement instanceof Update) {
                 update((Update) statement);
+                return Optional.empty();
             } else if (statement instanceof Drop) {
                 System.out.println("Drop table");
             } else if (statement instanceof Alter) {
@@ -133,12 +91,11 @@ public class Parser {
             }
         } catch (Exception ex) {
             ex.printStackTrace();
-            return false;
         }
-        return true;
+        return Optional.empty();
     }
 
-    private void select(final Select statement) {
+    private DataSet select(final Select statement) {
         final PlainSelect plainSelect = (PlainSelect) statement.getSelectBody();
         final List<String> tableList = new TablesNamesFinder().getTableList(statement);
 
@@ -148,14 +105,9 @@ public class Parser {
 
         if (areThereJoins(plainSelect)){
             printJoins(tableList, plainSelect.getJoins());
-            resultSet = executionEngine.getDataSet(tableList, cols, filters, plainSelect.getJoins());
+            return executionEngine.getDataSet(tableList, cols, filters, plainSelect.getJoins());
         }else{
-            resultSet = executionEngine.getDataSetBl(tableList, cols, filters);
-        }
-        if (resultSet == null) {
-            System.out.println("Ocorreu algum erro!");
-        } else {
-            System.out.println("Foram encontras " + resultSet.getData().size() + " tuplas!\n");
+            return executionEngine.getDataSetBl(tableList, cols, filters);
         }
     }
 
@@ -292,9 +244,9 @@ public class Parser {
         }
         Table dt;
         if (schemaT.getSchemaName() != null) {
-            dt = new Table(schemaT.getName(), executionEngine.getDictionary().getTarget(schemaT.getSchemaName()), pk, fk, cols);
+            dt = new Table(schemaT.getName(), executionEngine.getTarget(schemaT.getSchemaName()), pk, fk, cols);
         } else {
-            dt = new Table(schemaT.getName(), executionEngine.getDictionary().getTarget(null), pk, fk, cols);
+            dt = new Table(schemaT.getName(), executionEngine.getTarget(null), pk, fk, cols);
         }
         if (executionEngine.createTable(dt)) {
             System.out.println("Tabela Criada");
@@ -303,11 +255,23 @@ public class Parser {
         }
     }
 
-    public Dictionary getDic() {
-        return executionEngine.getDictionary();
-    }
-
     public void changeCurrentDB(String db) {
         executionEngine.changeCurrentDB(db);
+    }
+
+    public void addNoSqlTarget(NoSQL noSQL) {
+        executionEngine.addTarget(noSQL);
+    }
+
+    public List<NoSQL> getNoSqlTargets() {
+        return executionEngine.getTargets();
+    }
+
+    public BDR getCurrentDataBase() {
+        return executionEngine.getCurrentDb();
+    }
+
+    public List<BDR> getRdbms() {
+        return executionEngine.getRdbms();
     }
 }

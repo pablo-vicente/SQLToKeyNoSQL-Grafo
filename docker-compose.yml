@@ -10,25 +10,25 @@ services:
     container_name: "mongodb_1"
     ports:
       - "27018:27017"
-  mongodb_2:
-    image: mongo:latest
-    container_name: "mongodb_2"
-    ports:
-      - "27019:27017"
-  redis_0:
-    image: "bitnami/redis:latest"
-    container_name: "redis_0"
-    environment:
-      - ALLOW_EMPTY_PASSWORD=yes
-    ports:
-      - "6379:6379"
-  cassandra_0:
-    image: cassandra:latest
-    container_name: "cassandra_0"
-    ports:
-      - "7000:7000"
-  cassandra_1:
-    image: cassandra:latest
-    container_name: "cassandra_1"
-    ports:
-      - "7001:7000"
+#  mongodb_2:
+#    image: mongo:latest
+#    container_name: "mongodb_2"
+#    ports:
+#      - "27019:27017"
+#  redis_0:
+#    image: "bitnami/redis:latest"
+#    container_name: "redis_0"
+#    environment:
+#      - ALLOW_EMPTY_PASSWORD=yes
+#    ports:
+#      - "6379:6379"
+#  cassandra_0:
+#    image: cassandra:latest
+#    container_name: "cassandra_0"
+#    ports:
+#      - "7000:7000"
+#  cassandra_1:
+#    image: cassandra:latest
+#    container_name: "cassandra_1"
+#    ports:
+#      - "7001:7000"

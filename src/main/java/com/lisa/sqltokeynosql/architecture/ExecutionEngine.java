@@ -8,11 +8,11 @@ package com.lisa.sqltokeynosql.architecture;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.statement.select.Join;
 import net.sf.jsqlparser.util.deparser.ExpressionDeParser;
-import util.Dictionary;
-import util.*;
-import util.joins.HashJoin;
-import util.sql.JoinStatement;
-import util.sql.Table;
+import com.lisa.sqltokeynosql.util.Dictionary;
+import com.lisa.sqltokeynosql.util.*;
+import com.lisa.sqltokeynosql.util.joins.HashJoin;
+import com.lisa.sqltokeynosql.util.sql.JoinStatement;
+import com.lisa.sqltokeynosql.util.sql.Table;
 
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -31,19 +31,13 @@ public class ExecutionEngine {
     private static final ExecutorService threadPool = Executors.newCachedThreadPool();
 
     public ExecutionEngine() {
-        dictionary = loadDictionary();
-    }
-
-    private Dictionary loadDictionary() {
-        Dictionary dictionary = DictionaryDAO.loadDictionary();
-        if (dictionary == null) {
-            return new Dictionary();
-        }
-        return dictionary;
+        dictionary = DictionaryDAO.loadDictionary()
+                        .orElseGet(Dictionary::new);
     }
 
     private void createDBR(final String name) {
         dictionary.getRdbms().add(new BDR(name, new ArrayList<>()));
+        DictionaryDAO.storeDictionary(dictionary);
     }
 
     public void changeCurrentDB(final String name) {
@@ -53,11 +47,13 @@ public class ExecutionEngine {
             this.createDBR(name);
         }
         dictionary.setCurrentDb(name);
+        DictionaryDAO.storeDictionary(dictionary);
     }
 
     public boolean createTable(final Table table) {
         if (dictionary.getCurrentDb().getTables() != null) {
             dictionary.getCurrentDb().getTables().add(table);
+            DictionaryDAO.storeDictionary(dictionary);
             return true;
         }
         return false;
@@ -162,10 +158,6 @@ public class ExecutionEngine {
         return table.getTargetDB().getConnection().getN(n, table.getName(), (ArrayList<String>) table.getKeys(), filters, columns);
     }
 
-    public Dictionary getDictionary() {
-        return dictionary;
-    }
-
     DataSet getDataSet(final List<String> tableNames, final LinkedList<String> columns, final Stack<Object> filters, final List<Join> joins) {
 
         DataSet innerData = getInnerDataSet(tableNames, columns, filters);
@@ -250,6 +242,33 @@ public class ExecutionEngine {
         }
 
         return new Result(on, outerData);
+    }
+
+    public NoSQL getTarget(String schemaName) {
+        return dictionary.getTarget(schemaName);
+    }
+
+    public void addTarget(NoSQL noSQL) {
+        dictionary.getTargets().add(noSQL);
+        dictionary.getRdbms().add(new BDR(noSQL.getAlias(), new ArrayList<>()));
+        DictionaryDAO.storeDictionary(dictionary);
+    }
+
+    public List<NoSQL> getTargets() {
+        return dictionary.getTargets();
+    }
+
+    public BDR getCurrentDb() {
+        return dictionary.getCurrentDb();
+    }
+
+    public List<BDR> getRdbms() {
+        return dictionary.getRdbms();
+    }
+
+    public void setCurrentDb(String currentDataBase) {
+        dictionary.setCurrentDb(currentDataBase);
+        DictionaryDAO.storeDictionary(dictionary);
     }
 
     static class Result {

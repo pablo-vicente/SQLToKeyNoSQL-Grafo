@@ -3,7 +3,7 @@ package com.lisa.sqltokeynosql.architecture;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.schema.Column;
-import util.operations.Operator;
+import com.lisa.sqltokeynosql.util.operations.Operator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
