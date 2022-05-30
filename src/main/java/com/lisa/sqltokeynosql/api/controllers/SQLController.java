@@ -1,12 +1,10 @@
 package com.lisa.sqltokeynosql.api.controllers;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lisa.sqltokeynosql.api.dto.CurrentDataBaseRequestDTO;
 import com.lisa.sqltokeynosql.api.dto.NoSqlTargetDTO;
 import com.lisa.sqltokeynosql.api.dto.SQLDTO;
 import com.lisa.sqltokeynosql.architecture.Parser;
-import com.lisa.sqltokeynosql.util.DataSet;
 import com.lisa.sqltokeynosql.util.NoSQL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -57,8 +55,7 @@ public class SQLController {
         NoSQL noSQL = new NoSQL(noSqlTargetDTO.getName(),
                             noSqlTargetDTO.getUser(),
                         noSqlTargetDTO.getPassword(),
-                            noSqlTargetDTO.getUrl(),
-                        noSqlTargetDTO.getConnector().getValue());
+                            noSqlTargetDTO.getUrl());
         parser.addNoSqlTarget(noSQL);
         return ResponseEntity.ok(mapper.writeValueAsString(noSQL));
     }

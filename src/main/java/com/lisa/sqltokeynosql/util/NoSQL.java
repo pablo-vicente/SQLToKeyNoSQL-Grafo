@@ -13,6 +13,7 @@ public class NoSQL {
     private String url;
     private Connector connection;
 
+    //TODO add logic to validate the type of the connector;
     public NoSQL(String alias, String user, String password, String hostAndPort) {
         this.alias = alias;
         this.user = user;
@@ -20,14 +21,6 @@ public class NoSQL {
         this.url = hostAndPort;
         connection = new MongoConnector(user, password, hostAndPort);
         connection.connect(alias);
-    }
-
-    public NoSQL(String alias, String user, String password, String url, Connector connection) {
-        this.alias = alias;
-        this.user = user;
-        this.password = password;
-        this.url = url;
-        this.connection = connection;
     }
 
     public String getAlias() {

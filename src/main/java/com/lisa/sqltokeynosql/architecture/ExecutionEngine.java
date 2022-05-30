@@ -16,6 +16,7 @@ import com.lisa.sqltokeynosql.util.sql.Table;
 
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -41,7 +42,6 @@ public class ExecutionEngine {
     }
 
     public void changeCurrentDB(final String name) {
-        dictionary.setCurrentDb(name);
         if (dictionary.getCurrentDb() == null) {
             System.out.println("New RDB " + name + " created!");
             this.createDBR(name);
@@ -160,18 +160,20 @@ public class ExecutionEngine {
 
     DataSet getDataSet(final List<String> tableNames, final LinkedList<String> columns, final Stack<Object> filters, final List<Join> joins) {
 
-        DataSet innerData = getInnerDataSet(tableNames, columns, filters);
-        if (innerData == null) return null;
-
-
+        Future<DataSet> innerDataJob = threadPool.submit(() -> getInnerDataSet(tableNames, columns, filters));
+        
+        
         List<Callable<Result>> jobs = new ArrayList<>();
         for (Join j : joins) {
             jobs.add(() -> getOuterData(columns, filters, j));
         }
-
+        
         List<Result> data = getFutures(jobs).stream().map(this::getCompleted).collect(toList());
-
+        
         DataSet result = new DataSet();
+
+        DataSet innerData = completeInnerDataJob(innerDataJob);
+        if (innerData == null) return null;
 
         for (Result res : data) {
             HashJoin join = new HashJoin();
@@ -180,6 +182,14 @@ public class ExecutionEngine {
         }
 
         return result;
+    }
+
+    private DataSet completeInnerDataJob(Future<DataSet> innerDataJob) {
+        try {
+            return innerDataJob.get();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private List<Future<Result>> getFutures(List<Callable<Result>> jobs) {
@@ -249,8 +259,7 @@ public class ExecutionEngine {
     }
 
     public void addTarget(NoSQL noSQL) {
-        dictionary.getTargets().add(noSQL);
-        dictionary.getRdbms().add(new BDR(noSQL.getAlias(), new ArrayList<>()));
+        dictionary.addTarget(noSQL);
         DictionaryDAO.storeDictionary(dictionary);
     }
 
