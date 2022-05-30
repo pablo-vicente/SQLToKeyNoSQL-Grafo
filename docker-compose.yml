@@ -1,20 +1,20 @@
 version: "3"
 services:
   mongodb_0:
-    image: mongo:latest
+    image: mongo:4
     container_name: "mongodb_0"
     ports:
       - "27017:27017"
   mongodb_1:
-    image: mongo:latest
+    image: mongo:4
     container_name: "mongodb_1"
     ports:
       - "27018:27017"
-#  mongodb_2:
-#    image: mongo:latest
-#    container_name: "mongodb_2"
-#    ports:
-#      - "27019:27017"
+  mongodb_2:
+    image: mongo:4
+    container_name: "mongodb_2"
+    ports:
+      - "27019:27017"
 #  redis_0:
 #    image: "bitnami/redis:latest"
 #    container_name: "redis_0"
