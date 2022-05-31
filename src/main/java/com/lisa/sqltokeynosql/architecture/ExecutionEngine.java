@@ -160,15 +160,17 @@ public class ExecutionEngine {
 
     DataSet getDataSet(final List<String> tableNames, final LinkedList<String> columns, final Stack<Object> filters, final List<Join> joins) {
 
-        Future<DataSet> innerDataJob = threadPool.submit(() -> getInnerDataSet(tableNames, columns, filters));
-        
+        Future<DataSet> innerDataJob = threadPool
+            .submit(() -> getInnerDataSet(tableNames, columns, filters));
         
         List<Callable<Result>> jobs = new ArrayList<>();
-        for (Join j : joins) {
-            jobs.add(() -> getOuterData(columns, filters, j));
+        for (Join join : joins) {
+            jobs.add(() -> getOuterData(columns, filters, join));
         }
         
-        List<Result> data = getFutures(jobs).stream().map(this::getCompleted).collect(toList());
+        List<Result> data = getFutures(jobs).stream()
+                                            .map(this::getCompleted)
+                                            .collect(toList());
         
         DataSet result = new DataSet();
 
