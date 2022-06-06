@@ -194,8 +194,9 @@ public class ViewMain extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        if (!jTextAreaInput.getText().isEmpty()) {
-            for (String s : jTextAreaInput.getText().split(";")) {
+        String texto = jTextAreaInput.getText();
+        if (!texto.isEmpty()) {
+            for (String s : texto.split(";")) {
                 if (s.length() > 2) {
                     p.run(s);
                 }
