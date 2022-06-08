@@ -209,7 +209,11 @@ public class Parser {
                 if (schemaT.getSchemaName() != null) {
                     dt = new Table(schemaT.getName(), ex.getDic().getTarget(schemaT.getSchemaName()), pk, fk, cols);
                 } else {
-                    dt = new Table(schemaT.getName(), ex.getDic().getTarget(null), pk, fk, cols);
+                    String tableNome = schemaT.getName();
+                    Dictionary dictionary = ex.getDic();
+                    NoSQL targety = dictionary.getTarget(null);
+
+                    dt = new Table(tableNome, targety, pk, fk, cols);
                 }
                 if (ex.createTable(dt)) {
                     System.out.println("Tabela Criada");
