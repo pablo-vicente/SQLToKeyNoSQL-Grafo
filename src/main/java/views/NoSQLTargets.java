@@ -6,16 +6,10 @@
 package views;
 
 import com.lisa.sqltokeynosql.architecture.Connector;
-import java.util.Vector;
 import javax.swing.DefaultListModel;
-import org.apache.cassandra.thrift.Cassandra;
-import util.connectors.Cassandra2Connector;
-import util.connectors.CassandraConnector;
+import util.connectors.*;
 import util.Dictionary;
-import util.connectors.MongoConnector;
 import util.NoSQL;
-import util.connectors.RedisConnector;
-import util.connectors.SimpleDBConnector;
 
 /**
  *
@@ -195,6 +189,7 @@ public class NoSQLTargets extends javax.swing.JDialog {
         jComboBoxTarget.addItem(new CassandraConnector());
         jComboBoxTarget.addItem(new Cassandra2Connector());
         jComboBoxTarget.addItem(new SimpleDBConnector());
+        jComboBoxTarget.addItem(new Neo4jConnector("bolt://localhost:7687", "neo4j", "Neo4j"));
     }//GEN-LAST:event_formWindowActivated
 
     private void jListAliasValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_jListAliasValueChanged
@@ -206,7 +201,7 @@ public class NoSQLTargets extends javax.swing.JDialog {
             dic.getTargets().remove(jListAlias.getSelectedValue());
         }
         NoSQL n = new NoSQL(jTextFieldAlias.getText(), null, null, jTextFieldHost.getText(), (Connector)jComboBoxTarget.getSelectedItem());
-        dic.getTargets().add(n);
+        dic.getTargets().add(0, n);
         
         jTextFieldAlias.setText(null);
         jTextFieldHost.setText(null);
