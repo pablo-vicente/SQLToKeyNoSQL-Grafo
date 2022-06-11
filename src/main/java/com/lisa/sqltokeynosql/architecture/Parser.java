@@ -191,11 +191,11 @@ public class Parser {
                 }
                 if (ct.getIndexes() != null) {
                     for (Index index : ct.getIndexes()) {
-                        if (index.getType().equals("PRIMARY KEY")) {
+                        if (index.getType().equalsIgnoreCase("PRIMARY KEY")) {
                             for (String c : index.getColumnsNames()) {
                                 pk.add(c);
                             }
-                        } else if (index.getType().equals("FOREIGN KEY")) {
+                        } else if (index.getType().equalsIgnoreCase("FOREIGN KEY")) {
                              ForeignKeyIndex new_fk = (ForeignKeyIndex) index;
                              for (int i = 0; i<new_fk.getReferencedColumnNames().size();i++ ){
                                  fk.add(new ForeignKey(new_fk.getColumnsNames().get(i), new_fk.getReferencedColumnNames().get(i), new_fk.getTable().getName()));
