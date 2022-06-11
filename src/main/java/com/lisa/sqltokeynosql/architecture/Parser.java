@@ -176,9 +176,9 @@ public class Parser {
                 System.out.print("\n" + schemaT.getName() + "\n");
                 for (ColumnDefinition c : cl) {
                     cols.add(c.getColumnName());
-                    if (c.getColumnSpecStrings() != null) {
+                    if (c.getColumnSpecs() != null) {
                         int i = 0;
-                        for (String s : c.getColumnSpecStrings()) {
+                        for (String s : c.getColumnSpecs()) {
                             if (s.equals("PRIMARY")) {
                                 i++;
                             } else if (s.equals("KEY") && i > 0) {
