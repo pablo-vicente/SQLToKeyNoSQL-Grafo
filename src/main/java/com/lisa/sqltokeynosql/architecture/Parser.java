@@ -179,9 +179,9 @@ public class Parser {
                     if (c.getColumnSpecs() != null) {
                         int i = 0;
                         for (String s : c.getColumnSpecs()) {
-                            if (s.equals("PRIMARY")) {
+                            if (s.equalsIgnoreCase("PRIMARY")) {
                                 i++;
-                            } else if (s.equals("KEY") && i > 0) {
+                            } else if (s.equalsIgnoreCase("KEY") && i > 0) {
                                 pk.add(c.getColumnName());
                             }
                         }
