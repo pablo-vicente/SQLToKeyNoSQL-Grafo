@@ -74,9 +74,10 @@ public class Neo4jConnector extends Connector implements AutoCloseable
             if(results.size() >= 1)
                 throw new UnsupportedOperationException("Duplicate register for id " + key);
 
-            String queryInsert = getQueryInsert(table, key, cols, values);
+            Map<String, Object> props = getStringObjectMap(key, cols, values);
+            String queryInsert = "CREATE (n:" + table + " $props)";
 
-            session.run(queryInsert);
+            session.run(queryInsert, parameters("props", props));
         }
         catch (Exception exception)
         {
@@ -86,38 +87,27 @@ public class Neo4jConnector extends Connector implements AutoCloseable
 
     }
 
-    private String getQueryById(String table, String atribute, String value)
-    {
-        return "Match (n:"+ table + ") Where n." + atribute + "=" + value + " return n";
-    }
-
-    private String getQueryInsert(String table, String key, LinkedList<String> cols, ArrayList<String> values)
-    {
+    private Map<String, Object> getStringObjectMap(String key, LinkedList<String> cols, ArrayList<String> values) {
+        Map<String,Object> props = new HashMap<>();
         boolean contaisId = false;
-
-        String atributes = "";
         for (int i = 0; i < cols.size(); i++)
         {
             String name = cols.get(i);
             String value = values.get(i);
-            atributes += name + ":" + value + ",";
 
+            props.put( name, value );
             if(_idColumnName.equalsIgnoreCase(name))
                 contaisId = true;
         }
 
         if(!contaisId)
-            atributes += _idColumnName + ":" + key + "";
-        else
-            atributes = atributes.substring(0, atributes.length() -1);
+            props.put( _idColumnName, key);
+        return props;
+    }
 
-
-        String query = "CREATE (n:" + table +
-                "{" +
-                atributes +
-                "})";
-
-        return query;
+    private String getQueryById(String table, String atribute, String value)
+    {
+        return "Match (n:"+ table + ") Where n." + atribute + "=" + value + " return n";
     }
 
     /**
