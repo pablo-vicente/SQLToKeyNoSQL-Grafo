@@ -247,8 +247,14 @@ public class Parser {
                         return false;
                     }
                     vals = new <String> ArrayList();
-                    for (int i = 0; i < s; i++) {
-                        vals.add(values.get(i).toString());
+                    for (int i = 0; i < s; i++)
+                    {
+                        Expression valueExpression = values.get(i);
+                        String value = valueExpression
+                                .toString()
+                                .replaceAll("^(['\"])(.*)\\1$", "$2");
+
+                        vals.add(value);
                     }
                     net.sf.jsqlparser.schema.Table table = ins.getTable();
                     String tableName = table.getName();
