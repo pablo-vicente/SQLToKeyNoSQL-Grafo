@@ -8,6 +8,7 @@ import java.util.*;
 import com.lisa.sqltokeynosql.architecture.Connector;
 import org.neo4j.driver.*;
 import org.neo4j.driver.Record;
+import util.SQL.ForeignKey;
 import util.SQL.Table;
 
 import static org.neo4j.driver.Values.parameters;
@@ -69,9 +70,10 @@ public class Neo4jConnector extends Connector implements AutoCloseable
         try (Session session = driver.session(SessionConfig.forDatabase(_nomeBancoDados)))
         {
             verifyDuplicateId(table, key, session);
+            verifyRelationships(table, values, session);
 
             Map<String, Object> props = getStringObjectMap(key, cols, values);
-            String queryInsert = "CREATE (n:" + table + " $props)";
+            String queryInsert = "CREATE (n:" + table.getName() + " $props)";
 
             session.run(queryInsert, parameters("props", props));
         }
@@ -82,9 +84,38 @@ public class Neo4jConnector extends Connector implements AutoCloseable
         }
 
     }
+    private void verifyRelationships(Table table, ArrayList<String> values, Session session)
+    {
+        ArrayList<String> erros = new ArrayList<>();
+        ArrayList<ForeignKey> pks = table.getFks();
+        for (int i = 0; i < pks.size(); i++) {
+            ForeignKey pk = pks.get(i);
+
+            String tableFk = pk.getrTable();
+            String tableAttributeReference = pk.getrAtt();
+            String tableAttribute = pk.getAtt();
+
+            int indexPkReference = table.getAttributes().indexOf(tableAttribute);
+            String fkReferenceValue = values.get(indexPkReference);
+            String queryFk = getQueryAttribute(tableFk, tableAttributeReference, fkReferenceValue);
+            List<Record> results = session.run(queryFk).list();
+
+            if(results.size() != 1)
+                erros.add("Não foi possivel criar relacionamento entre atributo " + tableAttribute +
+                        " com a table " + tableFk + "(" + tableAttributeReference + ")" +
+                        " para o valor " + fkReferenceValue);
+        }
+
+        for (int i = 0; i < erros.size(); i++) {
+            System.out.println(erros.get(i));
+        }
+
+        if(erros.size() > 0)
+            throw new UnsupportedOperationException("Não foi possível criar relacionamentos. Verifique os logs para mais detalhes sobre os erros");
+    }
 
     private void verifyDuplicateId(Table table, String key, Session session) {
-        String queryId =  getQueryById(table.getName(), _idColumnName, key);
+        String queryId =  getQueryAttribute(table.getName(), _idColumnName, key);
         List<Record> results = session.run(queryId).list();
 
         if(results.size() >= 1)
@@ -109,7 +140,7 @@ public class Neo4jConnector extends Connector implements AutoCloseable
         return props;
     }
 
-    private String getQueryById(String table, String atribute, String value)
+    private String getQueryAttribute(String table, String atribute, String value)
     {
         return "Match (n:"+ table + ") Where n." + atribute + "=" + value + " return n";
     }
