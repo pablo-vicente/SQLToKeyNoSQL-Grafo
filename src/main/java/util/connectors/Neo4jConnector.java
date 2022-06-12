@@ -8,6 +8,7 @@ import java.util.*;
 import com.lisa.sqltokeynosql.architecture.Connector;
 import org.neo4j.driver.*;
 import org.neo4j.driver.Record;
+import util.SQL.Table;
 
 import static org.neo4j.driver.Values.parameters;
 
@@ -60,19 +61,14 @@ public class Neo4jConnector extends Connector implements AutoCloseable
      * @param values
      */
     @Override
-    public void put(String table, String key, LinkedList<String> cols, ArrayList<String> values)
+    public void put(Table table, String key, LinkedList<String> cols, ArrayList<String> values)
     {
         // TODO IMPLEMENTAT SEM PK
         // TODO IMPLEMENTAR COM PK
 
         try (Session session = driver.session(SessionConfig.forDatabase(_nomeBancoDados)))
         {
-
-            String queryId =  getQueryById(table, _idColumnName, key);
-            List<Record> results = session.run(queryId).list();
-
-            if(results.size() >= 1)
-                throw new UnsupportedOperationException("Duplicate register for id " + key);
+            verifyDuplicateId(table, key, session);
 
             Map<String, Object> props = getStringObjectMap(key, cols, values);
             String queryInsert = "CREATE (n:" + table + " $props)";
@@ -85,6 +81,14 @@ public class Neo4jConnector extends Connector implements AutoCloseable
             throw exception;
         }
 
+    }
+
+    private void verifyDuplicateId(Table table, String key, Session session) {
+        String queryId =  getQueryById(table.getName(), _idColumnName, key);
+        List<Record> results = session.run(queryId).list();
+
+        if(results.size() >= 1)
+            throw new UnsupportedOperationException("Duplicate register for id " + key);
     }
 
     private Map<String, Object> getStringObjectMap(String key, LinkedList<String> cols, ArrayList<String> values) {
