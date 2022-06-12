@@ -13,7 +13,7 @@ import java.util.Stack;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.schema.Column;
-import org.bson.Document;
+import util.SQL.Table;
 import util.operations.Operator;
 
 /**
@@ -24,7 +24,7 @@ public abstract class Connector {
     
     public abstract void connect(String nbd);
     
-    public abstract  void put (String table, String key, LinkedList<String>cols, ArrayList<String>values);
+    public abstract  void put (Table table, String key, LinkedList<String>cols, ArrayList<String>values);
     
     public abstract void delete(String table, String key);
     

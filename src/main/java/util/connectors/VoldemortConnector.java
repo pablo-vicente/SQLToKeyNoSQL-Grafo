@@ -1,14 +1,11 @@
 package util.connectors;
 
 import com.lisa.sqltokeynosql.architecture.Connector;
-import com.mongodb.util.JSON;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.Map;
-import java.util.stream.Collectors;
 import org.json.JSONObject;
+import util.SQL.Table;
 import voldemort.client.ClientConfig;
 import voldemort.client.SocketStoreClientFactory;
 import voldemort.client.StoreClient;
@@ -34,13 +31,13 @@ public class VoldemortConnector extends Connector {
     }
 
     @Override
-    public void put(String table, String key, LinkedList<String> cols, ArrayList<String> values) {
+    public void put(Table table, String key, LinkedList<String> cols, ArrayList<String> values) {
         HashMap<String, String> current = new HashMap<>();
         for (int i = 0; i < cols.size(); i++) {
             current.put(cols.get(i), values.get(i));
         }
         JSONObject json = new JSONObject(current);
-        client.put(table + "." + key, current.toString());
+        client.put(table.getName() + "." + key, current.toString());
     }
 
     @Override

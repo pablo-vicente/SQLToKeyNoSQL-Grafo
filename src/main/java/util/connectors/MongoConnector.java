@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Stack;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.schema.Column;
+import util.SQL.Table;
 import util.operations.Equal;
 import util.operations.Greater;
 import util.operations.GreaterEqual;
@@ -48,12 +49,12 @@ public class MongoConnector extends Connector {
     }
 
     @Override
-    public void put(String table, String key, LinkedList<String> cols, ArrayList<String> values) {
+    public void put(Table table, String key, LinkedList<String> cols, ArrayList<String> values) {
         BasicDBObject c = new BasicDBObject("_id", key);
         for (int i = 0; i < cols.size(); i++) {
             c.append(cols.get(i), values.get(i));
         }
-        ((DBCollection) db.getCollection(table)).insert(c);
+        ((DBCollection) db.getCollection(table.getName())).insert(c);
     }
 
     @Override

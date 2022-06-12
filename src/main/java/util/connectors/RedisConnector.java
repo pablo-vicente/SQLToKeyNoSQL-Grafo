@@ -9,10 +9,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
-import org.json.JSONObject;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
+import util.SQL.Table;
 
 /**
  *
@@ -31,13 +31,13 @@ public class RedisConnector extends Connector{
     }
 
     @Override
-    public void put(String table, String key, LinkedList<String> cols, ArrayList<String> values) {
+    public void put(Table table, String key, LinkedList<String> cols, ArrayList<String> values) {
         if (jedis != null){
             HashMap<String, String> current = new HashMap<>();
             for (int i = 0; i < cols.size(); i++) {
                 current.put(cols.get(i), values.get(i));
             }
-            String rkey = db+"::"+table+"::"+key;
+            String rkey = db+"::"+table.getName()+"::"+key;
             jedis.set(rkey, current.toString());
             //jedis.close();
         }

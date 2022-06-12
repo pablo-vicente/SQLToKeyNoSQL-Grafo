@@ -2,10 +2,8 @@ package util.connectors;
 
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.auth.policy.actions.SimpleDBActions;
 import com.amazonaws.services.simpledb.AmazonSimpleDBClient;
 import com.amazonaws.services.simpledb.model.Attribute;
-import com.amazonaws.services.simpledb.model.CreateDomainRequest;
 import com.amazonaws.services.simpledb.model.DeleteAttributesRequest;
 import com.amazonaws.services.simpledb.model.GetAttributesRequest;
 import com.amazonaws.services.simpledb.model.Item;
@@ -16,8 +14,6 @@ import com.amazonaws.services.simpledb.model.ReplaceableAttribute;
 import com.amazonaws.services.simpledb.model.SelectRequest;
 import com.amazonaws.services.simpledb.model.SelectResult;
 import com.lisa.sqltokeynosql.architecture.Connector;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -25,6 +21,7 @@ import java.util.List;
 import java.util.Stack;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.schema.Column;
+import util.SQL.Table;
 import util.operations.Equal;
 import util.operations.Greater;
 import util.operations.GreaterEqual;
@@ -50,7 +47,7 @@ public class SimpleDBConnector extends Connector {
     }
 
     @Override
-    public void put(String table, String key, LinkedList<String> cols, ArrayList<String> values) {
+    public void put(Table table, String key, LinkedList<String> cols, ArrayList<String> values) {
 
         if (null == this.client) {
             System.err.println("Problemas na conexão com o SimpleDB");
@@ -67,7 +64,7 @@ public class SimpleDBConnector extends Connector {
             att = new ReplaceableAttribute(cols.get(i), values.get(i), Boolean.TRUE);
             attributes.add(att);
         }
-        this.client.putAttributes(new PutAttributesRequest(table, key, attributes));
+        this.client.putAttributes(new PutAttributesRequest(table.getName(), key, attributes));
     }
 
     protected List<String> getAllDomains() {
