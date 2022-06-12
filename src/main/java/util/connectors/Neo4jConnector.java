@@ -4,12 +4,10 @@
  * and open the template in the editor.
  */
 package util.connectors;
-
-
 import java.util.*;
-
 import com.lisa.sqltokeynosql.architecture.Connector;
 import org.neo4j.driver.*;
+import org.neo4j.driver.Record;
 
 import static org.neo4j.driver.Values.parameters;
 
@@ -22,6 +20,7 @@ public class Neo4jConnector extends Connector implements AutoCloseable
     private final Driver driver;
     private static String DbName = "Neo4j";
     private String _nomeBancoDados = "";
+    private final String _idColumnName = "id";
 
     public Neo4jConnector()
     {
@@ -29,22 +28,6 @@ public class Neo4jConnector extends Connector implements AutoCloseable
         String user = "neo4j";
         String password = "Neo4j";
         driver = GraphDatabase.driver( uri, AuthTokens.basic( user, password ) );
-    }
-
-    public void printGreeting( final String message )
-    {
-        try ( Session session = driver.session(SessionConfig.forDatabase(_nomeBancoDados)) )
-        {
-            String greeting = session.writeTransaction( tx ->
-            {
-                Result result = tx.run( "CREATE (a:Greeting) " +
-                                "SET a.message = $message " +
-                                "RETURN a.message + ', from node ' + id(a)",
-                        parameters( "message", message ) );
-                return result.single().get( 0 ).asString();
-            } );
-            System.out.println( greeting );
-        }
     }
 
     /**
@@ -77,8 +60,64 @@ public class Neo4jConnector extends Connector implements AutoCloseable
      * @param values
      */
     @Override
-    public void put(String table, String key, LinkedList<String> cols, ArrayList<String> values) {
+    public void put(String table, String key, LinkedList<String> cols, ArrayList<String> values)
+    {
+        // TODO IMPLEMENTAT SEM PK
+        // TODO IMPLEMENTAR COM PK
 
+        try (Session session = driver.session(SessionConfig.forDatabase(_nomeBancoDados)))
+        {
+
+            String queryId =  getQueryById(table, _idColumnName, key);
+            List<Record> results = session.run(queryId).list();
+
+            if(results.size() >= 1)
+                throw new UnsupportedOperationException("Duplicate register for id " + key);
+
+            String queryInsert = getQueryInsert(table, key, cols, values);
+
+            session.run(queryInsert);
+        }
+        catch (Exception exception)
+        {
+            System.out.println(exception);
+            throw exception;
+        }
+
+    }
+
+    private String getQueryById(String table, String atribute, String value)
+    {
+        return "Match (n:"+ table + ") Where n." + atribute + "=" + value + " return n";
+    }
+
+    private String getQueryInsert(String table, String key, LinkedList<String> cols, ArrayList<String> values)
+    {
+        boolean contaisId = false;
+
+        String atributes = "";
+        for (int i = 0; i < cols.size(); i++)
+        {
+            String name = cols.get(i);
+            String value = values.get(i);
+            atributes += name + ":" + value + ",";
+
+            if(_idColumnName.equalsIgnoreCase(name))
+                contaisId = true;
+        }
+
+        if(!contaisId)
+            atributes += _idColumnName + ":" + key + "";
+        else
+            atributes = atributes.substring(0, atributes.length() -1);
+
+
+        String query = "CREATE (n:" + table +
+                "{" +
+                atributes +
+                "})";
+
+        return query;
     }
 
     /**
