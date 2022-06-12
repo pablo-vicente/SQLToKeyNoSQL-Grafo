@@ -250,7 +250,10 @@ public class Parser {
                     for (int i = 0; i < s; i++) {
                         vals.add(values.get(i).toString());
                     }
-                    if (ex.insertData(ins.getTable().getName(), cols, vals)) {
+                    net.sf.jsqlparser.schema.Table table = ins.getTable();
+                    String tableName = table.getName();
+
+                    if (ex.insertData(tableName, cols, vals)) {
                         j++;
                     } else {
                         System.out.println("Problemas na inserção! " + j + " linhas inseridas;");

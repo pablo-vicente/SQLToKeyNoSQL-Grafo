@@ -6,7 +6,6 @@
 package com.lisa.sqltokeynosql.architecture;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -18,17 +17,11 @@ import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.Join;
 import net.sf.jsqlparser.util.deparser.ExpressionDeParser;
-import util.BDR;
-import util.DataSet;
-import util.Dictionary;
-import util.DictionaryDAO;
+import util.*;
 import util.SQL.JoinStatment;
 import util.SQL.Table;
-import util.TimeConter;
-import util.SQL.WhereStatment;
 import util.joins.HashJoin;
 import util.joins.InMemoryJoins;
-import util.joins.NestedLoop;
 import util.operations.Operator;
 
 /**
@@ -77,14 +70,14 @@ public class ExecutionEngine {
     }
 
     public boolean insertData(String table, LinkedList<String> columns, ArrayList<String> values) {
-        Table t = dic.getCurrent_db().getTable(table);
-        if (t == null) {
+        Table tableDb = dic.getCurrent_db().getTable(table);
+        if (tableDb == null) {
             System.out.println("Tabela não Existe!");
             return false;
         }
         boolean equal = true;
         String key = "";
-        for (String k : t.getPks()) {
+        for (String k : tableDb.getPks()) {
             equal = false;
             for (String aux : columns) {
                 if (k.equals(aux)) {
@@ -99,9 +92,13 @@ public class ExecutionEngine {
             }
         }
         long now = new Date().getTime();
-        t.getTargetDB().getConection().put(table, key, columns, values);
+
+        NoSQL targetDb = tableDb.getTargetDB();
+        Connector connection = targetDb.getConection();
+        connection.put(table, key, columns, values);
+
         TimeConter.current += (new Date().getTime()) - now;
-        t.getKeys().add(key);
+        tableDb.getKeys().add(key);
         return true;
     }
 

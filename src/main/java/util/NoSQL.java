@@ -20,15 +20,6 @@ public class NoSQL implements Serializable{
     private String url;
     private Connector conection;
 
-    public NoSQL(String alias, String user, String password, String url) {
-        this.alias = alias;
-        this.user = user;
-        this.password = password;
-        this.url = url;
-        conection = new MongoConnector();
-        conection.connect(alias);
-    }
-
     public NoSQL(String alias, String user, String password, String url, Connector conection) {
         this.alias = alias;
         this.user = user;

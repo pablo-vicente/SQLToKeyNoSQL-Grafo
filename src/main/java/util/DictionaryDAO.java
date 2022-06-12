@@ -1,16 +1,11 @@
 package util;
 
+import com.lisa.sqltokeynosql.architecture.Connector;
 import util.SQL.ForeignKey;
 import util.SQL.Table;
-import util.connectors.Cassandra2Connector;
-import util.connectors.CassandraConnector;
-import util.connectors.MongoConnector;
-import util.connectors.RedisConnector;
-import util.connectors.SimpleDBConnector;
-import com.google.gson.Gson;
+import util.connectors.*;
 import com.mongodb.Block;
 import com.mongodb.MongoClient;
-import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import java.util.ArrayList;
@@ -18,7 +13,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
-import javax.swing.text.StyledEditorKit;
 import org.bson.Document;
 
 /**
@@ -35,26 +29,17 @@ public class DictionaryDAO {
         Document bdrs = new Document();
         Document targets = new Document();
         Document aux;
-        for (NoSQL n : dic.getTargets()) {
+        for (NoSQL noSQL : dic.getTargets()) {
             aux = new Document();
-            aux.append("alias", n.getAlias());
-            aux.append("url", n.getUrl());
-            aux.append("user", n.getUser());
-            aux.append("psw", n.getPassword());
-            int con = 1;
-            if (n.getConection() instanceof MongoConnector) {
-                con = 1;
-            } else if (n.getConection() instanceof Cassandra2Connector) {
-                con = 2;
-            } else if (n.getConection() instanceof CassandraConnector) {
-                con = 3;
-            } else if (n.getConection() instanceof RedisConnector) {
-                con = 4;
-            } else if (n.getConection() instanceof SimpleDBConnector) {
-                con = 5;
-            }
-            aux.append("connector", con);
-            targets.append(n.getAlias(), aux);
+            aux.append("alias", noSQL.getAlias());
+            aux.append("url", noSQL.getUrl());
+            aux.append("user", noSQL.getUser());
+            aux.append("psw", noSQL.getPassword());
+
+            Connector connector = noSQL.getConection();
+            String conncetoName = connector.getClass().getSimpleName();
+            aux.append("connector", conncetoName);
+            targets.append(noSQL.getAlias(), aux);
         }
         Document auxTable, tables;
         for (BDR bd : dic.getBdrs()) {
@@ -91,6 +76,29 @@ public class DictionaryDAO {
         mongoClient.close();
     }
 
+    private static Connector GetConnector(String connectorName)
+    {
+        if(connectorName.equalsIgnoreCase(MongoConnector.class.getSimpleName()))
+            return new MongoConnector();
+
+        if(connectorName.equalsIgnoreCase(Cassandra2Connector.class.getSimpleName()))
+            return new Cassandra2Connector();
+
+        if(connectorName.equalsIgnoreCase(CassandraConnector.class.getSimpleName()))
+            return new CassandraConnector();
+
+        if(connectorName.equalsIgnoreCase(RedisConnector.class.getSimpleName()))
+            return new RedisConnector();
+
+        if(connectorName.equalsIgnoreCase(SimpleDBConnector.class.getSimpleName()))
+            return new SimpleDBConnector();
+
+        if(connectorName.equalsIgnoreCase(Neo4jConnector.class.getSimpleName()))
+            return new Neo4jConnector();
+
+        throw new UnsupportedOperationException("Connector not declared!!!!");
+    }
+
     public static Dictionary loadDictionary() {
         MongoClient mongoClient = new MongoClient();
         MongoDatabase db = mongoClient.getDatabase("_dictionary");
@@ -111,32 +119,17 @@ public class DictionaryDAO {
                 Document aux;
                 while (iteratorTarget.hasNext()) {
                     aux = (Document) iteratorTarget.next();
-                    NoSQL n = new NoSQL(aux.getString("alias"), aux.getString("user"), aux.getString("psw"), aux.getString("url"));
-                    switch (aux.getInteger("connector")) {
-                        case 1: {
-                            n.setConection(new MongoConnector());
-                            break;
-                        }
-                        case 2: {
-                            n.setConection(new Cassandra2Connector());
-                            break;
-                        }
-                        case 3: {
-                            n.setConection(new CassandraConnector());
-                            break;
-                        }
-                        case 4: {
-                            n.setConection(new RedisConnector());
-                            break;
-                        }
-                        case 5: {
-                            n.setConection(new SimpleDBConnector());
-                            break;
-                        }
-                        default: {
-                            n.setConection(new MongoConnector());
-                        }
-                    }
+
+                    String alias = aux.getString("alias");
+                    String user = aux.getString("user");
+                    String psw = aux.getString("psw");
+                    String url = aux.getString("url");
+
+
+                    String connetion = aux.getString("connector");
+
+                    Connector connector = GetConnector(connetion);
+                    NoSQL n = new NoSQL(alias, user, psw, url, connector);
                     _new.getTargets().add(n);
                 }
 

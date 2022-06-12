@@ -189,7 +189,7 @@ public class NoSQLTargets extends javax.swing.JDialog {
         jComboBoxTarget.addItem(new CassandraConnector());
         jComboBoxTarget.addItem(new Cassandra2Connector());
         jComboBoxTarget.addItem(new SimpleDBConnector());
-        jComboBoxTarget.addItem(new Neo4jConnector("bolt://localhost:7687", "neo4j", "Neo4j"));
+        jComboBoxTarget.addItem(new Neo4jConnector());
     }//GEN-LAST:event_formWindowActivated
 
     private void jListAliasValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_jListAliasValueChanged
@@ -200,7 +200,11 @@ public class NoSQLTargets extends javax.swing.JDialog {
         if (!jListAlias.isSelectionEmpty()){
             dic.getTargets().remove(jListAlias.getSelectedValue());
         }
-        NoSQL n = new NoSQL(jTextFieldAlias.getText(), null, null, jTextFieldHost.getText(), (Connector)jComboBoxTarget.getSelectedItem());
+        String name = jTextFieldAlias.getText();
+        String host = jTextFieldHost.getText();
+        Object selectedItem = jComboBoxTarget.getSelectedItem();
+        Connector connector = (Connector) selectedItem;
+        NoSQL n = new NoSQL(name, null, null, host, connector);
         dic.getTargets().add(0, n);
         
         jTextFieldAlias.setText(null);

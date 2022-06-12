@@ -23,8 +23,11 @@ public class Neo4jConnector extends Connector implements AutoCloseable
     private static String DbName = "Neo4j";
     private String _nomeBancoDados = "";
 
-    public Neo4jConnector(String uri, String user, String password )
+    public Neo4jConnector()
     {
+        String uri = "bolt://localhost:7687";
+        String user = "neo4j";
+        String password = "Neo4j";
         driver = GraphDatabase.driver( uri, AuthTokens.basic( user, password ) );
     }
 
