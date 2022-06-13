@@ -64,16 +64,14 @@ public class Neo4jConnector extends Connector implements AutoCloseable
     @Override
     public void put(Table table, String key, LinkedList<String> cols, ArrayList<String> values)
     {
-        // TODO IMPLEMENTAT SEM PK
-        // TODO IMPLEMENTAR COM PK
-
         try (Session session = driver.session(SessionConfig.forDatabase(_nomeBancoDados)))
         {
             verifyDuplicateId(table, key, session);
-            verifyRelationships(table, values, session);
+            String querysRelationships = verifyRelationships(table, values, session);
 
             Map<String, Object> props = getStringObjectMap(key, cols, values);
-            String queryInsert = "CREATE (n:" + table.getName() + " $props)";
+            String queryInsert =  "CREATE (n:" + table.getName() + " $props)\n" +
+                                    querysRelationships;
 
             session.run(queryInsert, parameters("props", props));
         }
@@ -84,34 +82,46 @@ public class Neo4jConnector extends Connector implements AutoCloseable
         }
 
     }
-    private void verifyRelationships(Table table, ArrayList<String> values, Session session)
+    private String verifyRelationships(Table table, ArrayList<String> values, Session session)
     {
         ArrayList<String> erros = new ArrayList<>();
         ArrayList<ForeignKey> pks = table.getFks();
+        String queryRelationShip = "";
+
         for (int i = 0; i < pks.size(); i++) {
             ForeignKey pk = pks.get(i);
 
             String tableFk = pk.getrTable();
-            String tableAttributeReference = pk.getrAtt();
-            String tableAttribute = pk.getAtt();
+            String tableAttributeReferenceFk = pk.getrAtt();
+            String fkAttribute = pk.getAtt();
 
-            int indexPkReference = table.getAttributes().indexOf(tableAttribute);
-            String fkReferenceValue = values.get(indexPkReference);
-            String queryFk = getQueryAttribute(tableFk, tableAttributeReference, fkReferenceValue);
+            int indexFkAttribute = table.getAttributes().indexOf(fkAttribute);
+            String valueFkAttribute = values.get(indexFkAttribute);
+            String queryFk = getQueryAttribute(tableFk, tableAttributeReferenceFk, valueFkAttribute);
             List<Record> results = session.run(queryFk).list();
 
             if(results.size() != 1)
-                erros.add("Não foi possivel criar relacionamento entre atributo " + tableAttribute +
-                        " com a table " + tableFk + "(" + tableAttributeReference + ")" +
-                        " para o valor " + fkReferenceValue);
+                erros.add("Não foi possivel criar relacionamento entre atributo " + fkAttribute +
+                        " com a tabela " + tableFk + "(" + tableAttributeReferenceFk + ")" +
+                        " para o valor " + valueFkAttribute);
+            else
+            {
+                String nodeShortCutName = "b" + i;
+                queryRelationShip +=    "WITH (n)\n" +
+                                        "MATCH (" + nodeShortCutName + ":" + tableFk + ")\n" +
+                                        "WHERE " + nodeShortCutName + "." + tableAttributeReferenceFk + " = '" + valueFkAttribute + "'\n" +
+                                        "CREATE (n)-[:" + tableAttributeReferenceFk + "]->(" + nodeShortCutName + ")\n";
+            }
+
         }
 
-        for (int i = 0; i < erros.size(); i++) {
+        for (int i = 0; i < erros.size(); i++)
             System.out.println(erros.get(i));
-        }
 
         if(erros.size() > 0)
             throw new UnsupportedOperationException("Não foi possível criar relacionamentos. Verifique os logs para mais detalhes sobre os erros");
+        else
+            return queryRelationShip;
     }
 
     private void verifyDuplicateId(Table table, String key, Session session) {
@@ -142,7 +152,7 @@ public class Neo4jConnector extends Connector implements AutoCloseable
 
     private String getQueryAttribute(String table, String atribute, String value)
     {
-        return "Match (n:"+ table + ") Where n." + atribute + "=" + value + " return n";
+        return "Match (n:"+ table + ") Where n." + atribute + "='" + value + "' return n";
     }
 
     /**
