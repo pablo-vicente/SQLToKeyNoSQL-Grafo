@@ -250,7 +250,16 @@ public class ExecutionEngine {
             }
             result.setColumns((LinkedList<String>)cols);
             long now = new Date().getTime();
-            result.setData(t.getTargetDB().getConection().getN(1, t.getName(), t.getKeys(),filters, (LinkedList) cols));
+
+            NoSQL target = t.getTargetDB();
+            Connector conection = target.getConection();
+            String name = t.getName();
+            int numeroMagico = 1;
+            ArrayList<String> keys = t.getKeys();
+            LinkedList cols2 = (LinkedList) cols;
+
+            ArrayList<String[]> arrayList = conection.getN(numeroMagico, name, keys,filters, cols2);
+            result.setData(arrayList);
             TimeConter.current += (new Date().getTime()) - now;
                 
 //            for (HashMap<String, String> tpl: tuples) {
