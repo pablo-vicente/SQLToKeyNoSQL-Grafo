@@ -230,7 +230,12 @@ public class Parser {
                     exList = new <ExpressionList>ArrayList();
                     exList.add((ExpressionList) ins.getItemsList());
                 }
-                int s = ins.getColumns().size(), j = 0;
+
+                List<Column> columns = ins.getColumns();
+                if(columns == null || columns.size() == 0)
+                    throw new UnsupportedOperationException("e necessario declarar as colunas no INSERT!");
+
+                int s = columns.size(), j = 0;
                 LinkedList<String> cols;
                         ArrayList vals;
                 cols = new <String> LinkedList();
