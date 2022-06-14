@@ -173,7 +173,36 @@ public class Neo4jConnector extends Connector implements AutoCloseable
     @Override
     public HashMap<String, String> get(int n, String t, String key) {
 
-//        "MATCH (n:Movie) RETURN n LIMIT 25"
+        try (Session session = driver.session(SessionConfig.forDatabase(_nomeBancoDados)))
+        {
+
+            String querySelect = getQueryAttribute(t, _idColumnName, key);
+            List<Record> results = session.run(querySelect).list();
+
+            HashMap<String, String> props = new HashMap<>();
+            for (int i = 0; i < results.size(); i++)
+            {
+                Map<String, Object> maps = results.get(i)
+                        .fields()
+                        .get(0)
+                        .value()
+                        .asMap();
+
+                for (Map.Entry<String, Object> stringObjectEntry : maps.entrySet())
+                {
+                    String keyMap = stringObjectEntry.getKey();
+                    String valueMap = stringObjectEntry.getValue().toString();
+                    props.put(keyMap, valueMap);
+                }
+
+                return props;
+            }
+        }
+        catch (Exception exception)
+        {
+            System.out.println(exception);
+            throw exception;
+        }
 
         return null;
     }
