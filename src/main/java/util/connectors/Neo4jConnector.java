@@ -8,6 +8,7 @@ import java.util.*;
 import com.lisa.sqltokeynosql.architecture.Connector;
 import org.neo4j.driver.*;
 import org.neo4j.driver.Record;
+import org.neo4j.driver.summary.SummaryCounters;
 import util.SQL.ForeignKey;
 import util.SQL.Table;
 
@@ -45,13 +46,8 @@ public class Neo4jConnector extends Connector implements AutoCloseable
                 .replace("_", ".");
         try (Session session = driver.session())
         {
-            session.run("CREATE DATABASE $databasename IF NOT EXISTS",
-                    parameters("databasename", _nomeBancoDados));
-        }
-        catch (Exception exception)
-        {
-            System.out.println(exception);
-            throw exception;
+            String query = "CREATE DATABASE " + _nomeBancoDados + " IF NOT EXISTS";
+            session.run(query);
         }
     }
 
@@ -73,14 +69,11 @@ public class Neo4jConnector extends Connector implements AutoCloseable
             String queryInsert =  "CREATE (n:" + table.getName() + " $props)\n" +
                                     querysRelationships;
 
-            session.run(queryInsert, parameters("props", props));
+            Result result =session.run(queryInsert, parameters("props", props));
+            SummaryCounters summaryCounters = result.consume().counters();
+            int deletedNodes = summaryCounters.nodesCreated() + summaryCounters.relationshipsCreated();
+            verifyQueryResult(deletedNodes, queryInsert);
         }
-        catch (Exception exception)
-        {
-            System.out.println(exception);
-            throw exception;
-        }
-
     }
     private String verifyRelationships(Table table, ArrayList<String> values, Session session)
     {
@@ -101,9 +94,9 @@ public class Neo4jConnector extends Connector implements AutoCloseable
             List<Record> results = session.run(queryFk).list();
 
             if(results.size() != 1)
-                erros.add("Não foi possivel criar relacionamento entre atributo " + fkAttribute +
-                        " com a tabela " + tableFk + "(" + tableAttributeReferenceFk + ")" +
-                        " para o valor " + valueFkAttribute);
+                erros.add("Nao foi possivel criar relacionamento entre atributo '" + fkAttribute + " '" +
+                        " com a tabela '" + tableFk + " (" + tableAttributeReferenceFk + ")'" +
+                        " para o valor '" + valueFkAttribute + "' inexistente.");
             else
             {
                 String nodeShortCutName = "b" + i;
@@ -160,8 +153,28 @@ public class Neo4jConnector extends Connector implements AutoCloseable
      * @param key
      */
     @Override
-    public void delete(String table, String key) {
+    public void delete(String table, String key)
+    {
+        try (Session session = driver.session(SessionConfig.forDatabase(_nomeBancoDados)))
+        {
+            String queryDelete = "MATCH (n:" + table + ") " +
+                                 "WHERE n." + _idColumnName + "='" + key + "'" +
+                                 "DETACH DELETE n " +
+                                 "return n";
 
+            Result result = session.run(queryDelete);
+            SummaryCounters ss = result.consume().counters();
+            int deletedNodes = ss.nodesDeleted() + ss.relationshipsDeleted();
+            verifyQueryResult(deletedNodes, queryDelete);
+
+        }
+
+    }
+
+    private void verifyQueryResult(int affectedNodes, String query)
+    {
+        if(affectedNodes == 0)
+            throw new UnsupportedOperationException("Os dados informados nao alteraram os dados do banco verifique a query. \n" + query);
     }
 
     /**
@@ -194,17 +207,10 @@ public class Neo4jConnector extends Connector implements AutoCloseable
                     String valueMap = stringObjectEntry.getValue().toString();
                     props.put(keyMap, valueMap);
                 }
-
-                return props;
             }
-        }
-        catch (Exception exception)
-        {
-            System.out.println(exception);
-            throw exception;
-        }
 
-        return null;
+            return props;
+        }
     }
 
     @Override

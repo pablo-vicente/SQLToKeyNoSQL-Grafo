@@ -172,8 +172,11 @@ public class ExecutionEngine {
         DataSet ds = getDataSetBl(tables, cols, filters);
         for(String [] tuple : ds.getData()){
             ArrayList<String> val = new ArrayList();
-            for(int i=0;i<acls.size();i++){
-                tuple[cols.indexOf(acls.get(i))] = (String) avl.get(i);
+            for(int i=0;i<acls.size();i++)
+            {
+                Object coluna = acls.get(i);
+                int indexColuna = cols.indexOf(coluna);
+                tuple[indexColuna] = (String) avl.get(i);
             }
             for (int i = 0; i<cols.size()-1;i++){
                 val.add(tuple[i]);
