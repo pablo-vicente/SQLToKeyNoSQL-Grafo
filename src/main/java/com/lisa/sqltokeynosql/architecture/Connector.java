@@ -120,10 +120,9 @@ public abstract class Connector {
             result = (result || applyFilterR(filters, tuple));
         } else {
             String col = null;
-            Object val = null;
+            Object val = Parser.removeInvalidCaracteres(filters.pop().toString());
             Operator op = null;
             op = ((Operator) o);
-            val = filters.pop();
             col = ((Column) filters.pop()).getColumnName();
             result = compare((String) tuple.get(col), op, val);
         }

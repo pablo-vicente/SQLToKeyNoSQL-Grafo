@@ -149,19 +149,27 @@ public class ExecutionEngine {
     }
 
     void deleteData(String table, Stack<Object> filters) {
-        //ArrayList<Table> tables = new <Table>ArrayList();
 
         Table t = dic.getCurrent_db().getTable(table);
         System.out.print("Table: " + table + ", r: " + t.getKeys().size());
         //t.setKeys(new ArrayList<String>());
-        LinkedList <String> cols = new LinkedList();
         ArrayList <String> tables = new ArrayList();
         tables.add(table);
-        cols.add("_key");
-        DataSet ds = getDataSetBl(tables, cols, filters);
-        for(String [] tuple : ds.getData()){
-            t.getTargetDB().getConection().delete(table, tuple[0]);
-            t.getKeys().remove(tuple[0]);
+//        cols.add("_key");
+        DataSet ds = getDataSetBl(tables, t.getAttributes(), filters);
+        ArrayList<String[]> tuples = ds.getData();
+
+        if(tuples.size() == 0)
+            throw new UnsupportedOperationException("Nenhum registro encontrado.");
+
+        for(String [] tuple : tuples){
+            ArrayList<String> val = new ArrayList();
+            for (int i = 0; i < t.getAttributes().size();i++)
+                val.add(tuple[i]);
+
+            String key = getKey(t, t.getAttributes(), val);
+            t.getTargetDB().getConection().delete(table, key);
+            t.getKeys().remove(key);
         }
         
         System.out.println(" new: " + t.getKeys().size());

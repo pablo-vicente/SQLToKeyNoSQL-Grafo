@@ -124,7 +124,7 @@ public class Parser {
         return result;
     }
 
-    private static String removeInvalidCaracteres(String base)
+    public static String removeInvalidCaracteres(String base)
     {
        return base.replaceAll("^(['\"])(.*)\\1$", "$2");
     }
