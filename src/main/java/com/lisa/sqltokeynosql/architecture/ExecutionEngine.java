@@ -5,12 +5,8 @@
  */
 package com.lisa.sqltokeynosql.architecture;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
+
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
@@ -18,6 +14,7 @@ import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.Join;
 import net.sf.jsqlparser.util.deparser.ExpressionDeParser;
 import util.*;
+import util.Dictionary;
 import util.SQL.JoinStatment;
 import util.SQL.Table;
 import util.joins.HashJoin;
@@ -69,13 +66,9 @@ public class ExecutionEngine {
         return false;
     }
 
-    public boolean insertData(String table, LinkedList<String> columns, ArrayList<String> values) {
-        Table tableDb = dic.getCurrent_db().getTable(table);
-        if (tableDb == null) {
-            System.out.println("Tabela não Existe!");
-            return false;
-        }
-        boolean equal = true;
+    private String getKey(Table tableDb, LinkedList<String> columns, ArrayList<String> values)
+    {
+        boolean equal;
         String key = "";
         for (String k : tableDb.getPks()) {
             equal = false;
@@ -88,9 +81,24 @@ public class ExecutionEngine {
             }
             if (!equal) {
                 System.out.println("Falta uma pk");
-                return false;
+                return "";
             }
         }
+
+        return key;
+    }
+
+    public boolean insertData(String table, LinkedList<String> columns, ArrayList<String> values) {
+        Table tableDb = dic.getCurrent_db().getTable(table);
+        if (tableDb == null) {
+            System.out.println("Tabela não Existe!");
+            return false;
+        }
+
+        String key = getKey(tableDb, columns, values);
+        if (key == "")
+            return false;
+
         long now = new Date().getTime();
 
         NoSQL targetDb = tableDb.getTargetDB();
@@ -168,7 +176,7 @@ public class ExecutionEngine {
         LinkedList <String> cols = t.getAttributes();
         ArrayList <String> tables = new ArrayList();
         tables.add(table);
-        cols.add("_key");
+//        cols.add("_key");
         DataSet ds = getDataSetBl(tables, cols, filters);
         for(String [] tuple : ds.getData()){
             ArrayList<String> val = new ArrayList();
@@ -178,14 +186,15 @@ public class ExecutionEngine {
                 int indexColuna = cols.indexOf(coluna);
                 tuple[indexColuna] = (String) avl.get(i);
             }
-            for (int i = 0; i<cols.size()-1;i++){
+            for (int i = 0; i<cols.size();i++){
                 val.add(tuple[i]);
             }
-            String k = tuple[cols.size()-1];
-            t.getTargetDB().getConection().delete(table, k);
+//            String k = tuple[cols.size()-1];
+            String key = getKey(t, cols, val);
+            t.getTargetDB().getConection().delete(table, key);
             //tuple[cols.indexOf()]
-            cols.remove("_key");
-            t.getTargetDB().getConection().put(t, k, cols, val);
+//            cols.remove("_key");
+            t.getTargetDB().getConection().put(t, key, cols, val);
         }
         
         System.out.println(" new: " + t.getKeys().size());
