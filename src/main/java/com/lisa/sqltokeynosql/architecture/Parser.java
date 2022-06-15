@@ -124,6 +124,11 @@ public class Parser {
         return result;
     }
 
+    private static String removeInvalidCaracteres(String base)
+    {
+       return base.replaceAll("^(['\"])(.*)\\1$", "$2");
+    }
+
     private boolean run(Statement statement) {
         dataSet = null;
         ds = null;
@@ -255,9 +260,7 @@ public class Parser {
                     for (int i = 0; i < s; i++)
                     {
                         Expression valueExpression = values.get(i);
-                        String value = valueExpression
-                                .toString()
-                                .replaceAll("^(['\"])(.*)\\1$", "$2");
+                        String value = removeInvalidCaracteres(valueExpression.toString());
 
                         vals.add(value);
                     }
@@ -299,8 +302,10 @@ public class Parser {
                     cols.add(col.getColumnName());
                 }
                 ArrayList <String> vals = new <String> ArrayList();
-                for (Expression e : update.getExpressions()){
-                    vals.add(e.toString());
+                for (Expression e : update.getExpressions())
+                {
+                    String valueColumn = removeInvalidCaracteres(e.toString());
+                    vals.add(valueColumn);
                 }
                 //ps.getFromItem().
                 Stack<Object> filters = null;
