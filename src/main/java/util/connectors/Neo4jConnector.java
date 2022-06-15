@@ -218,14 +218,8 @@ public class Neo4jConnector extends Connector implements AutoCloseable
         return DbName;
     }
 
-    public static String DbName()
-    {
-        return DbName;
-    }
-
     @Override
-    public void close() throws Exception
-    {
+    public void close() {
         driver.close();
     }
 }
