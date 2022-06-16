@@ -105,7 +105,7 @@ public class Parser {
                     TimeConter.current = 0;
                     long setTime = new Date().getTime();
                     long resetTime = 0;
-                    Statements stmt = CCJSqlParserUtil.parseStatements(sb.toString());
+                    Statements stmt = CCJSqlParserUtil.parseStatements(sb.toString().toLowerCase());
 
                     for (Statement st : stmt.getStatements()) {
                         result &= this.run(st);
