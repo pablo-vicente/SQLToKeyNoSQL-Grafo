@@ -6,6 +6,7 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.lisa.sqltokeynosql.architecture.Connector;
+import util.Dictionary;
 import util.SQL.Table;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,7 +33,7 @@ public class CassandraConnector extends Connector {
     }
 
     @Override
-    public void put(Table table, String key, LinkedList<String> cols, ArrayList<String> values) {
+    public void put(Dictionary dictionary, Table table, String key, LinkedList<String> cols, ArrayList<String> values) {
         String cql = "INSERT INTO " + table.getName() + " ";
         String c = "(key, ", v = "('" + key + "', ";
         for (int i = 0; i < cols.size(); i++) {

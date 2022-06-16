@@ -9,6 +9,7 @@ import com.lisa.sqltokeynosql.architecture.Connector;
 import org.neo4j.driver.*;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.summary.SummaryCounters;
+import util.Dictionary;
 import util.SQL.ForeignKey;
 import util.SQL.Table;
 
@@ -58,16 +59,44 @@ public class Neo4jConnector extends Connector implements AutoCloseable
      * @param values
      */
     @Override
-    public void put(Table table, String key, LinkedList<String> cols, ArrayList<String> values)
+    public void put(Dictionary dictionary, Table table, String key, LinkedList<String> cols, ArrayList<String> values)
     {
         try (Session session = driver.session(SessionConfig.forDatabase(_nomeBancoDados)))
         {
             verifyDuplicateId(table, key, session);
             String querysRelationships = verifyRelationships(table, values, session);
 
+            ////////////////////////
+            ArrayList<Table> tables = dictionary.getCurrent_db().getTables();
+            String queryRelationShipWithtable = "";
+            for (int i = 0; i < tables.size(); i++)
+            {
+                Table tableWithFk = tables.get(i);
+                ArrayList<ForeignKey> fks = tableWithFk.getFks();
+
+                for (int i1 = 0; i1 < fks.size(); i1++)
+                {
+                    ForeignKey foreignKey = fks.get(i1);
+                    String tableFk = foreignKey.getrTable();
+                    String tableAttributeReferenceFk = foreignKey.getrAtt();
+                    String fkAttribute = foreignKey.getAtt();
+
+                    if(!tableFk.equalsIgnoreCase(table.getName()))
+                        continue;
+                    String nodeShortCutName = "c" + i1;
+                    queryRelationShipWithtable +=  "WITH (n)\n" +
+                                "MATCH (" + nodeShortCutName + ":" + tableWithFk.getName() + ")\n" +
+                                "WHERE " + nodeShortCutName + "." + fkAttribute + " = n." + tableAttributeReferenceFk + "\n" +
+                                "CREATE (" + nodeShortCutName + ")-[:" + tableAttributeReferenceFk + "]->(n)\n";
+                }
+            }
+
+            ////////////////////////
+
+
             Map<String, Object> props = getStringObjectMap(key, cols, values);
             String queryInsert =  "CREATE (n:" + table.getName() + " $props)\n" +
-                                    querysRelationships;
+                                    querysRelationships + queryRelationShipWithtable;
 
             Result result =session.run(queryInsert, parameters("props", props));
             SummaryCounters summaryCounters = result.consume().counters();

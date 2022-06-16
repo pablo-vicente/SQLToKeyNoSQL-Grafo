@@ -103,7 +103,7 @@ public class ExecutionEngine {
 
         NoSQL targetDb = tableDb.getTargetDB();
         Connector connection = targetDb.getConection();
-        connection.put(tableDb, key, columns, values);
+        connection.put(dic, tableDb, key, columns, values);
 
         TimeConter.current += (new Date().getTime()) - now;
         tableDb.getKeys().add(key);
@@ -202,7 +202,7 @@ public class ExecutionEngine {
             t.getTargetDB().getConection().delete(table, key);
             //tuple[cols.indexOf()]
 //            cols.remove("_key");
-            t.getTargetDB().getConection().put(t, key, cols, val);
+            t.getTargetDB().getConection().put(dic, t, key, cols, val);
         }
         
         System.out.println(" new: " + t.getKeys().size());

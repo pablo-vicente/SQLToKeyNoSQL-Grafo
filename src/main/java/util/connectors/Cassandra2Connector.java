@@ -16,6 +16,7 @@ import com.netflix.astyanax.model.ColumnFamily;
 import com.netflix.astyanax.model.ColumnList;
 import com.netflix.astyanax.serializers.StringSerializer;
 import com.netflix.astyanax.thrift.ThriftFamilyFactory;
+import util.Dictionary;
 import util.SQL.Table;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -53,7 +54,7 @@ public class Cassandra2Connector extends Connector {
     }
 
     @Override
-    public void put(Table table, String key, LinkedList<String> cols, ArrayList<String> values) {
+    public void put(Dictionary dictionary, Table table, String key, LinkedList<String> cols, ArrayList<String> values) {
         ColumnFamily<String, String> TABLE
                 = new ColumnFamily<String, String>(
                         table.getName(), // Column Family Name

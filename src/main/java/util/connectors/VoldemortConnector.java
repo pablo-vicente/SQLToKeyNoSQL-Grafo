@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import org.json.JSONObject;
+import util.Dictionary;
 import util.SQL.Table;
 import voldemort.client.ClientConfig;
 import voldemort.client.SocketStoreClientFactory;
@@ -31,7 +32,7 @@ public class VoldemortConnector extends Connector {
     }
 
     @Override
-    public void put(Table table, String key, LinkedList<String> cols, ArrayList<String> values) {
+    public void put(Dictionary dictionary, Table table, String key, LinkedList<String> cols, ArrayList<String> values) {
         HashMap<String, String> current = new HashMap<>();
         for (int i = 0; i < cols.size(); i++) {
             current.put(cols.get(i), values.get(i));

@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Stack;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.schema.Column;
+import util.Dictionary;
 import util.SQL.Table;
 import util.operations.Equal;
 import util.operations.Greater;
@@ -47,7 +48,7 @@ public class SimpleDBConnector extends Connector {
     }
 
     @Override
-    public void put(Table table, String key, LinkedList<String> cols, ArrayList<String> values) {
+    public void put(Dictionary dictionary, Table table, String key, LinkedList<String> cols, ArrayList<String> values) {
 
         if (null == this.client) {
             System.err.println("Problemas na conexão com o SimpleDB");

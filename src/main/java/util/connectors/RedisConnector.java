@@ -12,6 +12,7 @@ import java.util.Map;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
+import util.Dictionary;
 import util.SQL.Table;
 
 /**
@@ -31,7 +32,7 @@ public class RedisConnector extends Connector{
     }
 
     @Override
-    public void put(Table table, String key, LinkedList<String> cols, ArrayList<String> values) {
+    public void put(Dictionary dictionary, Table table, String key, LinkedList<String> cols, ArrayList<String> values) {
         if (jedis != null){
             HashMap<String, String> current = new HashMap<>();
             for (int i = 0; i < cols.size(); i++) {
