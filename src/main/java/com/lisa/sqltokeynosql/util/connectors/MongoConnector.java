@@ -5,19 +5,20 @@ import com.mongodb.*;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.schema.Column;
 import com.lisa.sqltokeynosql.util.operations.*;
+import com.lisa.sqltokeynosql.util.sql.Table;
 
 import java.util.*;
 
 /**
  * @author geomar
  */
-public class MongoConnector extends Connector {
+public class MongoConnector extends Connector{
 
     private final MongoClient mongoClient;
-    DB mongoDatabase;
+    public DB mongoDatabase;
 
     public MongoConnector() {
-        mongoClient = new MongoClient();
+        mongoClient = new MongoClient(new MongoClientURI("mongodb://root:root@localhost:27017"));
     }
 
     public MongoConnector(String user, String password, String hostAndPort) {

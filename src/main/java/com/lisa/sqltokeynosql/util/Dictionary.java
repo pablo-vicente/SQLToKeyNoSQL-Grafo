@@ -90,7 +90,7 @@ public final class Dictionary implements Serializable {
         String dbName = split[DB];
         String tableName = split[TABLE];
         return getBDR(dbName)
-                .flatMap(dbr -> getTable(tableName));
+                .flatMap(dbr -> dbr.getTable(tableName));
     }
 
     private static boolean tableSpecifiesDB(String tableName) {

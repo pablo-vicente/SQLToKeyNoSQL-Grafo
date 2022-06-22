@@ -6,6 +6,7 @@
 package com.lisa.sqltokeynosql.architecture;
 
 import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.statement.select.FromItem;
 import net.sf.jsqlparser.statement.select.Join;
 import net.sf.jsqlparser.util.deparser.ExpressionDeParser;
 import com.lisa.sqltokeynosql.util.Dictionary;
@@ -16,7 +17,6 @@ import com.lisa.sqltokeynosql.util.sql.Table;
 
 import java.util.*;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -69,9 +69,9 @@ public class ExecutionEngine {
         String key = "";
         for (String k : table.getPks()) {
             boolean equal = false;
-            for (String aux : columns) {
-                if (k.equals(aux)) {
-                    key += (key.length() > 0 ? "_" : "") + values.get(columns.indexOf(aux));
+            for (String column : columns) {
+                if (k.equals(column)) {
+                    key += (key.length() > 0 ? "_" : "") + values.get(columns.indexOf(column));
                     equal = true;
                     break;
                 }
@@ -133,7 +133,7 @@ public class ExecutionEngine {
 
     DataSet getDataSetBl(final List<String> tableNames, final List<String> cols, final Stack<Object> filters) {
         return tableNames
-                .parallelStream()
+                .stream()
                 .map(dictionary::getTable)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
@@ -155,27 +155,39 @@ public class ExecutionEngine {
     }
 
     private ArrayList getNWrapper(final Table table, final LinkedList columns, final Stack<Object> filters, final int n) {
-        return table.getTargetDB().getConnection().getN(n, table.getName(), (ArrayList<String>) table.getKeys(), filters, columns);
+        long begin = new Date().getTime();
+        ArrayList result = table.getTargetDB().getConnection().getN(n, table.getName(), (ArrayList<String>) table.getKeys(), filters, columns);
+        System.out.println(String.format("Time: %d, ThreadName: %s", new Date().getTime() - begin, Thread.currentThread().getName()));
+        return result;
     }
 
     DataSet getDataSet(final List<String> tableNames, final LinkedList<String> columns, final Stack<Object> filters, final List<Join> joins) {
 
+        List<Table> tables = tableNames
+                .stream()
+                .map(dictionary::getTable)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(toList());
+
         Future<DataSet> innerDataJob = threadPool
-            .submit(() -> getInnerDataSet(tableNames, columns, filters));
+            .submit(() -> getInnerDataSet(tables.get(0), columns, filters));
         
         List<Callable<Result>> jobs = new ArrayList<>();
         for (Join join : joins) {
             jobs.add(() -> getOuterData(columns, filters, join));
         }
-        
-        List<Result> data = getFutures(jobs).stream()
-                                            .map(this::getCompleted)
-                                            .collect(toList());
-        
-        DataSet result = new DataSet();
+        List<Future<Result>> futures = getFutures(jobs);
 
         DataSet innerData = completeInnerDataJob(innerDataJob);
         if (innerData == null) return null;
+        
+        List<Result> data = new ArrayList<>();
+        for (Future<Result> job: futures) {
+            data.add(getCompleted(job));
+        }
+        
+        DataSet result = new DataSet();
 
         for (Result res : data) {
             HashJoin join = new HashJoin();
@@ -220,7 +232,7 @@ public class ExecutionEngine {
             deparser.setBuffer(b);
             e.accept(deparser);
             on = ((JoinStatement) deparser).getParsedFilters();
-            Table outer = dictionary.getCurrentDb().getTable(((net.sf.jsqlparser.schema.Table) j.getRightItem()).getName()).get();
+            Table outer = dictionary.getTable(getTableName(j)).get();
 
             LinkedList<String> outerCols = new LinkedList();
             for (String col : columns) {
@@ -256,6 +268,11 @@ public class ExecutionEngine {
         return new Result(on, outerData);
     }
 
+    private String getTableName(Join j) {
+        net.sf.jsqlparser.schema.Table table = (net.sf.jsqlparser.schema.Table)j.getRightItem();
+        return table.getSchemaName() + "." + table.getName();
+    }
+
     public NoSQL getTarget(String schemaName) {
         return dictionary.getTarget(schemaName);
     }
@@ -277,11 +294,6 @@ public class ExecutionEngine {
         return dictionary.getRdbms();
     }
 
-    public void setCurrentDb(String currentDataBase) {
-        dictionary.setCurrentDb(currentDataBase);
-        DictionaryDAO.storeDictionary(dictionary);
-    }
-
     static class Result {
         public Stack<Object> on;
         public DataSet outerData;
@@ -292,24 +304,18 @@ public class ExecutionEngine {
         }
     }
 
-    private DataSet getInnerDataSet(List<String> tableNames, LinkedList<String> columns, Stack<Object> filters) {
-        List<Table> tables = tableNames
-                .stream()
-                .map(dictionary::getTable)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .collect(toList());
+    private DataSet getInnerDataSet(Table table, LinkedList<String> columns, Stack<Object> filters) {
 
         DataSet innerData = new DataSet();
-        Table inner = tables.get(0);
-        innerData.setTableName(inner.getName());
+        Table innerTable = table;
+        innerData.setTableName(innerTable.getName());
         LinkedList<String> innerCols = new LinkedList<>();
         for (String column : columns) {
             String[] c = column.split("\\.");
             if (c.length > 0) {
-                if (c[0].equals(inner.getName())) {
+                if (c[0].equals(innerTable.getName())) {
                     if (c[1].equals("*")) {
-                        innerCols.addAll(inner.getAttributes());
+                        innerCols.addAll(innerTable.getAttributes());
                     } else {
                         innerCols.add(c[1]);
                     }
@@ -323,9 +329,9 @@ public class ExecutionEngine {
         innerData.setColumns(innerCols);
 
         if (filters != null) {
-            innerData.setData(getNWrapper(inner, innerCols, (Stack<Object>) filters.clone(), 0));
+            innerData.setData(getNWrapper(innerTable, innerCols, (Stack<Object>) filters.clone(), 0));
         } else {
-            innerData.setData(getNWrapper(inner, innerCols, null, 0));
+            innerData.setData(getNWrapper(innerTable, innerCols, null, 0));
         }
         return innerData;
     }

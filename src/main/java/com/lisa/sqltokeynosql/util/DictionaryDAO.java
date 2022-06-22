@@ -2,6 +2,7 @@ package com.lisa.sqltokeynosql.util;
 
 import com.mongodb.Block;
 import com.mongodb.MongoClient;
+import com.mongodb.MongoClientURI;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
@@ -17,7 +18,7 @@ import java.util.*;
 public class DictionaryDAO {
 
     public static void storeDictionary(Dictionary dic) {
-        MongoClient mongoClient = new MongoClient();
+        MongoClient mongoClient = new MongoClient(new MongoClientURI("mongodb://root:root@localhost:27017"));
         MongoDatabase db = mongoClient.getDatabase("_dictionary");
         Document dictionary = new Document("_id", "_dictionary");
         Document bdrs = new Document();
@@ -32,14 +33,6 @@ public class DictionaryDAO {
             int con = 1;
             if (n.getConnection() instanceof MongoConnector) {
                 con = 1;
-            } else if (n.getConnection() instanceof Cassandra2Connector) {
-                con = 2;
-            } else if (n.getConnection() instanceof CassandraConnector) {
-                con = 3;
-            } else if (n.getConnection() instanceof RedisConnector) {
-                con = 4;
-            } else if (n.getConnection() instanceof SimpleDBConnector) {
-                con = 5;
             }
             aux.append("connector", con);
             targets.append(n.getAlias(), aux);
@@ -87,7 +80,7 @@ public class DictionaryDAO {
     }
 
     public static Optional<Dictionary> loadDictionary() {
-        MongoClient mongoClient = new MongoClient();
+        MongoClient mongoClient = new MongoClient(new MongoClientURI("mongodb://root:root@localhost:27017"));
         MongoDatabase db = mongoClient.getDatabase("_dictionary");
         MongoCollection<Document> cdic = db.getCollection("_dictionary");
         if (cdic.count() < 1) {
@@ -109,22 +102,22 @@ public class DictionaryDAO {
                         n.setConnection(new MongoConnector());
                         break;
                     }
-                    case 2: {
-                        n.setConnection(new Cassandra2Connector());
-                        break;
-                    }
-                    case 3: {
-                        n.setConnection(new CassandraConnector());
-                        break;
-                    }
-                    case 4: {
-                        n.setConnection(new RedisConnector());
-                        break;
-                    }
-                    case 5: {
-                        n.setConnection(new SimpleDBConnector());
-                        break;
-                    }
+                    // case 2: {
+                    //     n.setConnection(new Cassandra2Connector());
+                    //     break;
+                    // }
+                    // case 3: {
+                    //     n.setConnection(new CassandraConnector());
+                    //     break;
+                    // }
+                    // case 4: {
+                    //     n.setConnection(new RedisConnector());
+                    //     break;
+                    // }
+                    // case 5: {
+                    //     n.setConnection(new SimpleDBConnector());
+                    //     break;
+                    // }
                     default: {
                         n.setConnection(new MongoConnector());
                     }

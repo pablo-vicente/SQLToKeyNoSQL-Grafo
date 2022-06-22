@@ -1,13 +1,10 @@
 package com.lisa.sqltokeynosql.api.dto;
 
-import com.lisa.sqltokeynosql.api.enums.Connector;
-
 public class NoSqlTargetDTO {
     private String url;
     private String user;
     private String password;
     private String name;
-    private Connector connector;
 
     public String getUrl() {
         return url;
@@ -40,13 +37,5 @@ public class NoSqlTargetDTO {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public Connector getConnector() {
-        return connector;
-    }
-
-    public void setConnector(Connector connector) {
-        this.connector = connector;
     }
 }
