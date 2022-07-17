@@ -186,7 +186,9 @@ public class Neo4jConnector extends Connector implements AutoCloseable
 
     private String getQueryAttribute(String table, String atribute, String value)
     {
-        return "Match (n:"+ table + ") Where n." + atribute + "=" + value + " return n";
+        return "MATCH (n:"+ table + ") " +
+               "WHERE n." + atribute + "=" + value + " " +
+               "RETURN n";
     }
 
     /**
@@ -200,8 +202,7 @@ public class Neo4jConnector extends Connector implements AutoCloseable
         {
             String queryDelete = "MATCH (n:" + table + ") " +
                                  "WHERE n." + _idColumnName + "=" + key + " " +
-                                 "DETACH DELETE n " +
-                                 "RETURN n";
+                                 "DETACH DELETE n";
 
             Result result = session.run(queryDelete);
             SummaryCounters ss = result.consume().counters();
