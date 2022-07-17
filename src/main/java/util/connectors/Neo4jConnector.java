@@ -199,9 +199,9 @@ public class Neo4jConnector extends Connector implements AutoCloseable
         try (Session session = driver.session(SessionConfig.forDatabase(_nomeBancoDados)))
         {
             String queryDelete = "MATCH (n:" + table + ") " +
-                                 "WHERE n." + _idColumnName + "=" + key +
+                                 "WHERE n." + _idColumnName + "=" + key + " " +
                                  "DETACH DELETE n " +
-                                 "return n";
+                                 "RETURN n";
 
             Result result = session.run(queryDelete);
             SummaryCounters ss = result.consume().counters();
