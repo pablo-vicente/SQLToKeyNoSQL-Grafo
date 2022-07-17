@@ -131,7 +131,7 @@ public class Neo4jConnector extends Connector implements AutoCloseable
                 String nodeShortCutName = "b" + i;
                 queryRelationShip +=    "WITH (n)\n" +
                                         "MATCH (" + nodeShortCutName + ":" + tableFk + ")\n" +
-                                        "WHERE " + nodeShortCutName + "." + tableAttributeReferenceFk + " = '" + valueFkAttribute + "'\n" +
+                                        "WHERE " + nodeShortCutName + "." + tableAttributeReferenceFk + " = " + valueFkAttribute + "\n" +
                                         "CREATE (n)-[:" + tableAttributeReferenceFk + "]->(" + nodeShortCutName + ")\n";
             }
 
@@ -162,7 +162,19 @@ public class Neo4jConnector extends Connector implements AutoCloseable
             String name = cols.get(i);
             String value = values.get(i);
 
-            props.put( name, value );
+            try
+            {
+                props.put( name, Integer.parseInt(value));
+            }catch (NumberFormatException ex)
+            {
+                try
+                {
+                    props.put( name, Double.parseDouble(value));
+                }catch (NumberFormatException ex1)
+                {
+                    props.put( name, value);
+                }
+            }
             if(_idColumnName.equalsIgnoreCase(name))
                 contaisId = true;
         }
@@ -174,7 +186,7 @@ public class Neo4jConnector extends Connector implements AutoCloseable
 
     private String getQueryAttribute(String table, String atribute, String value)
     {
-        return "Match (n:"+ table + ") Where n." + atribute + "='" + value + "' return n";
+        return "Match (n:"+ table + ") Where n." + atribute + "=" + value + " return n";
     }
 
     /**
