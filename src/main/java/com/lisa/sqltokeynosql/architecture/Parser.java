@@ -5,18 +5,6 @@
  */
 package com.lisa.sqltokeynosql.architecture;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Stack;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
@@ -24,7 +12,6 @@ import net.sf.jsqlparser.expression.operators.relational.MultiExpressionList;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.Statement;
-import net.sf.jsqlparser.statement.Statements;
 import net.sf.jsqlparser.statement.alter.Alter;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 import net.sf.jsqlparser.statement.create.table.CreateTable;
@@ -36,266 +23,65 @@ import net.sf.jsqlparser.statement.insert.Insert;
 import net.sf.jsqlparser.statement.select.Join;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
-import net.sf.jsqlparser.statement.select.SelectItem;
 import net.sf.jsqlparser.statement.update.Update;
 import net.sf.jsqlparser.util.TablesNamesFinder;
-import net.sf.jsqlparser.util.deparser.ExpressionDeParser;
-import util.DataSet;
-import util.Dictionary;
-import util.SQL.ForeignKey;
-import util.NoSQL;
-import util.SQL.Table;
-import util.TimeConter;
-import util.SQL.WhereStatment;
+import org.springframework.stereotype.Service;
+import com.lisa.sqltokeynosql.util.BDR;
+import com.lisa.sqltokeynosql.util.DataSet;
+import com.lisa.sqltokeynosql.util.NoSQL;
+import com.lisa.sqltokeynosql.util.sql.ForeignKey;
+import com.lisa.sqltokeynosql.util.sql.Table;
+import com.lisa.sqltokeynosql.util.sql.WhereStatement;
+
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static java.util.stream.Collectors.toCollection;
 
 /**
  *
  * @author geomar
  */
+@Service
 public class Parser {
 
-    private ExecutionEngine ex;
-    public ArrayList<HashMap<String, String>> dataSet;
-    public DataSet ds;
-    public long timeToDO;
-    public final Stack<Integer> stak;
+    private final ExecutionEngine executionEngine;
+    public final Stack<Integer> stack;
 
     public Parser() {
-        ex = new ExecutionEngine();
-        //ex.createDBR("teste");
-        stak = new Stack<>();
-        stak.push(1);
+        executionEngine = new ExecutionEngine();
+        stack = new Stack<>();
+        stack.push(1);
     }
 
-    public boolean run(String sql) {
-        Statement statement;
-        boolean result;
+    public Optional<DataSet> run(final String sql) {
         try {
-            statement = CCJSqlParserUtil.parse(sql);
-            timeToDO = 0;
-            TimeConter.current = 0;
-            long setTime = new Date().getTime();
-            long resetTime = 0;
+            Statement statement = CCJSqlParserUtil.parse(sql);
 
-            result = this.run(statement);
-            resetTime = new Date().getTime();
-            timeToDO = resetTime - setTime;
+            return run(statement);
         } catch (JSQLParserException ex) {
             Logger.getLogger(Parser.class.getName()).log(Level.SEVERE, null, ex);
-            return false;
+            return Optional.empty();
         }
-        return result;
     }
 
-    public boolean run(File script) {
-        FileReader fr;
-        Boolean result = false;
-        try {
-            fr = new FileReader(script);
-            // be sure to not have line starting with "--" or "/*" or any other non aplhabetical character
-
-            BufferedReader br = new BufferedReader(fr);
-            String s;
-            StringBuffer sb = new StringBuffer();
-                timeToDO = 0;
-            while ((s = br.readLine()) != null) {
-                sb.append(s);
-                
-                if (sb.toString().contains(";")){
-                    TimeConter.current = 0;
-                    long setTime = new Date().getTime();
-                    long resetTime = 0;
-                    Statements stmt = CCJSqlParserUtil.parseStatements(sb.toString());
-
-                    for (Statement st : stmt.getStatements()) {
-                        result &= this.run(st);
-                    }
-                    resetTime = new Date().getTime();
-                    timeToDO += resetTime - setTime;
-                    sb = new StringBuffer();
-                }
-            }
-            br.close();
-            
-        } catch (Exception ex) {
-            Logger.getLogger(Parser.class.getName()).log(Level.SEVERE, null, ex);
-            return false;
-        }
-        return result;
-    }
-
-    private boolean run(Statement statement) {
-        dataSet = null;
-        ds = null;
+    private Optional<DataSet> run(final Statement statement) {
         try {
             if (statement instanceof Select) {
-                Select selectStatement = (Select) statement;
-                TablesNamesFinder tablesNamesFinder = new TablesNamesFinder();
-                List<String> tableList = tablesNamesFinder.getTableList(selectStatement);
-                
-                LinkedList<String> cols = new LinkedList<>();
-                PlainSelect ps = (PlainSelect) selectStatement.getSelectBody();
-                for (SelectItem si : ps.getSelectItems()) {
-                    cols.add(si.toString());
-                }
-                //ps.getFromItem().
-                Stack<Object> filters = null;
-                if (ps.getWhere() != null) {
-                    Expression e = ps.getWhere();
-                    ExpressionDeParser deparser = new WhereStatment();
-                    StringBuilder b = new StringBuilder();
-                    deparser.setBuffer(b);
-                    e.accept(deparser);
-                    filters = ((WhereStatment) deparser).getParsedFilters();
-                }
-                
-                if (ps.getJoins() != null && !ps.getJoins().isEmpty()){
-                  List <Join> joins = ps.getJoins();
-                  for(int i = 0; i< joins.size();i++){
-                      Join j = joins.get(i);
-                      System.out.println("\t-> "+tableList.get(i)+"- "+j.toString());
-                  }
-                  ds = ex.getDataSet(tableList, cols, filters, joins);
-                }else{
-                    ds = ex.getDataSetBl(tableList, cols, filters);
-                }
-                if (ds == null) {
-                    System.out.println("Ocorreu algum erro!");
-                } else {
-                    System.out.println("Foram encontras " + ds.getData().size() + " tuplas!\n");
-                }
-
+                return Optional.ofNullable(select((Select) statement));
             } else if (statement instanceof CreateTable) {
-                System.out.println("Create table");
-                CreateTable ct = (CreateTable) statement;
-                List<ColumnDefinition> cl = ct.getColumnDefinitions();
-                LinkedList<String> cols = new LinkedList();
-                ArrayList<String> pk = new ArrayList();
-                ArrayList<ForeignKey> fk = new ArrayList();
-                net.sf.jsqlparser.schema.Table schemaT = ct.getTable();
-                System.out.print("\n" + schemaT.getName() + "\n");
-                for (ColumnDefinition c : cl) {
-                    cols.add(c.getColumnName());
-                    if (c.getColumnSpecStrings() != null) {
-                        int i = 0;
-                        for (String s : c.getColumnSpecStrings()) {
-                            if (s.equals("PRIMARY")) {
-                                i++;
-                            } else if (s.equals("KEY") && i > 0) {
-                                pk.add(c.getColumnName());
-                            }
-                        }
-
-                    }
-                    //System.out.print("COluna:"+c.getColumnName()+", t: "+c.getColDataType().toString()+" \n");
-                }
-                if (ct.getIndexes() != null) {
-                    for (Index index : ct.getIndexes()) {
-                        if (index.getType().equals("PRIMARY KEY")) {
-                            for (String c : index.getColumnsNames()) {
-                                pk.add(c);
-                            }
-                        } else if (index.getType().equals("FOREIGN KEY")) {
-                             ForeignKeyIndex new_fk = (ForeignKeyIndex) index;
-                             for (int i = 0; i<new_fk.getReferencedColumnNames().size();i++ ){
-                                 fk.add(new ForeignKey(new_fk.getColumnsNames().get(i), new_fk.getReferencedColumnNames().get(i), new_fk.getTable().getName()));
-                             }
-                        }
-                        //System.out.print("n: "+index.getName()+", tipo: "+index.getType()+ ", col: "+ index.getColumnsNames()+" o:"+index.toString());
-                    }
-                }
-                Table dt;
-                //String [] table = (schemaT.getName()).split(".");
-                if (schemaT.getSchemaName() != null) {
-                    dt = new Table(schemaT.getName(), ex.getDic().getTarget(schemaT.getSchemaName()), pk, fk, cols);
-                } else {
-                    dt = new Table(schemaT.getName(), ex.getDic().getTarget(null), pk, fk, cols);
-                }
-                if (ex.createTable(dt)) {
-                    System.out.println("Tabela Criada");
-                } else {
-                    System.out.println("Tabela não Criada");
-                }
-
+                createTable((CreateTable) statement);
+                return Optional.empty();
             } else if (statement instanceof Insert) {
-                Insert ins = (Insert) statement;
-                List<ExpressionList> exList;
-                if (ins.getItemsList() instanceof MultiExpressionList) {
-                    exList = ((MultiExpressionList) ins.getItemsList()).getExprList();
-                } else {
-                    exList = new <ExpressionList>ArrayList();
-                    exList.add((ExpressionList) ins.getItemsList());
-                }
-                int s = ins.getColumns().size(), j = 0;
-                LinkedList<String> cols;
-                        ArrayList vals;
-                cols = new <String> LinkedList();
-                for (int i = 0; i < s; i++) {
-                    cols.add(ins.getColumns().get(i).getColumnName());
-                }
-                // long setTime = new Date().getTime();
-                // long resetTime = 0;
-
-                for (ExpressionList e : exList) {
-                    List<Expression> values = e.getExpressions();
-                    if (ins.getColumns().size() != values.size()) {
-                        System.err.println("Problemas no insert colunas e valores diferentes");
-                        return false;
-                    }
-                    vals = new <String> ArrayList();
-                    for (int i = 0; i < s; i++) {
-                        vals.add(values.get(i).toString());
-                    }
-                    if (ex.insertData(ins.getTable().getName(), cols, vals)) {
-                        j++;
-                    } else {
-                        System.out.println("Problemas na inserção! " + j + " linhas inseridas;");
-                        return false;
-                    }
-                }
-
-                System.out.println("Inserção executada com sucesso! " + j + " linhas inseridas;");
-
+                insertInto((Insert) statement);
+                return Optional.empty();
             } else if (statement instanceof Delete) {
-                System.out.println("Delete - ");
-                Delete del = (Delete) statement;
-                String t = del.getTable().getName();
-                Stack<Object> filters = null;
-                if (del.getWhere() != null) {
-                    Expression e = del.getWhere();
-                    ExpressionDeParser deparser = new WhereStatment();
-                    StringBuilder b = new StringBuilder();
-                    deparser.setBuffer(b);
-                    e.accept(deparser);
-                    filters = ((WhereStatment) deparser).getParsedFilters();
-                }
-                ex.deleteData(t, filters);
+                delete((Delete) statement);
+                return Optional.empty();
             } else if (statement instanceof Update) {
-                System.out.println("Update");
-                 Update update = (Update) statement;
-                String t = update.getTable().getName();
-                
-                ArrayList<String> cols = new ArrayList();
-                //PlainSelect ps = (PlainSelect) update.getWhere();
-                for (Column col : update.getColumns()) {
-                    cols.add(col.getColumnName());
-                }
-                ArrayList <String> vals = new <String> ArrayList();
-                for (Expression e : update.getExpressions()){
-                    vals.add(e.toString());
-                }
-                //ps.getFromItem().
-                Stack<Object> filters = null;
-                if (update.getWhere() != null) {
-                    Expression e = update.getWhere();
-                    ExpressionDeParser deparser = new WhereStatment();
-                    StringBuilder b = new StringBuilder();
-                    deparser.setBuffer(b);
-                    e.accept(deparser);
-                    filters = ((WhereStatment) deparser).getParsedFilters();
-                }
-                ex.updateData(t, cols, vals, filters);
-                
+                update((Update) statement);
+                return Optional.empty();
             } else if (statement instanceof Drop) {
                 System.out.println("Drop table");
             } else if (statement instanceof Alter) {
@@ -304,19 +90,188 @@ public class Parser {
                 System.out.println("Não suportado!");
             }
         } catch (Exception ex) {
-            System.err.println(ex.getMessage());
-            return false;
+            ex.printStackTrace();
         }
-
-        return true;
+        return Optional.empty();
     }
 
-    public Dictionary getDic() {
-        return ex.getDic();
+    private DataSet select(final Select statement) {
+        final PlainSelect plainSelect = (PlainSelect) statement.getSelectBody();
+        final List<String> tableList = new TablesNamesFinder().getTableList(statement);
+
+        final LinkedList<String> cols = extractColumns(plainSelect);
+
+        final Stack<Object> filters = extractFilters(plainSelect.getWhere());
+
+        if (areThereJoins(plainSelect)){
+            printJoins(tableList, plainSelect.getJoins());
+            return executionEngine.getDataSet(tableList, cols, filters, plainSelect.getJoins());
+        }else{
+            return executionEngine.getDataSetBl(tableList, cols, filters);
+        }
+    }
+
+    private LinkedList<String> extractColumns(final PlainSelect plainSelect) {
+        return plainSelect.getSelectItems()
+                .stream()
+                .map(Object::toString)
+                .collect(toCollection(LinkedList::new));
+    }
+
+    private boolean areThereJoins(final PlainSelect plainSelect) {
+        return plainSelect.getJoins() != null && !plainSelect.getJoins().isEmpty();
+    }
+
+    private void printJoins(final List<String> tableList, final List<Join> joins) {
+        for(int i = 0; i< joins.size(); i++){
+            Join join = joins.get(i);
+            System.out.println("\t-> "+ tableList.get(i)+"- "+join.toString());
+        }
+    }
+
+    private void update(final Update statement) {
+        System.out.println("Update");
+        final String tableName = statement.getTable().getName();
+
+        ArrayList<String> cols = new ArrayList<>();
+        for (final Column col : statement.getColumns()) {
+            cols.add(col.getColumnName());
+        }
+        final ArrayList<String> values = statement
+                .getExpressions()
+                .stream()
+                .map(Object::toString)
+                .collect(toCollection(ArrayList::new));
+
+        Stack<Object> filters = extractFilters(statement.getWhere());
+        executionEngine.updateData(tableName, cols, values, filters);
+    }
+
+    private Stack<Object> extractFilters(Expression where) {
+        if (where == null) return null;
+        WhereStatement whereStatement = new WhereStatement();
+        StringBuilder buffer = new StringBuilder();
+        whereStatement.setBuffer(buffer);
+        where.accept(whereStatement);
+        return whereStatement.getParsedFilters();
+    }
+
+    private void delete(Delete statement) {
+        System.out.println("Delete - ");
+        String tableName = statement.getTable().getName();
+        Stack<Object> filters = extractFilters(statement.getWhere());
+        executionEngine.deleteData(tableName, filters);
+    }
+
+    private boolean insertInto(Insert statement) {
+        Insert insert = statement;
+        List<ExpressionList> exList;
+        if (insert.getItemsList() instanceof MultiExpressionList) {
+            exList = ((MultiExpressionList) insert.getItemsList()).getExprList();
+        } else {
+            exList = new ArrayList<>();
+            exList.add((ExpressionList) insert.getItemsList());
+        }
+        int s = insert.getColumns().size(), j = 0;
+        LinkedList<String> cols;
+        cols = new LinkedList<>();
+        for (int i = 0; i < s; i++) {
+            cols.add(insert.getColumns().get(i).getColumnName());
+        }
+
+        for (ExpressionList e : exList) {
+            List<Expression> values = e.getExpressions();
+            if (valuesDifferFromColumns(insert, values)) {
+                System.err.println("Problemas no insert colunas e valores diferentes");
+                return true;
+            }
+            List<String> vals = new ArrayList<>();
+            for (int i = 0; i < s; i++) {
+                vals.add(values.get(i).toString());
+            }
+            if (executionEngine.insertData(insert.getTable().getName(), cols, (ArrayList<String>) vals)) {
+                j++;
+            } else {
+                System.out.println("Problemas na inserção! " + j + " linhas inseridas;");
+                return true;
+            }
+        }
+
+        System.out.println("Inserção executada com sucesso! " + j + " linhas inseridas;");
+        return false;
+    }
+
+    private boolean valuesDifferFromColumns(Insert insert, List<Expression> values) {
+        return insert.getColumns().size() != values.size();
+    }
+
+    private void createTable(CreateTable statement) {
+        System.out.println("Create table");
+        CreateTable ct = statement;
+        List<ColumnDefinition> cl = ct.getColumnDefinitions();
+        LinkedList<String> cols = new LinkedList();
+        ArrayList<String> pk = new ArrayList();
+        ArrayList<ForeignKey> fk = new ArrayList();
+        net.sf.jsqlparser.schema.Table schemaT = ct.getTable();
+        System.out.print("\n" + schemaT.getName() + "\n");
+        for (ColumnDefinition c : cl) {
+            cols.add(c.getColumnName());
+            if (c.getColumnSpecStrings() != null) {
+                int i = 0;
+                for (String s : c.getColumnSpecStrings()) {
+                    if (s.equals("PRIMARY")) {
+                        i++;
+                    } else if (s.equals("KEY") && i > 0) {
+                        pk.add(c.getColumnName());
+                    }
+                }
+
+            }
+        }
+        if (ct.getIndexes() != null) {
+            for (Index index : ct.getIndexes()) {
+                if (index.getType().equals("PRIMARY KEY")) {
+                    for (String c : index.getColumnsNames()) {
+                        pk.add(c);
+                    }
+                } else if (index.getType().equals("FOREIGN KEY")) {
+                     ForeignKeyIndex new_fk = (ForeignKeyIndex) index;
+                     for (int i = 0; i<new_fk.getReferencedColumnNames().size();i++ ){
+                         fk.add(new ForeignKey(new_fk.getColumnsNames().get(i), new_fk.getReferencedColumnNames().get(i), new_fk.getTable().getName()));
+                     }
+                }
+            }
+        }
+        Table dt;
+        if (schemaT.getSchemaName() != null) {
+            dt = new Table(schemaT.getName(), executionEngine.getTarget(schemaT.getSchemaName()), pk, fk, cols);
+        } else {
+            dt = new Table(schemaT.getName(), executionEngine.getTarget(null), pk, fk, cols);
+        }
+        if (executionEngine.createTable(dt)) {
+            System.out.println("Tabela Criada");
+        } else {
+            System.out.println("Tabela não Criada");
+        }
     }
 
     public void changeCurrentDB(String db) {
-        ex.changeCurrentDB(db);
+        executionEngine.changeCurrentDB(db);
     }
 
+    public void addNoSqlTarget(NoSQL noSQL) {
+        executionEngine.addTarget(noSQL);
+    }
+
+    public List<NoSQL> getNoSqlTargets() {
+        return executionEngine.getTargets();
+    }
+
+    public BDR getCurrentDataBase() {
+        return executionEngine.getCurrentDb();
+    }
+
+    public List<BDR> getRdbms() {
+        return executionEngine.getRdbms();
+    }
 }

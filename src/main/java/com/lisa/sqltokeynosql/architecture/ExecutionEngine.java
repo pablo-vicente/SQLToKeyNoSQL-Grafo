@@ -5,90 +5,73 @@
  */
 package com.lisa.sqltokeynosql.architecture;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Stack;
 import net.sf.jsqlparser.expression.Expression;
-import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
-import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
-import net.sf.jsqlparser.schema.Column;
+import net.sf.jsqlparser.statement.select.FromItem;
 import net.sf.jsqlparser.statement.select.Join;
 import net.sf.jsqlparser.util.deparser.ExpressionDeParser;
-import util.BDR;
-import util.DataSet;
-import util.Dictionary;
-import util.DictionaryDAO;
-import util.SQL.JoinStatment;
-import util.SQL.Table;
-import util.TimeConter;
-import util.SQL.WhereStatment;
-import util.joins.HashJoin;
-import util.joins.InMemoryJoins;
-import util.joins.NestedLoop;
-import util.operations.Operator;
+import com.lisa.sqltokeynosql.util.Dictionary;
+import com.lisa.sqltokeynosql.util.*;
+import com.lisa.sqltokeynosql.util.joins.HashJoin;
+import com.lisa.sqltokeynosql.util.sql.JoinStatement;
+import com.lisa.sqltokeynosql.util.sql.Table;
+
+import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
+import static java.util.stream.Collectors.toList;
 
 /**
- *
  * @author geomar
  */
 public class ExecutionEngine {
 
-    //private BDR bd;
-    private final Dictionary dic;
+    private final Dictionary dictionary;
+    private static final ExecutorService threadPool = Executors.newCachedThreadPool();
 
     public ExecutionEngine() {
-        dic = loadDictionary();
+        dictionary = DictionaryDAO.loadDictionary()
+                        .orElseGet(Dictionary::new);
     }
 
-    private Dictionary loadDictionary() {
-        Dictionary d = DictionaryDAO.loadDictionary();
-        if (d == null) {
-            return new Dictionary();
-        }
-        //changeCurrentDB(d.getCurrent_db().getName());
-        return d;
+    private void createDBR(final String name) {
+        dictionary.getRdbms().add(new BDR(name, new ArrayList<>()));
+        DictionaryDAO.storeDictionary(dictionary);
     }
 
-    private void createDBR(String name) {
-        //bd = ;
-        dic.getBdrs().add(new BDR(name, new ArrayList<Table>()));
-    }
-
-    public void changeCurrentDB(String name) {
-        dic.setCurrent_db(name);
-        // bd = ;
-        if (dic.getCurrent_db() == null) {
+    public void changeCurrentDB(final String name) {
+        if (dictionary.getCurrentDb() == null) {
             System.out.println("New RDB " + name + " created!");
             this.createDBR(name);
         }
-        dic.setCurrent_db(name);
+        dictionary.setCurrentDb(name);
+        DictionaryDAO.storeDictionary(dictionary);
     }
 
-    public boolean createTable(Table t) {
-        if (dic.getCurrent_db().getTables() != null) {
-            dic.getCurrent_db().getTables().add(t);
+    public boolean createTable(final Table table) {
+        if (dictionary.getCurrentDb().getTables() != null) {
+            dictionary.getCurrentDb().getTables().add(table);
+            DictionaryDAO.storeDictionary(dictionary);
             return true;
         }
         return false;
     }
 
-    public boolean insertData(String table, LinkedList<String> columns, ArrayList<String> values) {
-        Table t = dic.getCurrent_db().getTable(table);
-        if (t == null) {
+    public boolean insertData(final String tableName, final LinkedList<String> columns, final ArrayList<String> values) {
+        Optional<Table> optionalTable = dictionary.getCurrentDb().getTable(tableName);
+        if (optionalTable.isEmpty()) {
             System.out.println("Tabela não Existe!");
             return false;
         }
-        boolean equal = true;
+        Table table = optionalTable.get();
         String key = "";
-        for (String k : t.getPks()) {
-            equal = false;
-            for (String aux : columns) {
-                if (k.equals(aux)) {
-                    key += (key.length() > 0 ? "_" : "") + values.get(columns.indexOf(aux));
+        for (String k : table.getPks()) {
+            boolean equal = false;
+            for (String column : columns) {
+                if (k.equals(column)) {
+                    key += (key.length() > 0 ? "_" : "") + values.get(columns.indexOf(column));
                     equal = true;
                     break;
                 }
@@ -99,291 +82,240 @@ public class ExecutionEngine {
             }
         }
         long now = new Date().getTime();
-        t.getTargetDB().getConection().put(table, key, columns, values);
-        TimeConter.current += (new Date().getTime()) - now;
-        t.getKeys().add(key);
+        table.getTargetDB().getConnection().put(tableName, key, columns, values);
+        TimeConter.current = (new Date().getTime()) - now;
+        table.getKeys().add(key);
         return true;
     }
 
-    public boolean deleteData(String table, ArrayList<String> columns, ArrayList<String> values) {
-
-        return false;
-    }
-
-    ArrayList<HashMap<String, String>> getData(List<String> tablesN, List<String> cols, List<String> filters) {
-        ArrayList<HashMap<String, String>> result = new <HashMap<String, String>>ArrayList();
-        HashMap<String, String> aux;
-        ArrayList<Table> tables = new <Table>ArrayList();
-        for (String s : tablesN) {
-            Table t = dic.getCurrent_db().getTable(s);
-            if (t == null) {
-                System.out.println("Tabela: " + s + " não existe!");
-                return null;
-            }
-            tables.add(t);
-        }
-        for (Table t : tables) {
-            for (String k : t.getKeys()) {
-                HashMap<String, String> _new = new <String, String>HashMap();
-                long now = new Date().getTime();
-                aux = t.getTargetDB().getConection().get(1, t.getName(), k);
-                TimeConter.current += (new Date().getTime()) - now;
-                for (String c : cols) {
-                    if (!c.equals("*")) {
-                        _new.put(c, aux.get(c));
-                    } else {
-                        //cols = t.getAttributes();
-                        _new = (HashMap) aux.clone();
-                        break;
-                    }
-                }
-                result.add(_new);
-            }
-        }
-        return result; //To change body of generated methods, choose Tools | Templates.
-    }
-
-    void deleteData(String table, Stack<Object> filters) {
-        //ArrayList<Table> tables = new <Table>ArrayList();
-
-        Table t = dic.getCurrent_db().getTable(table);
+    void deleteData(final String table, final Stack<Object> filters) {
+        Table t = dictionary.getCurrentDb().getTable(table).get();
         System.out.print("Table: " + table + ", r: " + t.getKeys().size());
-        //t.setKeys(new ArrayList<String>());
-        LinkedList <String> cols = new LinkedList();
-        ArrayList <String> tables = new ArrayList();
+        LinkedList<String> cols = new LinkedList<>();
+        ArrayList<String> tables = new ArrayList<>();
         tables.add(table);
         cols.add("_key");
         DataSet ds = getDataSetBl(tables, cols, filters);
-        for(String [] tuple : ds.getData()){
-            t.getTargetDB().getConection().delete(table, tuple[0]);
+        for (String[] tuple : ds.getData()) {
+            t.getTargetDB().getConnection().delete(table, tuple[0]);
             t.getKeys().remove(tuple[0]);
         }
-        
+
         System.out.println(" new: " + t.getKeys().size());
     }
-    
-    void updateData(String table, ArrayList acls, ArrayList avl,Stack<Object> filters) {
-        //ArrayList<Table> tables = new <Table>ArrayList();
 
-        Table t = dic.getCurrent_db().getTable(table);
-        System.out.print("Table: " + table + ", r: " + t.getKeys().size());
-        //t.setKeys(new ArrayList<String>());
-        LinkedList <String> cols = t.getAttributes();
-        ArrayList <String> tables = new ArrayList();
-        tables.add(table);
+    void updateData(final String tableName, final ArrayList acls, final ArrayList avl, final Stack<Object> filters) {
+        dictionary
+                .getTable(tableName)
+                .ifPresent(table -> updateTable(tableName, acls, avl, filters, table));
+    }
+
+    private void updateTable(String tableName, ArrayList acls, ArrayList avl, Stack<Object> filters, Table table) {
+        System.out.print("Table: " + tableName + ", r: " + table.getKeys().size());
+        List<String> cols = table.getAttributes();
+        ArrayList<String> tables = new ArrayList<>();
+        tables.add(tableName);
         cols.add("_key");
         DataSet ds = getDataSetBl(tables, cols, filters);
-        for(String [] tuple : ds.getData()){
-            ArrayList<String> val = new ArrayList();
-            for(int i=0;i<acls.size();i++){
+        for (String[] tuple : ds.getData()) {
+            for (int i = 0; i < acls.size(); i++) {
                 tuple[cols.indexOf(acls.get(i))] = (String) avl.get(i);
             }
-            for (int i = 0; i<cols.size()-1;i++){
-                val.add(tuple[i]);
-            }
-            String k = tuple[cols.size()-1];
-            t.getTargetDB().getConection().delete(table, k);
-            //tuple[cols.indexOf()]
+            ArrayList<String> values = new ArrayList<>(Arrays.asList(tuple).subList(0, cols.size() - 1));
+            String k = tuple[cols.size() - 1];
+            table.getTargetDB().getConnection().delete(tableName, k);
             cols.remove("_key");
-            t.getTargetDB().getConection().put(table, k, cols, val);
+            table.getTargetDB().getConnection().put(tableName, k, (LinkedList<String>) cols, values);
+        }
+
+        System.out.println(" new: " + table.getKeys().size());
+    }
+
+    DataSet getDataSetBl(final List<String> tableNames, final List<String> cols, final Stack<Object> filters) {
+        return tableNames
+                .stream()
+                .map(dictionary::getTable)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .map(table -> {
+                    DataSet dataSet = new DataSet();
+                    dataSet.setColumns(getColumnsForResultingDataSet(cols, table));
+                    long now = new Date().getTime();
+                    dataSet.setData(getNWrapper(table, (LinkedList<String>) getColumnsForResultingDataSet(cols, table), filters, 0));
+                    TimeConter.current = (new Date().getTime()) - now;
+                    return dataSet;
+                }).findAny().orElse(null);
+    }
+
+    private List<String> getColumnsForResultingDataSet(final List<String> cols, final Table table) {
+        if (cols.get(0).equals("*")) {
+            return table.getAttributes();
+        }
+        return cols;
+    }
+
+    private ArrayList getNWrapper(final Table table, final LinkedList columns, final Stack<Object> filters, final int n) {
+        long begin = new Date().getTime();
+        ArrayList result = table.getTargetDB().getConnection().getN(n, table.getName(), (ArrayList<String>) table.getKeys(), filters, columns);
+        System.out.println(String.format("Time: %d, ThreadName: %s", new Date().getTime() - begin, Thread.currentThread().getName()));
+        return result;
+    }
+
+    DataSet getDataSet(final List<String> tableNames, final LinkedList<String> columns, final Stack<Object> filters, final List<Join> joins) {
+
+        List<Table> tables = tableNames
+                .stream()
+                .map(dictionary::getTable)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(toList());
+
+        Future<DataSet> innerDataJob = threadPool
+            .submit(() -> getInnerDataSet(tables.get(0), columns, filters));
+        
+        List<Callable<Result>> jobs = new ArrayList<>();
+        for (Join join : joins) {
+            jobs.add(() -> getOuterData(columns, filters, join));
+        }
+        List<Future<Result>> futures = getFutures(jobs);
+
+        DataSet innerData = completeInnerDataJob(innerDataJob);
+        if (innerData == null) return null;
+        
+        List<Result> data = new ArrayList<>();
+        for (Future<Result> job: futures) {
+            data.add(getCompleted(job));
         }
         
-        System.out.println(" new: " + t.getKeys().size());
-    }
+        DataSet result = new DataSet();
 
-    DataSet getDataSet(List<String> tablesN, List<String> cols, Stack<Object> filters) {
-        DataSet result = null;
-        HashMap<String, String> aux;
-        ArrayList<Table> tables = new <Table>ArrayList();
-
-        for (String s : tablesN) {
-            Table t = dic.getCurrent_db().getTable(s);
-            if (t == null) {
-                System.out.println("Tabela: " + s + " não existe!");
-                return null;
-            }
-            tables.add(t);
-        }
-
-        result = new DataSet();
-        for (Table t : tables) {
-            if (cols.get(0).equals("*")) {
-                cols = t.getAttributes();
-            }
-            result.setColumns((LinkedList) cols);
-            for (String k : t.getKeys()) {
-                String[] tuple = new String[cols.size()];
-                //HashMap<String, String> _new = new <String, String>HashMap();
-                long now = new Date().getTime();
-                aux = t.getTargetDB().getConection().get(1, t.getName(), k);
-                TimeConter.current += (new Date().getTime()) - now;
-                if (applyFilterR((filters != null ? (Stack) filters.clone() : null), aux)) {
-                    for (int i = 0; i < cols.size(); i++) {
-                        tuple[i] = aux.get(cols.get(i));
-                    }
-                    result.getData().add(tuple);
-                }
-
-            }
-
-        }
-
-        return result; //To change body of generated methods, choose Tools | Templates.
-    }
-
-    DataSet getDataSetBl(List<String> tablesN, List<String> cols, Stack<Object> filters) {
-        DataSet result = null;
-        ArrayList<HashMap<String, String>> tuples;
-        HashMap<String, String> aux;
-        ArrayList<Table> tables = new <Table>ArrayList();
-
-        for (String s : tablesN) {
-            Table t = dic.getCurrent_db().getTable(s);
-            if (t == null) {
-                System.out.println("Tabela: " + s + " não existe!");
-                return null;
-            }
-            tables.add(t);
-        }
-
-        result = new DataSet();
-        for (Table t : tables) {
-            if (cols.get(0).equals("*")) {
-                cols = t.getAttributes();
-            }
-            result.setColumns((LinkedList<String>)cols);
-            long now = new Date().getTime();
-            result.setData(t.getTargetDB().getConection().getN(1, t.getName(), t.getKeys(),filters, (LinkedList) cols));
-            TimeConter.current += (new Date().getTime()) - now;
-                
-//            for (HashMap<String, String> tpl: tuples) {
-//                String[] tuple = new String[cols.size()];
-//                //HashMap<String, String> _new = new <String, String>HashMap();
-//                aux = tpl;
-//               // if (applyFilterR((filters != null ? (Stack) filters.clone() : null), aux)) {
-//                    for (int i = 0; i < cols.size(); i++) {
-//                        tuple[i] = aux.get(cols.get(i));
-//                    }
-//                    result.getData().add(tuple);
-//               // }
-//
-//            }
-
-        }
-
-        return result; //To change body of generated methods, choose Tools | Templates.
-    }
-
-    
-    private boolean applyFilter(List<Object> filters, HashMap tuple) {
-        if (filters == null) {
-            return true;
-        }
-        Boolean result = false;
-        String col = null;
-        Object val = null;
-        Operator op = null;
-        for (Object o : filters) {
-            if (o instanceof Column) {
-                if (col == null) {
-                    col = ((Column) o).getColumnName();
-                } else {
-                    System.out.println("Comparação de colunas;");
-                }
-            } else if (o instanceof Operator) {
-                if (op == null) {
-                    op = ((Operator) o);
-                } else {
-                    System.out.println("Comparação ja setada;");
-                }
-            } else {
-                if (val == null) {
-                    val = (o);
-                } else {
-                    System.out.println("Comparação de valores;");
-                }
-            }
-
-            if (col != null && op != null && val != null) {
-                result = compare((String) tuple.get(col), op, val);
-                col = null;
-                op = null;
-                val = null;
-            }
+        for (Result res : data) {
+            HashJoin join = new HashJoin();
+            result = join.join(innerData, res.outerData, res.on);
+            innerData = result; //mutability
         }
 
         return result;
     }
 
-    private boolean applyFilterR(Stack<Object> filters, HashMap tuple) {
-        if (filters == null) {
-            return true;
+    private DataSet completeInnerDataJob(Future<DataSet> innerDataJob) {
+        try {
+            return innerDataJob.get();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-        Boolean result = false;
-        Object o = filters.pop();
-        if (o instanceof AndExpression) {
-            result = applyFilterR(filters, tuple);
-            if (!result) {
-                return false;
-            }
-            result = (result && applyFilterR(filters, tuple));
-        } else if (o instanceof OrExpression) {
-            result = applyFilterR(filters, tuple);
-            result = (result || applyFilterR(filters, tuple));
-        } else {
-            String col = null;
-            Object val = null;
-            Operator op = null;
-            op = ((Operator) o);
-            val = filters.pop();
-            col = ((Column) filters.pop()).getColumnName();
-            result = compare((String) tuple.get(col), op, val);
-        }
-        return result;
     }
 
-    private boolean compare(String v1, Operator operation, Object val) {
-        if (v1 == null || val == null) {
-            return false;
+    private List<Future<Result>> getFutures(List<Callable<Result>> jobs) {
+        try {
+            return threadPool.invokeAll(jobs);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
-        return operation.compare(v1, val);
     }
 
-    public BDR getBd() {
-        return dic.getCurrent_db();
-    }
-
-    public Dictionary getDic() {
-        return dic;
-    }
-
-    DataSet getDataSet(List<String> tablesN, LinkedList<String> cols, Stack<Object> filters, List<Join> joins) {
-        DataSet innerData, result = null;
-        HashMap<String, String> aux;
-        ArrayList<Table> tables = new <Table>ArrayList();
-
-        for (String s : tablesN) {
-            Table t = dic.getCurrent_db().getTable(s);
-            if (t == null) {
-                System.out.println("Tabela: " + s + " não existe!");
-                return null;
-            }
-            tables.add(t);
+    private Result getCompleted(Future<Result> future) {
+        try {
+            return future.get();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
+    }
 
-        innerData = new DataSet();
-        //buscando e manipulando só a inner table (mais da esquerda...)
-        Table inner = tables.get(0);
-        innerData.setTable_n(inner.getName());
-        LinkedList<String> innerCols = new LinkedList();
-        for (String col : cols) {
-            String[] c = col.split("\\.");
-            if (c.length > 0) {
-                if (c[0].equals(inner.getName())) {
-                    if (c[1].equals("*")) {
-                        for (String a : inner.getAttributes()) {
-                            innerCols.add(a);
+    private Result getOuterData(LinkedList<String> columns, Stack<Object> filters, Join j) {
+        DataSet outerData = new DataSet();
+        Stack<Object> on;
+        if (j.getOnExpression() != null) {
+            Expression e = j.getOnExpression();
+            ExpressionDeParser deparser = new JoinStatement();
+            StringBuilder b = new StringBuilder();
+            deparser.setBuffer(b);
+            e.accept(deparser);
+            on = ((JoinStatement) deparser).getParsedFilters();
+            Table outer = dictionary.getTable(getTableName(j)).get();
+
+            LinkedList<String> outerCols = new LinkedList();
+            for (String col : columns) {
+                String[] c = col.split("\\.");
+                if (c.length > 0) {
+                    if (c[0].equals(outer.getName())) {
+                        if (c[1].equals("*")) {
+                            for (String a : outer.getAttributes()) {
+                                outerCols.add(a);
+                            }
+                        } else {
+                            outerCols.add(c[1]);
                         }
+                    }
+                } else {
+                    System.out.println("Colunas nao podem ser duplas...");
+                    return null;
+                }
+            }
+            if (filters != null)
+                outerData.setData(getNWrapper(outer, outerCols, (Stack) filters.clone(), 0));
+            else
+                outerData.setData(getNWrapper(outer, outerCols, null, 0));
+
+
+            outerData.setTableName(outer.getName());
+            outerData.setColumns(outerCols);
+        } else {
+            System.out.println("JOIN without ON clause!!");
+            return null;
+        }
+
+        return new Result(on, outerData);
+    }
+
+    private String getTableName(Join j) {
+        net.sf.jsqlparser.schema.Table table = (net.sf.jsqlparser.schema.Table)j.getRightItem();
+        return table.getSchemaName() + "." + table.getName();
+    }
+
+    public NoSQL getTarget(String schemaName) {
+        return dictionary.getTarget(schemaName);
+    }
+
+    public void addTarget(NoSQL noSQL) {
+        dictionary.addTarget(noSQL);
+        DictionaryDAO.storeDictionary(dictionary);
+    }
+
+    public List<NoSQL> getTargets() {
+        return dictionary.getTargets();
+    }
+
+    public BDR getCurrentDb() {
+        return dictionary.getCurrentDb();
+    }
+
+    public List<BDR> getRdbms() {
+        return dictionary.getRdbms();
+    }
+
+    static class Result {
+        public Stack<Object> on;
+        public DataSet outerData;
+
+        public Result(Stack<Object> on, DataSet data) {
+            this.on = on;
+            this.outerData = data;
+        }
+    }
+
+    private DataSet getInnerDataSet(Table table, LinkedList<String> columns, Stack<Object> filters) {
+
+        DataSet innerData = new DataSet();
+        Table innerTable = table;
+        innerData.setTableName(innerTable.getName());
+        LinkedList<String> innerCols = new LinkedList<>();
+        for (String column : columns) {
+            String[] c = column.split("\\.");
+            if (c.length > 0) {
+                if (c[0].equals(innerTable.getName())) {
+                    if (c[1].equals("*")) {
+                        innerCols.addAll(innerTable.getAttributes());
                     } else {
                         innerCols.add(c[1]);
                     }
@@ -393,91 +325,14 @@ public class ExecutionEngine {
                 return null;
             }
         }
-//        for (String k : inner.getKeys()) {
-//            String[] tuple = new String[innerCols.size()];
-//            //HashMap<String, String> _new = new <String, String>HashMap();
-//            long now = new Date().getTime();
-//            aux = inner.getTargetDB().getConection().get(1, inner.getName(), k);
-//            TimeConter.current += (new Date().getTime()) - now;
-//            // if (applyFilterR((filters != null ? (Stack) filters.clone() : null), aux)) {
-//            for (int i = 0; i < innerCols.size(); i++) {
-//                tuple[i] = aux.get((innerCols.get(i).split("\\.")[1]));
-//            }
-//            innerData.getData().add(tuple);
-//            //}
-//
-//        }
 
-        if (filters != null)
-            innerData.setData(inner.getTargetDB().getConection().getN(0, inner.getName(), inner.getKeys(), (Stack)filters.clone(), innerCols));
-        else
-            innerData.setData(inner.getTargetDB().getConection().getN(0, inner.getName(), inner.getKeys(), null, innerCols));
-        
         innerData.setColumns(innerCols);
-        //fim inner
-        InMemoryJoins join = new HashJoin();
-        
-        for (Join j : joins) {
-            DataSet outerData = new DataSet();
-            Stack<Object> on = null;
-            if (j.getOnExpression() != null) {
-                Expression e = j.getOnExpression();
-                ExpressionDeParser deparser = new JoinStatment();
-                StringBuilder b = new StringBuilder();
-                deparser.setBuffer(b);
-                e.accept(deparser);
-                on = ((JoinStatment) deparser).getParsedFilters();
-                Table outer = dic.getCurrent_db().getTable(((net.sf.jsqlparser.schema.Table) j.getRightItem()).getName());
 
-                    LinkedList<String> outerCols = new LinkedList();
-                for (String col : cols) {
-                    String[] c = col.split("\\.");
-                    if (c.length > 0) {
-                        if (c[0].equals(outer.getName())) {
-                            if (c[1].equals("*")) {
-                                for (String a : outer.getAttributes()) {
-                                    outerCols.add( a);
-                                }
-                            } else {
-                                outerCols.add(c[1]);
-                            }
-                        }
-                    } else {
-                        System.out.println("Colunas podem ser duplas...");
-                        return null;
-                    }
-                }
-//                for (String k : outer.getKeys()) {
-//                    String[] tuple = new String[outerCols.size()];
-//                    //HashMap<String, String> _new = new <String, String>HashMap();
-//                    long now = new Date().getTime();
-//                    aux = outer.getTargetDB().getConection().get(1, outer.getName(), k);
-//                    TimeConter.current += (new Date().getTime()) - now;
-//                    // if (applyFilterR((filters != null ? (Stack) filters.clone() : null), aux)) {
-//                    for (int i = 0; i < outerCols.size(); i++) {
-//                        tuple[i] = aux.get((outerCols.get(i).split("\\.")[1]));
-//                    }
-//                    outerData.getData().add(tuple);
-//                    //}
-//
-//                }
-
-                if (filters != null)
-                    outerData.setData(outer.getTargetDB().getConection().getN(0, outer.getName(), outer.getKeys(), (Stack)filters.clone(), outerCols));
-                else
-                    outerData.setData(outer.getTargetDB().getConection().getN(0, outer.getName(), outer.getKeys(), null, outerCols));
-                
-                outerData.setTable_n(outer.getName());
-                outerData.setColumns(outerCols);
-            } else {
-                System.out.println("Problemas no JOIN!");
-                return null;
-            }
-            
-            result = join.join(innerData, outerData, on);
-            innerData = result;
+        if (filters != null) {
+            innerData.setData(getNWrapper(innerTable, innerCols, (Stack<Object>) filters.clone(), 0));
+        } else {
+            innerData.setData(getNWrapper(innerTable, innerCols, null, 0));
         }
-        
-        return result;
+        return innerData;
     }
 }
