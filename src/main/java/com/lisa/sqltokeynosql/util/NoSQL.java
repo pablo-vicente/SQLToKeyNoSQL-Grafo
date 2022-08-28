@@ -13,14 +13,12 @@ public class NoSQL {
     private String url;
     private Connector connection;
 
-    //TODO add logic to validate the type of the connector;
-    public NoSQL(String alias, String user, String password, String hostAndPort) {
+    public NoSQL(String alias, String user, String password, String url, Connector conection) {
         this.alias = alias;
         this.user = user;
         this.password = password;
-        this.url = hostAndPort;
-        connection = new MongoConnector(user, password, hostAndPort);
-        connection.connect(alias);
+        this.url = url;
+        this.connection = conection;
     }
 
     public String getAlias() {

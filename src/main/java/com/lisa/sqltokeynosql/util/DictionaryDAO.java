@@ -1,5 +1,6 @@
 package com.lisa.sqltokeynosql.util;
 
+import com.lisa.sqltokeynosql.architecture.Connector;
 import com.mongodb.Block;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
@@ -30,11 +31,10 @@ public class DictionaryDAO {
             aux.append("url", n.getUrl());
             aux.append("user", n.getUser());
             aux.append("psw", n.getPassword());
-            int con = 1;
-            if (n.getConnection() instanceof MongoConnector) {
-                con = 1;
-            }
-            aux.append("connector", con);
+
+            Connector connector = n.getConnection();
+            String conncetoName = connector.getClass().getSimpleName();
+            aux.append("connector", conncetoName);
             targets.append(n.getAlias(), aux);
         }
         Document auxTable, tables;
@@ -79,6 +79,29 @@ public class DictionaryDAO {
         return null;
     }
 
+    private static Connector GetConnector(String connectorName)
+    {
+        if(connectorName.equalsIgnoreCase(MongoConnector.class.getSimpleName()))
+            return new MongoConnector();
+
+        if(connectorName.equalsIgnoreCase(Cassandra2Connector.class.getSimpleName()))
+            return new Cassandra2Connector();
+
+        if(connectorName.equalsIgnoreCase(CassandraConnector.class.getSimpleName()))
+            return new CassandraConnector();
+
+        if(connectorName.equalsIgnoreCase(RedisConnector.class.getSimpleName()))
+            return new RedisConnector();
+
+        if(connectorName.equalsIgnoreCase(SimpleDBConnector.class.getSimpleName()))
+            return new SimpleDBConnector();
+
+        if(connectorName.equalsIgnoreCase(Neo4jConnector.class.getSimpleName()))
+            return new Neo4jConnector();
+
+        throw new UnsupportedOperationException("Connector not declared!!!!");
+    }
+
     public static Optional<Dictionary> loadDictionary() {
         MongoClient mongoClient = new MongoClient(new MongoClientURI("mongodb://root:root@localhost:27017"));
         MongoDatabase db = mongoClient.getDatabase("_dictionary");
@@ -96,32 +119,15 @@ public class DictionaryDAO {
             Document aux;
             while (iteratorTarget.hasNext()) {
                 aux = (Document) iteratorTarget.next();
-                NoSQL n = new NoSQL(aux.getString("alias"), aux.getString("user"), aux.getString("psw"), aux.getString("url"));
-                switch (aux.getInteger("connector")) {
-                    case 1: {
-                        n.setConnection(new MongoConnector());
-                        break;
-                    }
-                    // case 2: {
-                    //     n.setConnection(new Cassandra2Connector());
-                    //     break;
-                    // }
-                    // case 3: {
-                    //     n.setConnection(new CassandraConnector());
-                    //     break;
-                    // }
-                    // case 4: {
-                    //     n.setConnection(new RedisConnector());
-                    //     break;
-                    // }
-                    // case 5: {
-                    //     n.setConnection(new SimpleDBConnector());
-                    //     break;
-                    // }
-                    default: {
-                        n.setConnection(new MongoConnector());
-                    }
-                }
+
+                String alias = aux.getString("alias");
+                String user = aux.getString("user");
+                String psw = aux.getString("psw");
+                String url = aux.getString("url");
+                String connetion = aux.getString("connector");
+                Connector connector = GetConnector(connetion);
+
+                NoSQL n = new NoSQL(alias, user, psw, url, connector);
                 _new.getTargets().add(n);
             }
 
