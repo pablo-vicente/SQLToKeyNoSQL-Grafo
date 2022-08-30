@@ -6,6 +6,16 @@ public class NoSqlTargetDTO {
     private String password;
     private String name;
 
+    private String connector;
+
+    public String getConnector() {
+        return connector;
+    }
+    public void setConnector(String connector)
+    {
+        this.connector = connector;
+    }
+
     public String getUrl() {
         return url;
     }

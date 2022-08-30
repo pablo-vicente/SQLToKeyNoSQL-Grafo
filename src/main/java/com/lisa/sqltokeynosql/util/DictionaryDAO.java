@@ -31,10 +31,7 @@ public class DictionaryDAO {
             aux.append("url", n.getUrl());
             aux.append("user", n.getUser());
             aux.append("psw", n.getPassword());
-
-            Connector connector = n.getConnection();
-            String conncetoName = connector.getClass().getSimpleName();
-            aux.append("connector", conncetoName);
+            aux.append("connector", n.getConnector().toString());
             targets.append(n.getAlias(), aux);
         }
         Document auxTable, tables;
@@ -79,29 +76,6 @@ public class DictionaryDAO {
         return null;
     }
 
-    private static Connector GetConnector(String connectorName)
-    {
-        if(connectorName.equalsIgnoreCase(MongoConnector.class.getSimpleName()))
-            return new MongoConnector();
-
-        if(connectorName.equalsIgnoreCase(Cassandra2Connector.class.getSimpleName()))
-            return new Cassandra2Connector();
-
-        if(connectorName.equalsIgnoreCase(CassandraConnector.class.getSimpleName()))
-            return new CassandraConnector();
-
-        if(connectorName.equalsIgnoreCase(RedisConnector.class.getSimpleName()))
-            return new RedisConnector();
-
-        if(connectorName.equalsIgnoreCase(SimpleDBConnector.class.getSimpleName()))
-            return new SimpleDBConnector();
-
-        if(connectorName.equalsIgnoreCase(Neo4jConnector.class.getSimpleName()))
-            return new Neo4jConnector();
-
-        throw new UnsupportedOperationException("Connector not declared!!!!");
-    }
-
     public static Optional<Dictionary> loadDictionary() {
         MongoClient mongoClient = new MongoClient(new MongoClientURI("mongodb://root:root@localhost:27017"));
         MongoDatabase db = mongoClient.getDatabase("_dictionary");
@@ -124,8 +98,7 @@ public class DictionaryDAO {
                 String user = aux.getString("user");
                 String psw = aux.getString("psw");
                 String url = aux.getString("url");
-                String connetion = aux.getString("connector");
-                Connector connector = GetConnector(connetion);
+                var connector =  aux.getString("connector");
 
                 NoSQL n = new NoSQL(alias, user, psw, url, connector);
                 _new.getTargets().add(n);

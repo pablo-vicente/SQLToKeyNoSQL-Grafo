@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lisa.sqltokeynosql.api.dto.CurrentDataBaseRequestDTO;
 import com.lisa.sqltokeynosql.api.dto.NoSqlTargetDTO;
 import com.lisa.sqltokeynosql.api.dto.SQLDTO;
+import com.lisa.sqltokeynosql.api.enums.Connector;
 import com.lisa.sqltokeynosql.architecture.Parser;
 import com.lisa.sqltokeynosql.util.NoSQL;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -55,7 +58,8 @@ public class SQLController {
         NoSQL noSQL = new NoSQL(noSqlTargetDTO.getName(),
                             noSqlTargetDTO.getUser(),
                         noSqlTargetDTO.getPassword(),
-                            noSqlTargetDTO.getUrl());
+                            noSqlTargetDTO.getUrl(),
+                noSqlTargetDTO.getConnector());
         parser.addNoSqlTarget(noSQL);
         return ResponseEntity.ok(mapper.writeValueAsString(noSQL));
     }
@@ -65,6 +69,13 @@ public class SQLController {
         return ResponseEntity.ok(
                 mapper.writeValueAsString(parser.getNoSqlTargets())
         );
+    }
+
+    @GetMapping(value = "/connectors", produces = APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> listConnectors() throws IOException
+    {
+        var connectors = new ArrayList<>(Arrays.asList(Connector.values()));
+        return ResponseEntity.ok(mapper.writeValueAsString(connectors));
     }
 
     private String getAsString(Object object) {

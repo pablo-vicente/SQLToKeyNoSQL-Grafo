@@ -59,12 +59,39 @@ public class ExecutionEngine {
         return false;
     }
 
+    private String getKey(Table tableDb, LinkedList<String> columns, ArrayList<String> values)
+    {
+        boolean equal;
+        String key = "";
+        for (String k : tableDb.getPks()) {
+            equal = false;
+            for (String aux : columns) {
+                if (k.equals(aux)) {
+                    key += (key.length() > 0 ? "_" : "") + values.get(columns.indexOf(aux));
+                    equal = true;
+                    break;
+                }
+            }
+            if (!equal) {
+                System.out.println("Falta uma pk");
+                return "";
+            }
+        }
+
+        return key;
+    }
+
     public boolean insertData(final String tableName, final LinkedList<String> columns, final ArrayList<String> values) {
         Optional<Table> optionalTable = dictionary.getCurrentDb().getTable(tableName);
         if (optionalTable.isEmpty()) {
             System.out.println("Tabela não Existe!");
             return false;
         }
+        //TODO PODE SER UTIL
+//        String key = getKey(tableDb, columns, values);
+//        if (key == "")
+//            return false;
+
         Table table = optionalTable.get();
         String key = "";
         for (String k : table.getPks()) {
