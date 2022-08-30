@@ -16,11 +16,11 @@ public class Neo4jConnector extends Connector
     private String _nomeBancoDados = "";
     private final String _idColumnName = "id";
 
-    private Neo4jConnector()
+    public Neo4jConnector()
     {
         String uri = "bolt://localhost:7687";
         String user = "neo4j";
-        String password = "neo4j";
+        String password = "pAsSw0rD";
         driver = GraphDatabase.driver( uri, AuthTokens.basic( user, password ));
     }
 
