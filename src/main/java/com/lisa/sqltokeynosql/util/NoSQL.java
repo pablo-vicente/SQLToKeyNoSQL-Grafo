@@ -44,7 +44,7 @@ public class NoSQL {
                 return new SimpleDBConnector();
 
             case NEO4J:
-                return new Neo4jConnector(this.user, this.password, this.url);
+                return new Neo4jConnector();
 
             default:
                 throw new UnsupportedOperationException("Connector not declared!!!!");
