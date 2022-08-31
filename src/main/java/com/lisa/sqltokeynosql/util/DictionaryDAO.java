@@ -19,7 +19,7 @@ import java.util.*;
 public class DictionaryDAO {
 
     public static void storeDictionary(Dictionary dic) {
-        MongoClient mongoClient = new MongoClient(new MongoClientURI("mongodb://root:root@localhost:27017"));
+        MongoClient mongoClient = MongoConnector.GetDefaultInstace();
         MongoDatabase db = mongoClient.getDatabase("_dictionary");
         Document dictionary = new Document("_id", "_dictionary");
         Document bdrs = new Document();
@@ -77,7 +77,7 @@ public class DictionaryDAO {
     }
 
     public static Optional<Dictionary> loadDictionary() {
-        MongoClient mongoClient = new MongoClient(new MongoClientURI("mongodb://root:root@localhost:27017"));
+        MongoClient mongoClient = MongoConnector.GetDefaultInstace();
         MongoDatabase db = mongoClient.getDatabase("_dictionary");
         MongoCollection<Document> cdic = db.getCollection("_dictionary");
         if (cdic.count() < 1) {

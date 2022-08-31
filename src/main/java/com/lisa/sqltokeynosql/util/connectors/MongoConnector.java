@@ -17,8 +17,12 @@ public class MongoConnector extends Connector{
     private final MongoClient mongoClient;
     public DB mongoDatabase;
 
+    public static MongoClient GetDefaultInstace(){
+        return new MongoClient(new MongoClientURI("mongodb://root:root@localhost:27017"));
+    }
+
     public MongoConnector() {
-        mongoClient = new MongoClient(new MongoClientURI("mongodb://root:root@localhost:27017"));
+        mongoClient = GetDefaultInstace();
     }
 
     public MongoConnector(String user, String password, String hostAndPort) {
