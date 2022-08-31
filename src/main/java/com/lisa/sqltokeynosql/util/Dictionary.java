@@ -38,10 +38,10 @@ public final class Dictionary implements Serializable {
 
     public void addTarget(NoSQL noSQL) {
         targets.add(noSQL);
-        BDR bdr = new BDR(noSQL.getAlias(), new ArrayList<>());
-        rdbms.add(bdr);
-        if (currentDb == null)
-            currentDb = bdr;
+//        BDR bdr = new BDR(noSQL.getAlias(), new ArrayList<>());
+//        rdbms.add(bdr);
+//        if (currentDb == null)
+//            currentDb = bdr;
     }
 
     public Optional<BDR> getBDR(String dbName) {
