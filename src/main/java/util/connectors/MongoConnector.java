@@ -6,12 +6,7 @@
 package util.connectors;
 
 import com.lisa.sqltokeynosql.architecture.Connector;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
-import com.mongodb.MongoClient;
+import com.mongodb.*;
 import com.mongodb.client.MongoDatabase;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,8 +34,13 @@ public class MongoConnector extends Connector {
     DB db;
     MongoDatabase db2;
 
+    public static MongoClient GetDefaultInstace(){
+        return new MongoClient(new MongoClientURI("mongodb://root:root@localhost:27017"));
+    }
+
     public MongoConnector() {
-        mongoClient = new MongoClient();
+
+        mongoClient = GetDefaultInstace();
     }
 
     @Override

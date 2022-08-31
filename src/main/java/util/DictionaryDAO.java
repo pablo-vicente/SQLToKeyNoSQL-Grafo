@@ -22,7 +22,7 @@ import org.bson.Document;
 public class DictionaryDAO {
 
     public static void storeDictionary(Dictionary dic) {
-        MongoClient mongoClient = new MongoClient();
+        MongoClient mongoClient = MongoConnector.GetDefaultInstace();
         MongoDatabase db = mongoClient.getDatabase("_dictionary");
         Document dictionary = new Document("_id", "_dictionary");
         //Document dictionary = new Document();
@@ -100,7 +100,7 @@ public class DictionaryDAO {
     }
 
     public static Dictionary loadDictionary() {
-        MongoClient mongoClient = new MongoClient();
+        MongoClient mongoClient = MongoConnector.GetDefaultInstace();
         MongoDatabase db = mongoClient.getDatabase("_dictionary");
         MongoCollection<Document> cdic = db.getCollection("_dictionary");
         if (cdic.count() < 1) {
