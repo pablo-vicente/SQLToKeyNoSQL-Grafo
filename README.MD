@@ -8,8 +8,7 @@
 - NEO4J(Enterprise): acessível através da [localhost:7474](http://localhost:7474)
     - User: ``neo4j``
     - PWS: ``pAsSw0rD``
-- Documentação da API SQLTONOKEYNOSQL: [SWAGER](http://localhost:8080/swagger)
-- Recomendação: utilizar o [POSTAM](https://www.postman.com/) para os testes da API
+- API SQLTONOKEYNOSQL: é possível utilizar o [SWAGER-Documentação](http://localhost:8080/swagger) ou [POSTAM](https://www.postman.com/) para os testes da API
 
 ## PASSOS
 
@@ -36,8 +35,13 @@
 > É possivel verificar criaçao através ```GET/databases```
 > È possível verificar se está definido através ```GET/current-database```
 
-# 3 Definir o banco de dados através ```POST/current-database```
-
+# 3 Rodar os SCRIPS através ```/query```
+* um instrução por chamada
+```JSON
+{
+  "value": "string"
+}
+```
 
 
 
