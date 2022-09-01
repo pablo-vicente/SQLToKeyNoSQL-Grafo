@@ -1,7 +1,7 @@
 # Rodando Programa
 
 - Baixar [DOCKER](https://www.docker.com/)
-- Rodar Arquivo ```docker-compose.yml```, instâncias dos bancos de dados utlizados (Mongo e Neo4j)
+- Rodar Arquivo ```docker-compose.yml```, instâncias dos bancos de dados utlizados ([Mongo](https://www.mongodb.com/) e [Neo4j](https://neo4j.com/))
 - MONGO: acessível através do [localhost:8081](http://localhost:8081) (utilizado para armazenar dicionario)
   - User: ``root``
   - PWS: ``root``
@@ -9,6 +9,7 @@
     - User: ``neo4j``
     - PWS: ``pAsSw0rD``
 - API SQLTONOKEYNOSQL: é possível utilizar o [SWAGER-Documentação](http://localhost:8080/swagger) ou [POSTAM](https://www.postman.com/) para os testes da API
+- O arquivo [bd_matConstru.sql](.\SQLs\bd_matConstru.sql) contém alguns exemplos de SQL 
 
 ## PASSOS
 
@@ -36,7 +37,8 @@
 > È possível verificar se está definido através ```GET/current-database```
 
 # 3 Rodar os SCRIPS através ```/query```
-* uma instrução por chamada Exemplo
+* uma instrução por chamada. 
+* Exemplo
 ```SQL
 create table funcao(
     id_funcao int not null primary key auto_increment,
