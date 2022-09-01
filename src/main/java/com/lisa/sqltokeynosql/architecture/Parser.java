@@ -57,7 +57,10 @@ public class Parser {
 
     public Optional<DataSet> run(final String sql) {
         try {
-            Statement statement = CCJSqlParserUtil.parse(sql);
+            if(sql.trim().isEmpty())
+                return Optional.empty();
+
+            Statement statement = CCJSqlParserUtil.parse(sql.trim().toLowerCase());
 
             return run(statement);
         } catch (JSQLParserException ex) {
