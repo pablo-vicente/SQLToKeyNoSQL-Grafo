@@ -36,10 +36,19 @@
 > È possível verificar se está definido através ```GET/current-database```
 
 # 3 Rodar os SCRIPS através ```/query```
-* um instrução por chamada
+* uma instrução por chamada Exemplo
+```SQL
+create table funcao(
+    id_funcao int not null primary key auto_increment,
+    desc_funcao varchar(50),
+    salario double,
+    carga_horaria varchar(30)
+);
+```
+> Entrada API
 ```JSON
 {
-  "value": "string"
+  "value": "create table funcao(id_funcao int not null primary key auto_increment,desc_funcao varchar(50),salario double,carga_horaria varchar(30));"
 }
 ```
 

@@ -1,5 +1,6 @@
 package com.lisa.sqltokeynosql.api.controllers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lisa.sqltokeynosql.api.dto.CurrentDataBaseRequestDTO;
 import com.lisa.sqltokeynosql.api.dto.NoSqlTargetDTO;
@@ -82,15 +83,9 @@ public class SQLController {
 
     @PostMapping(value = "/query", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     @ApiOperation(value = "Run SQL Queries, only one for request.")
-    public ResponseEntity<String> query(@RequestBody SQLDTO query) {
-        return ResponseEntity.ok(parser.run(query.getValue()).map(this::getAsString)
-                .orElse("No value found."));
-    }
-    private String getAsString(Object object) {
-        try {
-            return mapper.writeValueAsString(object);
-        }catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    public ResponseEntity<String> query(@RequestBody SQLDTO query) throws JsonProcessingException {
+        var value = query.getValue();
+        var result = parser.run(value);
+        return ResponseEntity.ok(mapper.writeValueAsString(result));
     }
 }
