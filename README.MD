@@ -13,7 +13,7 @@
 
 ## PASSOS
 
-*  1 Criar Conexão com SGBD através da rota ```/noSqlTarget```
+# 1 Criar Conexão com SGBD através da rota ```POST/no-sql-target```
 > Dados de conexão Neo4j
 ```JSON
 {
@@ -24,7 +24,20 @@
   "user": "neo4j"
 }
 ```
-  
+> É possivel verificar criaçao através ```GET/no-sql-targets```
+
+# 2 Definir o banco de dados através ```POST/current-database```
+- Se o banco não existir será criado, se existir será apenas definido
+```JSON
+{
+  "name": "bd_matConstru"
+}
+```
+> É possivel verificar criaçao através ```GET/databases```
+> È possível verificar se está definido através ```GET/current-database```
+
+# 3 Definir o banco de dados através ```POST/current-database```
+
 
 
 

@@ -41,8 +41,13 @@ public class ExecutionEngine {
         DictionaryDAO.storeDictionary(dictionary);
     }
 
-    public void changeCurrentDB(final String name) {
-        if (dictionary.getCurrentDb() == null) {
+    public void changeCurrentDB(final String name)
+    {
+        var dabaseExists = dictionary
+                .getRdbms()
+                .stream()
+                .anyMatch(br -> br.getName().equalsIgnoreCase(name));
+        if (!dabaseExists) {
             System.out.println("New RDB " + name + " created!");
             this.createDBR(name);
         }
