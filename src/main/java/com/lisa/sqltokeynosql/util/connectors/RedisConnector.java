@@ -3,6 +3,7 @@ package com.lisa.sqltokeynosql.util.connectors;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.lisa.sqltokeynosql.architecture.Connector;
+import com.lisa.sqltokeynosql.util.sql.Table;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
@@ -29,13 +30,13 @@ public class RedisConnector extends Connector{
     }
 
     @Override
-    public void put(String table, String key, LinkedList<String> cols, ArrayList<String> values) {
+    public void put(com.lisa.sqltokeynosql.util.Dictionary dictionary, Table table, String key, LinkedList<String> cols, ArrayList<String> values) {
         if (jedis != null){
             HashMap<String, String> current = new HashMap<>();
             for (int i = 0; i < cols.size(); i++) {
                 current.put(cols.get(i), values.get(i));
             }
-            String rkey = db+"::"+table+"::"+key;
+            String rkey = db+"::"+table.getName()+"::"+key;
             jedis.set(rkey, current.toString());
             //jedis.close();
         }

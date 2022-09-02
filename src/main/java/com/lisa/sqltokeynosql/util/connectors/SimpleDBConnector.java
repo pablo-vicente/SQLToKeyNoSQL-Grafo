@@ -20,6 +20,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;
+
+import com.lisa.sqltokeynosql.util.sql.Table;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.schema.Column;
 import com.lisa.sqltokeynosql.util.operations.Equal;
@@ -47,7 +49,7 @@ public class SimpleDBConnector extends Connector {
     }
 
     @Override
-    public void put(String table, String key, LinkedList<String> cols, ArrayList<String> values) {
+    public void put(com.lisa.sqltokeynosql.util.Dictionary dictionary, Table table, String key, LinkedList<String> cols, ArrayList<String> values) {
 
         if (null == this.client) {
             System.err.println("Problemas na conexão com o SimpleDB");
@@ -64,7 +66,7 @@ public class SimpleDBConnector extends Connector {
             att = new ReplaceableAttribute(cols.get(i), values.get(i), Boolean.TRUE);
             attributes.add(att);
         }
-        this.client.putAttributes(new PutAttributesRequest(table, key, attributes));
+        this.client.putAttributes(new PutAttributesRequest(table.getName(), key, attributes));
     }
 
     protected List<String> getAllDomains() {

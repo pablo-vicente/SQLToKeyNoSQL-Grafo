@@ -1,6 +1,7 @@
 package com.lisa.sqltokeynosql.util.connectors;
 
 import com.lisa.sqltokeynosql.architecture.Connector;
+import com.lisa.sqltokeynosql.util.sql.Table;
 import com.netflix.astyanax.AstyanaxContext;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
@@ -51,10 +52,10 @@ public class Cassandra2Connector extends Connector {
     }
 
     @Override
-    public void put(String table, String key, LinkedList<String> cols, ArrayList<String> values) {
+    public void put(com.lisa.sqltokeynosql.util.Dictionary dictionary, Table table, String key, LinkedList<String> cols, ArrayList<String> values) {
         ColumnFamily<String, String> TABLE
                 = new ColumnFamily<String, String>(
-                        table, // Column Family Name
+                        table.getName(), // Column Family Name
                         StringSerializer.get(), // Key Serializer
                         StringSerializer.get());
 

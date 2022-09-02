@@ -114,7 +114,7 @@ public class ExecutionEngine {
             }
         }
         long now = new Date().getTime();
-        table.getTargetDB().getConnection().put(tableName, key, columns, values);
+        table.getTargetDB().getConnection().put(dictionary, table, key, columns, values);
         TimeConter.current = (new Date().getTime()) - now;
         table.getKeys().add(key);
         return true;
@@ -157,7 +157,7 @@ public class ExecutionEngine {
             String k = tuple[cols.size() - 1];
             table.getTargetDB().getConnection().delete(tableName, k);
             cols.remove("_key");
-            table.getTargetDB().getConnection().put(tableName, k, (LinkedList<String>) cols, values);
+            table.getTargetDB().getConnection().put(dictionary, table, k, (LinkedList<String>) cols, values);
         }
 
         System.out.println(" new: " + table.getKeys().size());

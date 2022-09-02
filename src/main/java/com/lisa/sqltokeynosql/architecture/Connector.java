@@ -1,5 +1,7 @@
 package com.lisa.sqltokeynosql.architecture;
 
+import com.lisa.sqltokeynosql.util.Dictionary;
+import com.lisa.sqltokeynosql.util.sql.Table;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.schema.Column;
@@ -19,7 +21,7 @@ public abstract class Connector {
 
     public abstract void connect(String nameDB);
 
-    public abstract void put(String table, String key, LinkedList<String> cols, ArrayList<String> values);
+    public abstract void put (com.lisa.sqltokeynosql.util.Dictionary dictionary, Table table, String key, LinkedList<String> cols, ArrayList<String> values);
 
     public abstract void delete(String table, String key);
 
@@ -57,10 +59,9 @@ public abstract class Connector {
             result = (result || applyFilterR(filters, tuple));
         } else {
             String col = null;
-            Object val = null;
+            Object val = Parser.removeInvalidCaracteres(filters.pop().toString());
             Operator op = null;
             op = ((Operator) o);
-            val = filters.pop();
             col = ((Column) filters.pop()).getColumnName();
             result = compare((String) tuple.get(col), op, val);
         }

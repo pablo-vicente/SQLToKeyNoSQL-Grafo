@@ -193,8 +193,12 @@ public class Parser {
                 return true;
             }
             List<String> vals = new ArrayList<>();
-            for (int i = 0; i < s; i++) {
-                vals.add(values.get(i).toString());
+            for (int i = 0; i < s; i++)
+            {
+                Expression valueExpression = values.get(i);
+                String value = removeInvalidCaracteres(valueExpression.toString());
+
+                vals.add(value);
             }
             if (executionEngine.insertData(insert.getTable().getName(), cols, (ArrayList<String>) vals)) {
                 j++;
@@ -280,5 +284,10 @@ public class Parser {
 
     public List<BDR> getRdbms() {
         return executionEngine.getRdbms();
+    }
+
+    public static String removeInvalidCaracteres(String base)
+    {
+        return base.replaceAll("^(['\"])(.*)\\1$", "$2");
     }
 }
