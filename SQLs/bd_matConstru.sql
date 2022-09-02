@@ -199,7 +199,7 @@ desc_formPag varchar(20)
 );
 
 insert into Forma_pag (id_formaPag,desc_formPag)
-values (1,'Dinheiro'); 
+values (1,'Dinheiro');
 
 create table vendas(
 id_venda int primary key auto_increment,
@@ -249,4 +249,4 @@ cep varchar(20)
 );
 
 insert into entrega (id_entrega, id_venda, id_veiculo, rua, numero, bairro, cidade, uf, cep)
-values (1, 1, 1, "Rua", "Numero", "bairro", "cidade", "uf", "cep")
+values (1, 1, 1, 'Rua', 'Numero', 'bairro', 'cidade', 'uf', 'cep');
