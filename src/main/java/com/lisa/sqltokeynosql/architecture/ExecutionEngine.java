@@ -92,29 +92,16 @@ public class ExecutionEngine {
             System.out.println("Tabela não Existe!");
             return false;
         }
-        //TODO PODE SER UTIL
-//        String key = getKey(tableDb, columns, values);
-//        if (key == "")
-//            return false;
-
         Table table = optionalTable.get();
-        String key = "";
-        for (String k : table.getPks()) {
-            boolean equal = false;
-            for (String column : columns) {
-                if (k.equals(column)) {
-                    key += (key.length() > 0 ? "_" : "") + values.get(columns.indexOf(column));
-                    equal = true;
-                    break;
-                }
-            }
-            if (!equal) {
-                System.out.println("Falta uma pk");
-                return false;
-            }
-        }
+        String key = getKey(table, columns, values);
+        if (key == "")
+            return false;
+
         long now = new Date().getTime();
-        table.getTargetDB().getConnection().put(dictionary, table, key, columns, values);
+        NoSQL targetDb = table.getTargetDB();
+        Connector connection = targetDb.getConnection();
+        connection.put(dictionary, table, key, columns, values);
+
         TimeConter.current = (new Date().getTime()) - now;
         table.getKeys().add(key);
         return true;
@@ -126,7 +113,6 @@ public class ExecutionEngine {
         LinkedList<String> cols = new LinkedList<>();
         ArrayList<String> tables = new ArrayList<>();
         tables.add(table);
-        cols.add("_key");
         DataSet ds = getDataSetBl(tables, cols, filters);
         for (String[] tuple : ds.getData()) {
             t.getTargetDB().getConnection().delete(table, tuple[0]);
@@ -147,17 +133,18 @@ public class ExecutionEngine {
         List<String> cols = table.getAttributes();
         ArrayList<String> tables = new ArrayList<>();
         tables.add(tableName);
-        cols.add("_key");
         DataSet ds = getDataSetBl(tables, cols, filters);
         for (String[] tuple : ds.getData()) {
-            for (int i = 0; i < acls.size(); i++) {
-                tuple[cols.indexOf(acls.get(i))] = (String) avl.get(i);
+            for (int i = 0; i < acls.size(); i++)
+            {
+                var coluna = acls.get(i);
+                int indexColuna = cols.indexOf(coluna);
+                tuple[indexColuna] = (String) avl.get(i);
             }
-            ArrayList<String> values = new ArrayList<>(Arrays.asList(tuple).subList(0, cols.size() - 1));
-            String k = tuple[cols.size() - 1];
-            table.getTargetDB().getConnection().delete(tableName, k);
-            cols.remove("_key");
-            table.getTargetDB().getConnection().put(dictionary, table, k, (LinkedList<String>) cols, values);
+            ArrayList<String> values = new ArrayList<>(Arrays.asList(tuple));
+            String key = getKey(table,(LinkedList<String>) cols, values);
+            table.getTargetDB().getConnection().delete(tableName, key);
+            table.getTargetDB().getConnection().put(dictionary, table, key, (LinkedList<String>) cols, values);
         }
 
         System.out.println(" new: " + table.getKeys().size());

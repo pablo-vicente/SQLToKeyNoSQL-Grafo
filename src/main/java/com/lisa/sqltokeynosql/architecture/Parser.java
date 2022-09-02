@@ -143,7 +143,7 @@ public class Parser {
         final ArrayList<String> values = statement
                 .getExpressions()
                 .stream()
-                .map(Object::toString)
+                .map(x -> Parser.removeInvalidCaracteres(x.toString()))
                 .collect(toCollection(ArrayList::new));
 
         Stack<Object> filters = extractFilters(statement.getWhere());
@@ -257,7 +257,9 @@ public class Parser {
         if (schemaT.getSchemaName() != null) {
             dt = new Table(schemaT.getName(), executionEngine.getTarget(schemaT.getSchemaName()), pk, fk, cols);
         } else {
-            dt = new Table(schemaT.getName(), executionEngine.getTarget(null), pk, fk, cols);
+            String tableNome = schemaT.getName();
+            NoSQL targety = executionEngine.getTarget(null);
+            dt = new Table(tableNome, targety, pk, fk, cols);
         }
         if (executionEngine.createTable(dt)) {
             System.out.println("Tabela Criada");
