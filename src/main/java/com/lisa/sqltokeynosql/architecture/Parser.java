@@ -55,45 +55,50 @@ public class Parser {
         stack.push(1);
     }
 
-    public Optional<DataSet> run(final String sql) {
-        try {
-            if(sql.trim().isEmpty())
-                return Optional.empty();
-
-            Statement statement = CCJSqlParserUtil.parse(sql.trim().toLowerCase());
-
-            return run(statement);
-        } catch (JSQLParserException ex) {
-            Logger.getLogger(Parser.class.getName()).log(Level.SEVERE, null, ex);
+    public Optional<DataSet> run(final String sql) throws JSQLParserException
+    {
+        if(sql.trim().isEmpty())
             return Optional.empty();
-        }
+        Statement statement = CCJSqlParserUtil.parse(sql.trim().toLowerCase());
+        return run(statement);
     }
 
     private Optional<DataSet> run(final Statement statement) {
-        try {
-            if (statement instanceof Select) {
-                return Optional.ofNullable(select((Select) statement));
-            } else if (statement instanceof CreateTable) {
-                createTable((CreateTable) statement);
-                return Optional.empty();
-            } else if (statement instanceof Insert) {
-                insertInto((Insert) statement);
-                return Optional.empty();
-            } else if (statement instanceof Delete) {
-                delete((Delete) statement);
-                return Optional.empty();
-            } else if (statement instanceof Update) {
-                update((Update) statement);
-                return Optional.empty();
-            } else if (statement instanceof Drop) {
-                System.out.println("Drop table");
-            } else if (statement instanceof Alter) {
-                System.out.println("Alter table");
-            } else {
-                System.out.println("Não suportado!");
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
+        if (statement instanceof Select)
+        {
+            return Optional.ofNullable(select((Select) statement));
+        }
+        else if (statement instanceof CreateTable)
+        {
+            createTable((CreateTable) statement);
+            return Optional.empty();
+        }
+        else if (statement instanceof Insert)
+        {
+            insertInto((Insert) statement);
+            return Optional.empty();
+        }
+        else if (statement instanceof Delete)
+        {
+            delete((Delete) statement);
+            return Optional.empty();
+        }
+        else if (statement instanceof Update)
+        {
+            update((Update) statement);
+            return Optional.empty();
+        }
+        else if (statement instanceof Drop)
+        {
+            System.out.println("Drop table");
+        }
+        else if (statement instanceof Alter)
+        {
+            System.out.println("Alter table");
+        }
+        else
+        {
+            System.out.println("Não suportado!");
         }
         return Optional.empty();
     }

@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.RestController;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -83,9 +85,19 @@ public class SQLController {
 
     @PostMapping(value = "/query", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     @ApiOperation(value = "Run SQL Queries, only one for request.")
-    public ResponseEntity<String> query(@RequestBody SQLDTO query) throws JsonProcessingException {
-        var value = query.getValue();
-        var result = parser.run(value);
-        return ResponseEntity.ok(mapper.writeValueAsString(result));
+    public ResponseEntity<String> query(@RequestBody SQLDTO query) throws JsonProcessingException
+    {
+        try
+        {
+            var value = query.getValue();
+            var result = parser.run(value);
+            return ResponseEntity.ok(mapper.writeValueAsString(result));
+        }
+        catch (Exception ex)
+        {
+            Logger.getLogger(Parser.class.getName()).log(Level.SEVERE, null, ex);
+            return ResponseEntity.badRequest().body(mapper.writeValueAsString(ex.getMessage()));
+        }
+
     }
 }
