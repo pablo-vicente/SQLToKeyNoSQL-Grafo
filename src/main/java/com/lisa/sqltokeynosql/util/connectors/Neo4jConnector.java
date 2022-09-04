@@ -15,7 +15,6 @@ import static org.neo4j.driver.Values.parameters;
 public class Neo4jConnector extends Connector
 {
     private final Driver driver;
-    private static String DbName = "Neo4j";
     private String _nomeBancoDados = "";
     private final String _idColumnName = "id";
 
@@ -64,34 +63,7 @@ public class Neo4jConnector extends Connector
         {
             verifyDuplicateId(table, key, session);
             String querysRelationships = verifyRelationships(table, values, session);
-
-            ////////////////////////
-            var tables = dictionary.getCurrentDb().getTables();
-            String queryRelationShipWithtable = "";
-            for (int i = 0; i < tables.size(); i++)
-            {
-                Table tableWithFk = tables.get(i);
-                var fks = tableWithFk.getFks();
-
-                for (int i1 = 0; i1 < fks.size(); i1++)
-                {
-                    ForeignKey foreignKey = fks.get(i1);
-                    String tableFk = foreignKey.getrTable();
-                    String tableAttributeReferenceFk = foreignKey.getrAtt();
-                    String fkAttribute = foreignKey.getAtt();
-
-                    if(!tableFk.equalsIgnoreCase(table.getName()))
-                        continue;
-                    String nodeShortCutName = "c" + i1;
-                    queryRelationShipWithtable +=  "WITH (n)\n" +
-                            "MATCH (" + nodeShortCutName + ":" + tableWithFk.getName() + ")\n" +
-                            "WHERE " + nodeShortCutName + "." + fkAttribute + " = n." + tableAttributeReferenceFk + "\n" +
-                            "CREATE (" + nodeShortCutName + ")-[:" + tableAttributeReferenceFk + "]->(n)\n";
-                }
-            }
-
-            ////////////////////////
-
+            var queryRelationShipWithtable = ReconstructionRelationshipWithtable(dictionary, table);
 
             Map<String, Object> props = getStringObjectMap(key, cols, values);
             String queryInsert =  "CREATE (n:" + table.getName() + " $props)\n" +
@@ -102,6 +74,35 @@ public class Neo4jConnector extends Connector
             int deletedNodes = summaryCounters.nodesCreated() + summaryCounters.relationshipsCreated();
             verifyQueryResult(deletedNodes, queryInsert);
         }
+    }
+
+    private String ReconstructionRelationshipWithtable(com.lisa.sqltokeynosql.util.Dictionary dictionary, Table table)
+    {
+        var tables = dictionary.getCurrentDb().getTables();
+        String queryRelationshipWithtable = "";
+        for (int i = 0; i < tables.size(); i++)
+        {
+            Table tableWithFk = tables.get(i);
+            var fks = tableWithFk.getFks();
+
+            for (int i1 = 0; i1 < fks.size(); i1++)
+            {
+                ForeignKey foreignKey = fks.get(i1);
+                String tableFk = foreignKey.getrTable();
+                String tableAttributeReferenceFk = foreignKey.getrAtt();
+                String fkAttribute = foreignKey.getAtt();
+
+                if(!tableFk.equalsIgnoreCase(table.getName()))
+                    continue;
+                String nodeShortCutName = "c" + i1;
+                queryRelationshipWithtable +=  "WITH (n)\n" +
+                        "MATCH (" + nodeShortCutName + ":" + tableWithFk.getName() + ")\n" +
+                        "WHERE " + nodeShortCutName + "." + fkAttribute + " = n." + tableAttributeReferenceFk + "\n" +
+                        "CREATE (" + nodeShortCutName + ")-[:" + tableAttributeReferenceFk + "]->(n)\n";
+            }
+        }
+
+        return queryRelationshipWithtable;
     }
 
     private String verifyRelationships(Table table, ArrayList<String> values, Session session)
