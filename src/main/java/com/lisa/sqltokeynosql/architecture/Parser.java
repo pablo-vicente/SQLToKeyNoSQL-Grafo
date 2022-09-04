@@ -266,11 +266,7 @@ public class Parser {
             NoSQL targety = executionEngine.getTarget(null);
             dt = new Table(tableNome, targety, pk, fk, cols);
         }
-        if (executionEngine.createTable(dt)) {
-            System.out.println("Tabela Criada");
-        } else {
-            System.out.println("Tabela não Criada");
-        }
+        executionEngine.createTable(dt);
     }
 
     public void changeCurrentDB(String db) {

@@ -55,13 +55,23 @@ public class ExecutionEngine {
         DictionaryDAO.storeDictionary(dictionary);
     }
 
-    public boolean createTable(final Table table) {
-        if (dictionary.getCurrentDb().getTables() != null) {
-            dictionary.getCurrentDb().getTables().add(table);
-            DictionaryDAO.storeDictionary(dictionary);
-            return true;
-        }
-        return false;
+    public void createTable(final Table table)
+    {
+        var currenteDb = dictionary.getCurrentDb();
+        if(currenteDb == null)
+            throw new UnsupportedOperationException("Banco de dados não definido!");
+
+        var tables = currenteDb.getTables();
+
+        var tableExist = tables
+                .stream()
+                .anyMatch(x -> x.getName().equalsIgnoreCase(table.getName()));
+
+        if (tableExist)
+            throw new UnsupportedOperationException("A Tabela " + table.getName() + " já foi criada");
+
+        tables.add(table);
+        DictionaryDAO.storeDictionary(dictionary);
     }
 
     private String getKey(Table tableDb, LinkedList<String> columns, ArrayList<String> values)

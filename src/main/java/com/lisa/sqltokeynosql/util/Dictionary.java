@@ -55,10 +55,13 @@ public final class Dictionary implements Serializable {
         return Optional.empty();
     }
 
-    public NoSQL getTarget(String alias) {
-        if (alias == null) {
+    public NoSQL getTarget(String alias)
+    {
+        if(targets == null || targets.size() == 0)
+            throw new UnsupportedOperationException("Não foi cadastrado nenhum NoSQL target.");
+
+        if (alias == null)
             return targets.get(0);
-        }
 
         for (NoSQL noSQL : targets) {
             if (noSQL.getAlias().equals(alias)) {
