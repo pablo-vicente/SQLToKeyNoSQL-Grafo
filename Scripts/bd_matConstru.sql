@@ -219,7 +219,7 @@ data_venda datetime,
 entrega varchar(1)
 );
 insert into vendas (id_venda,fun_id,id_itemVenda,id_formaPag,valor_venda, valor_recebido, troco, data_venda, entrega)
-values (1,1,1,1,1000, 2000, 1000, '2004-05-23T14:25:10', '23/05/1998')
+values (1,1,1,1,1000, 2000, 1000, '2004-05-23T14:25:10', '23/05/1998');
 
 create table veiculo(
 id_veiculo int primary key auto_increment,

@@ -61,12 +61,13 @@ public class Neo4jConnector extends Connector
     {
         try (Session session = driver.session(SessionConfig.forDatabase(_nomeBancoDados)))
         {
+            var node = table.getName() + key;
             verifyDuplicateId(table, key, session);
-            String querysRelationships = verifyRelationships(table, values, session);
-            var queryRelationShipWithtable = ReconstructionRelationshipWithtable(dictionary, table);
+            String querysRelationships = verifyRelationships(table, values, session, node);
+            var queryRelationShipWithtable = ReconstructionRelationshipWithtable(dictionary, table, node);
 
             Map<String, Object> props = getStringObjectMap(key, cols, values);
-            String queryInsert =  "CREATE (n:" + table.getName() + " $props)\n" +
+            String queryInsert =  "CREATE (" + node + ":" + table.getName() + " $props)\n" +
                     querysRelationships + queryRelationShipWithtable;
 
             Result result =session.run(queryInsert, parameters("props", props));
@@ -76,70 +77,68 @@ public class Neo4jConnector extends Connector
         }
     }
 
-    private String ReconstructionRelationshipWithtable(com.lisa.sqltokeynosql.util.Dictionary dictionary, Table table)
+    private String ReconstructionRelationshipWithtable(com.lisa.sqltokeynosql.util.Dictionary dictionary, Table table, String node)
     {
         var tables = dictionary.getCurrentDb().getTables();
         String queryRelationshipWithtable = "";
-        for (int i = 0; i < tables.size(); i++)
+
+        for (Table tableWithFk : tables)
         {
-            Table tableWithFk = tables.get(i);
+            if(tableWithFk.getName().equalsIgnoreCase(table.getName()))
+                continue;
+
             var fks = tableWithFk.getFks();
-
-            for (int i1 = 0; i1 < fks.size(); i1++)
+            for (ForeignKey foreignKey : fks)
             {
-                ForeignKey foreignKey = fks.get(i1);
-                String tableFk = foreignKey.getrTable();
-                String tableAttributeReferenceFk = foreignKey.getrAtt();
-                String fkAttribute = foreignKey.getAtt();
-
-                if(!tableFk.equalsIgnoreCase(table.getName()))
+                if(!foreignKey.getrTable().equalsIgnoreCase(table.getName()))
                     continue;
-                String nodeShortCutName = "c" + i1;
-                queryRelationshipWithtable +=  "WITH (n)\n" +
+
+                var referenceAttribute = foreignKey.getrAtt();
+                var attribute = foreignKey.getAtt();
+
+                var nodeShortCutName = tableWithFk.getName() + "_" + referenceAttribute + "_" + attribute;
+                queryRelationshipWithtable +=  "WITH (" +  node +")\n" +
                         "MATCH (" + nodeShortCutName + ":" + tableWithFk.getName() + ")\n" +
-                        "WHERE " + nodeShortCutName + "." + fkAttribute + " = n." + tableAttributeReferenceFk + "\n" +
-                        "CREATE (" + nodeShortCutName + ")-[:" + tableAttributeReferenceFk + "]->(n)\n";
+                        "WHERE " + nodeShortCutName + "." + attribute + " = " + node +"." + referenceAttribute + "\n" +
+                        "CREATE (" + nodeShortCutName + ")-[:" + referenceAttribute + "]->(" + node + ")\n";
             }
         }
 
         return queryRelationshipWithtable;
     }
 
-    private String verifyRelationships(Table table, ArrayList<String> values, Session session)
+    private String verifyRelationships(Table table, ArrayList<String> values, Session session, String node)
     {
+        String queryRelationShip = "";
         ArrayList<String> erros = new ArrayList<>();
         var pks = table.getFks();
-        String queryRelationShip = "";
+        for (ForeignKey pk : pks)
+        {
+            var referenceTable = pk.getrTable();
+            var referenceAttribute = pk.getrAtt();
+            var attribute = pk.getAtt();
 
-        for (int i = 0; i < pks.size(); i++) {
-            ForeignKey pk = pks.get(i);
-
-            String tableFk = pk.getrTable();
-            String tableAttributeReferenceFk = pk.getrAtt();
-            String fkAttribute = pk.getAtt();
-
-            int indexFkAttribute = table.getAttributes().indexOf(fkAttribute);
-            String valueFkAttribute = values.get(indexFkAttribute);
-            String queryFk = getQueryAttribute(tableFk, tableAttributeReferenceFk, valueFkAttribute);
+            int indexFkAttribute = table.getAttributes().indexOf(attribute);
+            var valueFkAttribute = values.get(indexFkAttribute);
+            var queryFk = getQueryAttribute(referenceTable, referenceAttribute, valueFkAttribute);
             List<Record> results = session.run(queryFk).list();
 
             if(results.size() != 1)
-                erros.add("Nao foi possivel criar relacionamento entre atributo '" + fkAttribute + " '" +
-                        " com a tabela '" + tableFk + " (" + tableAttributeReferenceFk + ")'" +
+                erros.add("Nao foi possivel criar relacionamento entre atributo '" + attribute + " '" +
+                        " com a tabela '" + referenceTable + " (" + referenceAttribute + ")'" +
                         " para o valor '" + valueFkAttribute + "' inexistente.");
             else
             {
-                String nodeShortCutName = "b" + i;
-                queryRelationShip +=    "WITH (n)\n" +
-                        "MATCH (" + nodeShortCutName + ":" + tableFk + ")\n" +
-                        "WHERE " + nodeShortCutName + "." + tableAttributeReferenceFk + " = " + valueFkAttribute + "\n" +
-                        "CREATE (n)-[:" + tableAttributeReferenceFk + "]->(" + nodeShortCutName + ")\n";
+                String nodeShortCutName = referenceTable + "_" + referenceAttribute + "_" + attribute;
+                queryRelationShip +=    "WITH (" + node + ")\n" +
+                        "MATCH (" + nodeShortCutName + ":" + referenceTable + ")\n" +
+                        "WHERE " + nodeShortCutName + "." + referenceAttribute + " = " + valueFkAttribute + "\n" +
+                        "CREATE (" + node + ")-[:" + referenceAttribute + "]->(" + nodeShortCutName + ")\n";
             }
-
         }
 
-        for (int i = 0; i < erros.size(); i++)
-            System.out.println(erros.get(i));
+        for (String erro : erros)
+            System.out.println(erro);
 
         if(erros.size() > 0)
             throw new UnsupportedOperationException("Não foi possível criar relacionamentos. Verifique os logs para mais detalhes sobre os erros");
