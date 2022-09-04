@@ -9,7 +9,8 @@
     - User: ``neo4j``
     - PWS: ``pAsSw0rD``
 - API SQLTONOKEYNOSQL: é possível utilizar o [SWAGER-Documentação](http://localhost:8080/swagger) ou [POSTAM](https://www.postman.com/) para os testes da API
-- O arquivo [bd_matConstru.sql](.\SQLs\bd_matConstru.sql) contém alguns exemplos de SQL 
+- O arquivo [bd_matConstru.sql](.\Scripts\bd_matConstru.sql) contém alguns exemplos de SQL 
+- O arquivo [Setup](.\Scripts\setup.js) contém exemplo de utilização da API com JS
 
 ## PASSOS
 
