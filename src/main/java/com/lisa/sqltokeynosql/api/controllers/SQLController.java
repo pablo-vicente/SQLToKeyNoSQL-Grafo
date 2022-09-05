@@ -11,10 +11,8 @@ import com.lisa.sqltokeynosql.util.NoSQL;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -22,7 +20,7 @@ import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.http.MediaType.*;
 
 @RestController
 public class SQLController {
@@ -84,7 +82,7 @@ public class SQLController {
 
 
     @PostMapping(value = "/query", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
-    @ApiOperation(value = "Run SQL Queries, only one for request.")
+    @ApiOperation(value = "Run SQL Queries.")
     public ResponseEntity<String> query(@RequestBody SQLDTO query) throws JsonProcessingException
     {
         try
@@ -99,5 +97,21 @@ public class SQLController {
             return ResponseEntity.badRequest().body(mapper.writeValueAsString(ex.getMessage()));
         }
 
+    }
+
+    @PostMapping(value = "/query-file-sql-script", produces = APPLICATION_JSON_VALUE, consumes = MULTIPART_FORM_DATA_VALUE)
+    @ApiOperation(value = "Run File Script SQL.")
+    public ResponseEntity<String> saveProfileImage(@RequestPart("file") MultipartFile file) throws JsonProcessingException
+    {
+        try
+        {
+            var query = new String(file.getBytes());
+            var result = parser.run(query);
+            return ResponseEntity.ok(mapper.writeValueAsString(result));
+        }
+        catch (Exception ex)
+        {
+            return ResponseEntity.badRequest().body(mapper.writeValueAsString(ex.getMessage()));
+        }
     }
 }

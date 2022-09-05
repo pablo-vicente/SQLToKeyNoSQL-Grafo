@@ -38,7 +38,6 @@
 > È possível verificar se está definido através ```GET/current-database```
 
 # 3 Rodar os SCRIPS através ```/query```
-* uma instrução por chamada. 
 * Exemplo
 ```SQL
 create table funcao(
@@ -54,6 +53,7 @@ create table funcao(
   "value": "create table funcao(id_funcao int not null primary key auto_increment,desc_funcao varchar(50),salario double,carga_horaria varchar(30));"
 }
 ```
+# 3.1 Rodar os Arquivo Sql através ```/query-file-sql-script```
 
 
 

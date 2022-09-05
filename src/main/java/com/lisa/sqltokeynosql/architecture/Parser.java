@@ -55,12 +55,24 @@ public class Parser {
         stack.push(1);
     }
 
-    public Optional<DataSet> run(final String sql) throws JSQLParserException
+    public ArrayList<Optional<DataSet>> run(final String sql) throws JSQLParserException
     {
         if(sql.trim().isEmpty())
-            return Optional.empty();
-        Statement statement = CCJSqlParserUtil.parse(sql.trim().toLowerCase());
-        return run(statement);
+            return new ArrayList<>();
+
+        var dataSets = new ArrayList<Optional<DataSet>>();
+        var queries = sql
+                .trim()
+                .toLowerCase()
+                .split(";");
+        for (var query : queries)
+        {
+            var statement = CCJSqlParserUtil.parse(query);
+            var dataSet = run(statement);
+            dataSets.add(dataSet);
+        }
+
+        return dataSets;
     }
 
     private Optional<DataSet> run(final Statement statement) {
