@@ -59,12 +59,19 @@ public class Parser {
     {
         if(sql.trim().isEmpty())
             return new ArrayList<>();
+        var linhas = Arrays
+                .stream(sql
+                        .trim()
+                        .toLowerCase()
+                        .split("\n"))
+                .filter(x -> !x.startsWith("--"))
+                .toArray();
+        var sb = new StringBuilder();
+        for (Object linha : linhas)
+            sb.append(linha + "\n");
 
         var dataSets = new ArrayList<Optional<DataSet>>();
-        var queries = sql
-                .trim()
-                .toLowerCase()
-                .split(";");
+        var queries = sb.toString().trim().split(";");
         for (var query : queries)
         {
             var statement = CCJSqlParserUtil.parse(query);

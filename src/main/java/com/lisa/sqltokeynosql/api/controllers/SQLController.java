@@ -111,6 +111,7 @@ public class SQLController {
         }
         catch (Exception ex)
         {
+            Logger.getLogger(Parser.class.getName()).log(Level.SEVERE, null, ex);
             return ResponseEntity.badRequest().body(mapper.writeValueAsString(ex.getMessage()));
         }
     }
