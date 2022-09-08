@@ -55,7 +55,7 @@ public class Parser {
         stack.push(1);
     }
 
-    public ArrayList<Optional<DataSet>> run(final String sql) throws JSQLParserException
+    public ArrayList<DataSet> run(final String sql) throws JSQLParserException
     {
         if(sql.trim().isEmpty())
             return new ArrayList<>();
@@ -70,56 +70,40 @@ public class Parser {
         for (Object linha : linhas)
             sb.append(linha + "\n");
 
-        var dataSets = new ArrayList<Optional<DataSet>>();
+        var dataSets = new ArrayList<DataSet>();
         var queries = sb.toString().trim().split(";");
         for (var query : queries)
         {
             var statement = CCJSqlParserUtil.parse(query);
             var dataSet = run(statement);
+
+            if(dataSet == null)
+                continue;
+
             dataSets.add(dataSet);
         }
 
         return dataSets;
     }
 
-    private Optional<DataSet> run(final Statement statement) {
+    private DataSet run(final Statement statement) {
         if (statement instanceof Select)
-        {
-            return Optional.ofNullable(select((Select) statement));
-        }
+            return select((Select) statement);
         else if (statement instanceof CreateTable)
-        {
             createTable((CreateTable) statement);
-            return Optional.empty();
-        }
         else if (statement instanceof Insert)
-        {
             insertInto((Insert) statement);
-            return Optional.empty();
-        }
         else if (statement instanceof Delete)
-        {
             delete((Delete) statement);
-            return Optional.empty();
-        }
         else if (statement instanceof Update)
-        {
             update((Update) statement);
-            return Optional.empty();
-        }
         else if (statement instanceof Drop)
-        {
             System.out.println("Drop table");
-        }
         else if (statement instanceof Alter)
-        {
             System.out.println("Alter table");
-        }
         else
-        {
             System.out.println("Não suportado!");
-        }
-        return Optional.empty();
+        return null;
     }
 
     private DataSet select(final Select statement) {
