@@ -94,7 +94,7 @@ public class SQLController {
         try
         {
             parser.changeCurrentDB(currentDataBase.getName());
-            return ResponseEntity.ok(currentDataBase.getName());
+            return ResponseEntity.ok(mapper.writeValueAsString(currentDataBase.getName()));
         }
         catch (Exception ex)
         {
