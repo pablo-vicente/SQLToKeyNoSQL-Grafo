@@ -31,53 +31,106 @@ public class SQLController {
     @Autowired
     private ObjectMapper mapper;
 
+    private ResponseEntity<String> handleException(Exception ex) throws JsonProcessingException
+    {
+        Logger.getLogger(Parser.class.getName()).log(Level.SEVERE, null, ex);
+        return ResponseEntity.badRequest().body(mapper.writeValueAsString(ex.getMessage()));
+    }
+
     @GetMapping(value = "/connectors", produces = APPLICATION_JSON_VALUE)
     @ApiOperation(value = "Get all SGBDs supported.")
     public ResponseEntity<String> listConnectors() throws IOException
     {
-        var connectors = new ArrayList<>(Arrays.asList(Connector.values()));
-        return ResponseEntity.ok(mapper.writeValueAsString(connectors));
+        try
+        {
+            var connectors = new ArrayList<>(Arrays.asList(Connector.values()));
+            return ResponseEntity.ok(mapper.writeValueAsString(connectors));
+        }
+        catch (Exception ex)
+        {
+            return handleException(ex);
+        }
     }
 
     @PostMapping(value = "/no-sql-target", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     @ApiOperation(value = "Create the SGDB Target.")
     public ResponseEntity<String> createNoSqlTarget(@RequestBody NoSqlTargetDTO noSqlTargetDTO) throws IOException
     {
-        NoSQL noSQL = new NoSQL(noSqlTargetDTO.getName(),
-                noSqlTargetDTO.getUser(),
-                noSqlTargetDTO.getPassword(),
-                noSqlTargetDTO.getUrl(),
-                noSqlTargetDTO.getConnector());
-        parser.addNoSqlTarget(noSQL);
-        return ResponseEntity.ok(mapper.writeValueAsString(noSQL));
+        try
+        {
+            NoSQL noSQL = new NoSQL(noSqlTargetDTO.getName(),
+                    noSqlTargetDTO.getUser(),
+                    noSqlTargetDTO.getPassword(),
+                    noSqlTargetDTO.getUrl(),
+                    noSqlTargetDTO.getConnector());
+            parser.addNoSqlTarget(noSQL);
+            return ResponseEntity.ok(mapper.writeValueAsString(noSQL));
+        }
+        catch (Exception ex)
+        {
+            return handleException(ex);
+        }
     }
 
     @GetMapping(value = "/no-sql-targets", produces = APPLICATION_JSON_VALUE)
     @ApiOperation(value = "Get all SGBDs previously registered.")
     public ResponseEntity<String> listNoSqlTargets() throws IOException
     {
-        return ResponseEntity.ok(
-                mapper.writeValueAsString(parser.getNoSqlTargets())
-        );
+        try
+        {
+            return ResponseEntity.ok(mapper.writeValueAsString(parser.getNoSqlTargets()));
+        }
+        catch (Exception ex)
+        {
+            return handleException(ex);
+        }
+
     }
 
     @PostMapping(value = "/current-database", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     @ApiOperation(value = "Create a databse if is not exist and set as current database.")
-    public ResponseEntity<String> choseCurrentDataBase(@RequestBody CurrentDataBaseRequestDTO currentDataBase) {
-        parser.changeCurrentDB(currentDataBase.getName());
-        return ResponseEntity.ok(currentDataBase.getName());
+    public ResponseEntity<String> choseCurrentDataBase(@RequestBody CurrentDataBaseRequestDTO currentDataBase) throws JsonProcessingException
+    {
+        try
+        {
+            parser.changeCurrentDB(currentDataBase.getName());
+            return ResponseEntity.ok(currentDataBase.getName());
+        }
+        catch (Exception ex)
+        {
+            return handleException(ex);
+        }
+
     }
 
     @GetMapping(value = "/current-database", produces = APPLICATION_JSON_VALUE)
     @ApiOperation(value = "Get the current database.")
-    public ResponseEntity<String> getCurrentDataBase() throws IOException {
-        return ResponseEntity.ok(mapper.writeValueAsString(parser.getCurrentDataBase()));
+    public ResponseEntity<String> getCurrentDataBase() throws IOException
+    {
+        try
+        {
+            return ResponseEntity.ok(mapper.writeValueAsString(parser.getCurrentDataBase()));
+        }
+        catch (Exception ex)
+        {
+            return handleException(ex);
+        }
+
     }
 
     @GetMapping(value = "/databases", produces = APPLICATION_JSON_VALUE)
     @ApiOperation(value = "Get all database created.")
-    public ResponseEntity<String> listDbs() throws IOException {
-        return ResponseEntity.ok(mapper.writeValueAsString(parser.getRdbms()));
+    public ResponseEntity<String> listDbs() throws IOException
+    {
+        try
+        {
+            return ResponseEntity.ok(mapper.writeValueAsString(parser.getRdbms()));
+        }
+        catch (Exception ex)
+        {
+            return handleException(ex);
+        }
+
     }
 
 
@@ -93,8 +146,7 @@ public class SQLController {
         }
         catch (Exception ex)
         {
-            Logger.getLogger(Parser.class.getName()).log(Level.SEVERE, null, ex);
-            return ResponseEntity.badRequest().body(mapper.writeValueAsString(ex.getMessage()));
+            return handleException(ex);
         }
 
     }
@@ -111,8 +163,7 @@ public class SQLController {
         }
         catch (Exception ex)
         {
-            Logger.getLogger(Parser.class.getName()).log(Level.SEVERE, null, ex);
-            return ResponseEntity.badRequest().body(mapper.writeValueAsString(ex.getMessage()));
+            return handleException(ex);
         }
     }
 }
