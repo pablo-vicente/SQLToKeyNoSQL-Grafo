@@ -114,12 +114,16 @@ public class Neo4jConnector extends Connector
         var pks = table.getFks();
         for (ForeignKey pk : pks)
         {
-            var referenceTable = pk.getrTable();
-            var referenceAttribute = pk.getrAtt();
             var attribute = pk.getAtt();
-
             int indexFkAttribute = table.getAttributes().indexOf(attribute);
             var valueFkAttribute = values.get(indexFkAttribute);
+
+            if(valueFkAttribute.equalsIgnoreCase("NULL"))
+                continue;
+
+            var referenceTable = pk.getrTable();
+            var referenceAttribute = pk.getrAtt();
+
             var queryFk = getQueryAttribute(referenceTable, referenceAttribute, valueFkAttribute);
             List<Record> results = session.run(queryFk).list();
 
