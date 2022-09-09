@@ -9,6 +9,7 @@ import org.neo4j.driver.Record;
 import org.neo4j.driver.summary.SummaryCounters;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.neo4j.driver.Values.parameters;
 
@@ -52,6 +53,40 @@ public class Neo4jConnector extends Connector
 
     /**
      * @param table
+     */
+    @Override
+    public void create(Table table)
+    {
+        try (Session session = driver.session(SessionConfig.forDatabase(_nomeBancoDados)))
+        {
+            var tableName = table.getName();
+            var constraintName = tableName + "_"+ "NODE_KEY";
+
+            var shortName = "n";
+
+            var propertys = table
+                    .getPks()
+                    .stream()
+                    .map(x -> shortName + "." + x)
+                    .distinct()
+                    .collect(Collectors.toList());
+            var pk = shortName + "." + _idColumnName;
+            if(!propertys.contains(pk))
+                propertys.add(pk);
+
+            var queryPropertys = String.join(",", propertys);
+            var query = "CREATE CONSTRAINT " + constraintName +"\n"+
+                    "IF NOT EXISTS FOR (n:" + tableName + ")\n"+
+                    "REQUIRE (" + queryPropertys +  ") IS NODE KEY";
+
+            Result result =session.run(query);
+            SummaryCounters summaryCounters = result.consume().counters();
+            verifyQueryResult(summaryCounters, query);
+        }
+    }
+
+    /**
+     * @param table
      * @param key
      * @param cols
      * @param values
@@ -62,7 +97,7 @@ public class Neo4jConnector extends Connector
         try (Session session = driver.session(SessionConfig.forDatabase(_nomeBancoDados)))
         {
             var node = table.getName() + key;
-            verifyDuplicateId(table, key, session);
+//            verifyDuplicateId(table, key, session);
             String querysRelationships = verifyRelationships(table, values, session, node);
             var queryRelationShipWithtable = ReconstructionRelationshipWithtable(dictionary, table, node);
 
@@ -72,8 +107,7 @@ public class Neo4jConnector extends Connector
 
             Result result =session.run(queryInsert, parameters("props", props));
             SummaryCounters summaryCounters = result.consume().counters();
-            int deletedNodes = summaryCounters.nodesCreated() + summaryCounters.relationshipsCreated();
-            verifyQueryResult(deletedNodes, queryInsert);
+            verifyQueryResult(summaryCounters, queryInsert);
         }
     }
 
@@ -212,15 +246,29 @@ public class Neo4jConnector extends Connector
                     "DETACH DELETE n";
 
             Result result = session.run(queryDelete);
-            SummaryCounters ss = result.consume().counters();
-            int deletedNodes = ss.nodesDeleted() + ss.relationshipsDeleted();
-            verifyQueryResult(deletedNodes, queryDelete);
+            SummaryCounters summaryCounters = result.consume().counters();
+            verifyQueryResult(summaryCounters, queryDelete);
 
         }
     }
 
-    private void verifyQueryResult(int affectedNodes, String query)
+    private void verifyQueryResult(SummaryCounters summaryCounters, String query)
     {
+        var affectedNodes = 0;
+
+        affectedNodes += summaryCounters.nodesCreated();
+        affectedNodes += summaryCounters.nodesDeleted();
+        affectedNodes += summaryCounters.relationshipsCreated();
+        affectedNodes += summaryCounters.relationshipsDeleted();
+        affectedNodes += summaryCounters.propertiesSet();
+        affectedNodes += summaryCounters.labelsAdded();
+        affectedNodes += summaryCounters.labelsRemoved();
+        affectedNodes += summaryCounters.indexesAdded();
+        affectedNodes += summaryCounters.indexesRemoved();
+        affectedNodes += summaryCounters.constraintsAdded();
+        affectedNodes += summaryCounters.constraintsRemoved();
+        affectedNodes += summaryCounters.systemUpdates();
+
         if(affectedNodes == 0)
             throw new UnsupportedOperationException("Os dados informados nao alteraram os dados do banco verifique a query. \n" + query);
     }
