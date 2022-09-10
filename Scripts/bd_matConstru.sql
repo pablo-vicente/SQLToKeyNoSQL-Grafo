@@ -47,14 +47,15 @@ insert into funcionario (id, funcao_id,banco_id,Nome,data_nasc,telefone,email,t_
 values(1,1,1,'Lucas Oliveira','1998-04-23','(19)3333-3333','Lucas@com.net','Pessoa Física','num sei cara','45.343.942-1','450.802.308.86','Rua: vinicius de Moraes n°846','13.188-103','1111','2222','3333','Jd.Amanda','Hortolândia','sp','4444','5555');
 
 UPDATE funcionario
-SET razao_social = 'Luana'
+SET razao_social = 'Razão Social'
 WHERE id = 1;
 
 create table usuario(
 user_id int primary key auto_increment,
 func_id int not null,
     constraint fk_us_fun 
-    foreign key(func_id) references funcionario(id),
+    foreign key(func_id)
+    references funcionario(id),
 user_log varchar(30),
 user_pwd varchar(20)
 );

@@ -37,7 +37,7 @@
 > É possivel verificar criaçao através ```GET/databases```
 > È possível verificar se está definido através ```GET/current-database```
 
-# 3 Rodar os SCRIPS através ```/query```
+# 3 Rodar os Scripts através ```/query```
 * Exemplo
 ```SQL
 create table funcao(
@@ -53,9 +53,72 @@ create table funcao(
   "value": "create table funcao(id_funcao int not null primary key auto_increment,desc_funcao varchar(50),salario double,carga_horaria varchar(30));"
 }
 ```
-# 3.1 Rodar os Arquivo Sql através ```/query-file-sql-script```
+### 3.1 Rodar os Arquivo SQL através ```/query-file-sql-script```
 
+# 4 Realizando o Transferência para Banco NoSQL
+### 4.1 Script DDL (Criação tabelas) - A camada não faz a leitura automatica das definições das tabelas de um banco.
+ - CREATE
+ - ALTER
+### 4.1 Script DML
+- INSERT
+- UPDATE
+- SELECT
+- DELETE
 
+# 5 Sintaxe Suportada
+O Parse SQL utilizado suporta um conjunto limitado de sintaxe, para mais detalhes [JSqlParser](https://github.com/JSQLParser/JSqlParser).
+### Exemplo utilizados no Experimento:
+### CREATE
+```SQL
+create table usuario(
+-- TODOS os campos devem ser declarados, os tipos São ignorados
+user_id int primary key auto_increment, -- Declaração Primary Key
+func_id int not null,
+    constraint fk_us_fun -- Declaração Foreign Key
+    foreign key(func_id) -- Declaração Foreign Key, especificar ATRIBUTO
+    references funcionario(id), -- Declaração Foreign Key, especificar TABELE E ATRIBUTO
+user_log varchar(30),
+user_pwd varchar(20)
+);
+```
+### ALTER
+```SQL
+-- TODO Não Suportado (Atualizar)
+```
+### DROP
+```SQL
+-- TODO Não Suportado (Atualizar)
+```
+
+### INSERT
+```SQL
+-- Obrigatório Declarar todas as colunas, inclusive a Chave Primaria mesmo Sendo Id
+-- Auto incremento ainda não é suportado
+insert into usuario (user_id, func_id, user_log, user_pwd)  -- 
+values (1,1,'adm','adm');
+```
+
+### UPDATE
+```SQL
+-- TODO Suporta apenas uma COLUNA (Atualizar)
+UPDATE funcionario
+SET razao_social = 'Razão Social'
+WHERE id = 1;
+```
+
+### SELECT
+```SQL
+-- TODO (Atualizar)
+SELECT column1, column2,
+FROM table_name;
+```
+
+### DELETE
+```SQL
+-- TODO Atualizar
+DELETE FROM table_name 
+WHERE condition;
+```
 
 
 
