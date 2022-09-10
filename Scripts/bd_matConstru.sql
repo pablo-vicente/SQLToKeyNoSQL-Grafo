@@ -5,7 +5,7 @@ salario double,
 carga_horaria varchar(30)
 );
 
-insert into funcao (id_funcao, desc_funcao,salario,carga_horaria)
+insert into funcao(id_funcao, desc_funcao,salario,carga_horaria)
 values(1,'administrador',2000.00,'40 horas semanais');
 
 create table Banco(
@@ -64,6 +64,7 @@ insert into usuario (user_id, func_id, user_log, user_pwd)
 values (1,1,'adm','adm');
 
 create table fluxo_caixa(
+id int primary key auto_increment,
 vl_pd double,
 vl_nd double,
 vl_pm double,
@@ -71,6 +72,9 @@ vl_nm double,
 contAreceber double,
 contApagar double
 );
+
+insert into fluxo_caixa (id, vl_pd, vl_nd, vl_pm, vl_nm, contAreceber, contApagar)
+values (1, 2000, 3000, 4000, 5000, 2600, 10000);
 
 create table cliente( 
 cli_id int not null primary key auto_increment,
