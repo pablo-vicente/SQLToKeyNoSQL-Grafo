@@ -21,8 +21,6 @@ public abstract class Connector {
 
     public abstract void connect(String nameDB);
 
-    public void create(Table table) {}
-
     public abstract void put (com.lisa.sqltokeynosql.util.Dictionary dictionary, Table table, String key, LinkedList<String> cols, ArrayList<String> values);
 
     public abstract void delete(String table, String key);

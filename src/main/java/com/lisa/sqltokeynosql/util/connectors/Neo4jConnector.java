@@ -9,8 +9,6 @@ import org.neo4j.driver.Record;
 import org.neo4j.driver.summary.SummaryCounters;
 
 import java.util.*;
-import java.util.stream.Collectors;
-
 import static org.neo4j.driver.Values.parameters;
 
 public class Neo4jConnector extends Connector
@@ -53,40 +51,6 @@ public class Neo4jConnector extends Connector
 
     /**
      * @param table
-     */
-    @Override
-    public void create(Table table)
-    {
-        try (Session session = driver.session(SessionConfig.forDatabase(_nomeBancoDados)))
-        {
-            var tableName = table.getName();
-            var constraintName = tableName + "_"+ "NODE_KEY";
-
-            var shortName = "n";
-
-            var propertys = table
-                    .getPks()
-                    .stream()
-                    .map(x -> shortName + "." + x)
-                    .distinct()
-                    .collect(Collectors.toList());
-            var pk = shortName + "." + _idColumnName;
-            if(!propertys.contains(pk))
-                propertys.add(pk);
-
-            var queryPropertys = String.join(",", propertys);
-            var query = "CREATE CONSTRAINT " + constraintName +"\n"+
-                    "IF NOT EXISTS FOR (n:" + tableName + ")\n"+
-                    "REQUIRE (" + queryPropertys +  ") IS NODE KEY";
-
-            Result result =session.run(query);
-            SummaryCounters summaryCounters = result.consume().counters();
-            verifyQueryResult(summaryCounters, query);
-        }
-    }
-
-    /**
-     * @param table
      * @param key
      * @param cols
      * @param values
@@ -97,7 +61,7 @@ public class Neo4jConnector extends Connector
         try (Session session = driver.session(SessionConfig.forDatabase(_nomeBancoDados)))
         {
             var node = table.getName() + key;
-//            verifyDuplicateId(table, key, session);
+            verifyDuplicateId(table, key, session);
             String querysRelationships = verifyRelationships(table, values, session, node);
             var queryRelationShipWithtable = ReconstructionRelationshipWithtable(dictionary, table, node);
 
