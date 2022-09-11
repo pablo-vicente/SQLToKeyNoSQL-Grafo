@@ -72,9 +72,6 @@ public class ExecutionEngine {
 
         tables.add(table);
 
-        var target = table.getTargetDB();
-        var connection = target.getConnection();
-        connection.create(table);
         DictionaryDAO.storeDictionary(dictionary);
     }
 
