@@ -160,19 +160,8 @@ public class SQLController {
     {
         try
         {
-//            BufferedReader br;
-//            List<String> result = new ArrayList<>();
-//            String line;
-//            InputStream is = file.getInputStream();
-//            br = new BufferedReader(new InputStreamReader(is));
-//            while ((line = br.readLine()) != null)
-//            {
-//                result.add(line);
-//            }
-
-//           var query = new String(file.getBytes());
-            var result2 = parser.run(file.getInputStream());
-            return ResponseEntity.ok(mapper.writeValueAsString(result2));
+            var result = parser.run(file.getInputStream());
+            return ResponseEntity.ok(mapper.writeValueAsString(result));
         }
         catch (Exception ex)
         {
