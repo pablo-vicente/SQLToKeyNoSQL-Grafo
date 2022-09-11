@@ -33,9 +33,11 @@ import com.lisa.sqltokeynosql.util.sql.ForeignKey;
 import com.lisa.sqltokeynosql.util.sql.Table;
 import com.lisa.sqltokeynosql.util.sql.WhereStatement;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import static java.util.stream.Collectors.toCollection;
 
@@ -55,35 +57,69 @@ public class Parser {
         stack.push(1);
     }
 
-    public ArrayList<DataSet> run(final String sql) throws JSQLParserException
+    public ArrayList<DataSet> run(final InputStream is) throws JSQLParserException, IOException
     {
-        if(sql.trim().isEmpty())
-            return new ArrayList<>();
-        var linhas = Arrays
-                .stream(sql
-                        .trim()
-                        .toLowerCase()
-                        .split("\n"))
-                .filter(x -> !x.startsWith("--"))
-                .toArray();
-        var sb = new StringBuilder();
-        for (Object linha : linhas)
-            sb.append(linha + "\n");
-
         var dataSets = new ArrayList<DataSet>();
-        var queries = sb.toString().trim().split(";");
-        for (var query : queries)
-        {
-            var statement = CCJSqlParserUtil.parse(query);
-            var dataSet = run(statement);
+        var br = new BufferedReader(new InputStreamReader(is));
+        String line;
 
-            if(dataSet == null)
+        StringBuilder query = new StringBuilder();
+        while ((line = br.readLine()) != null)
+        {
+            var lineClear = line
+                    .trim()
+                    .toLowerCase();
+
+            if(lineClear.startsWith("--"))
                 continue;
 
-            dataSets.add(dataSet);
+            if(!lineClear.contains(";"))
+            {
+                query.append(line);
+                continue;
+            }
+
+            var parte1 = "";
+            var parte2 = "";
+
+            if(lineClear.endsWith(";"))
+                parte1 = lineClear;
+            else
+            {
+                var partes = lineClear.split(";");
+                parte1 = partes[0];
+                parte2 = partes[1];
+            }
+
+            query.append(parte1);
+            var dataSet = run(query.toString());
+            if(dataSet != null)
+                dataSets.add(dataSet);
+
+            query.setLength(0);
+            query.append(parte2);
         }
 
+        if(query.toString().trim() == "")
+            return dataSets;
+
+        var dataSet = run(query.toString().trim());
+        query.setLength(0);
+        if(dataSet != null)
+            dataSets.add(dataSet);
+
         return dataSets;
+    }
+
+    private DataSet run(final String sql) throws JSQLParserException
+    {
+        if(sql.trim().isEmpty())
+            return null;
+
+        var query = sql .trim().toLowerCase();
+        var statement = CCJSqlParserUtil.parse(query);
+        var dataSet = run(statement);
+        return dataSet;
     }
 
     private DataSet run(final Statement statement) {

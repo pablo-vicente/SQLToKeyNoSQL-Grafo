@@ -2,6 +2,7 @@ package com.lisa.sqltokeynosql.api.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.io.Files;
 import com.lisa.sqltokeynosql.api.dto.CurrentDataBaseRequestDTO;
 import com.lisa.sqltokeynosql.api.dto.NoSqlTargetDTO;
 import com.lisa.sqltokeynosql.api.dto.SQLDTO;
@@ -14,9 +15,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -140,8 +143,8 @@ public class SQLController {
     {
         try
         {
-            var value = query.getValue();
-            var result = parser.run(value);
+            var value = query.getValue().getBytes();
+            var result = parser.run(new ByteArrayInputStream(value));
             return ResponseEntity.ok(mapper.writeValueAsString(result));
         }
         catch (Exception ex)
@@ -153,13 +156,23 @@ public class SQLController {
 
     @PostMapping(value = "/query-file-sql-script", produces = APPLICATION_JSON_VALUE, consumes = MULTIPART_FORM_DATA_VALUE)
     @ApiOperation(value = "Run File Script SQL.")
-    public ResponseEntity<String> saveProfileImage(@RequestPart("file") MultipartFile file) throws JsonProcessingException
+    public ResponseEntity<String> saveProfileImage(@RequestPart("file") MultipartFile file) throws IOException
     {
         try
         {
-            var query = new String(file.getBytes());
-            var result = parser.run(query);
-            return ResponseEntity.ok(mapper.writeValueAsString(result));
+//            BufferedReader br;
+//            List<String> result = new ArrayList<>();
+//            String line;
+//            InputStream is = file.getInputStream();
+//            br = new BufferedReader(new InputStreamReader(is));
+//            while ((line = br.readLine()) != null)
+//            {
+//                result.add(line);
+//            }
+
+//           var query = new String(file.getBytes());
+            var result2 = parser.run(file.getInputStream());
+            return ResponseEntity.ok(mapper.writeValueAsString(result2));
         }
         catch (Exception ex)
         {
