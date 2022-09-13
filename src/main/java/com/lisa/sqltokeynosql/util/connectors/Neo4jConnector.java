@@ -2,6 +2,7 @@ package com.lisa.sqltokeynosql.util.connectors;
 
 import com.lisa.sqltokeynosql.architecture.Connector;
 import com.lisa.sqltokeynosql.architecture.Parser;
+import com.lisa.sqltokeynosql.util.TimeReport;
 import com.lisa.sqltokeynosql.util.sql.ForeignKey;
 import com.lisa.sqltokeynosql.util.sql.Table;
 import org.neo4j.driver.*;
@@ -9,6 +10,8 @@ import org.neo4j.driver.Record;
 import org.neo4j.driver.summary.SummaryCounters;
 
 import java.util.*;
+import java.util.stream.Collectors;
+
 import static org.neo4j.driver.Values.parameters;
 
 public class Neo4jConnector extends Connector
@@ -51,6 +54,40 @@ public class Neo4jConnector extends Connector
 
     /**
      * @param table
+     */
+    @Override
+    public void create(Table table)
+    {
+        try (Session session = driver.session(SessionConfig.forDatabase(_nomeBancoDados)))
+        {
+            var tableName = table.getName();
+            var constraintName = tableName + "_"+ "NODE_KEY";
+
+            var shortName = "n";
+
+            var propertys = table
+                    .getPks()
+                    .stream()
+                    .map(x -> shortName + "." + x)
+                    .distinct()
+                    .collect(Collectors.toList());
+            var pk = shortName + "." + _idColumnName;
+            if(!propertys.contains(pk))
+                propertys.add(pk);
+
+            var queryPropertys = String.join(",", propertys);
+            var query = "CREATE CONSTRAINT " + constraintName +"\n"+
+                    "IF NOT EXISTS FOR (n:" + tableName + ")\n"+
+                    "REQUIRE (" + queryPropertys +  ") IS NODE KEY";
+
+            Result result =session.run(query);
+            SummaryCounters summaryCounters = result.consume().counters();
+            verifyQueryResult(summaryCounters, query);
+        }
+    }
+
+    /**
+     * @param table
      * @param key
      * @param cols
      * @param values
@@ -58,6 +95,9 @@ public class Neo4jConnector extends Connector
     @Override
     public void put(com.lisa.sqltokeynosql.util.Dictionary dictionary, Table table, String key, LinkedList<String> cols, ArrayList<String> values)
     {
+        var stopwatchPutConnetor = new org.springframework.util.StopWatch();
+        stopwatchPutConnetor.start();
+
         try (Session session = driver.session(SessionConfig.forDatabase(_nomeBancoDados)))
         {
             var node = table.getName() + key;
@@ -69,10 +109,17 @@ public class Neo4jConnector extends Connector
             String queryInsert =  "CREATE (" + node + ":" + table.getName() + " $props)\n" +
                     querysRelationships + queryRelationShipWithtable;
 
+            var stopwatchPut = new org.springframework.util.StopWatch();
+            stopwatchPut.start();
             Result result =session.run(queryInsert, parameters("props", props));
+            stopwatchPut.stop();
+            TimeReport.putTimeNeo4j("PUT",stopwatchPut.getTotalTimeSeconds());
+
             SummaryCounters summaryCounters = result.consume().counters();
             verifyQueryResult(summaryCounters, queryInsert);
         }
+        stopwatchPutConnetor.stop();
+        TimeReport.putTimeConnector("PUT-CONNECTOR",stopwatchPutConnetor.getTotalTimeSeconds());
     }
 
     private String ReconstructionRelationshipWithtable(com.lisa.sqltokeynosql.util.Dictionary dictionary, Table table, String node)
@@ -203,17 +250,27 @@ public class Neo4jConnector extends Connector
     @Override
     public void delete(String table, String key)
     {
+        var stopwatchDeleteConnetor = new org.springframework.util.StopWatch();
+        stopwatchDeleteConnetor.start();
         try (Session session = driver.session(SessionConfig.forDatabase(_nomeBancoDados)))
         {
             String queryDelete = "MATCH (n:" + table + ") " +
                     "WHERE n." + _idColumnName + "=" + key + " " +
                     "DETACH DELETE n";
 
+            var stopwatchDelete = new org.springframework.util.StopWatch();
+            stopwatchDelete.start();
             Result result = session.run(queryDelete);
+            stopwatchDelete.stop();
+            TimeReport.putTimeNeo4j("DELETE",stopwatchDelete.getTotalTimeSeconds());
+
             SummaryCounters summaryCounters = result.consume().counters();
             verifyQueryResult(summaryCounters, queryDelete);
 
         }
+
+        stopwatchDeleteConnetor.stop();
+        TimeReport.putTimeConnector("DELETE-CONNECTOR",stopwatchDeleteConnetor.getTotalTimeSeconds());
     }
 
     private void verifyQueryResult(SummaryCounters summaryCounters, String query)
@@ -246,11 +303,18 @@ public class Neo4jConnector extends Connector
     @Override
     public HashMap<String, String> get(int n, String table, String key)
     {
+        var stopwatchDeleteConnetor = new org.springframework.util.StopWatch();
+        stopwatchDeleteConnetor.start();
         try (Session session = driver.session(SessionConfig.forDatabase(_nomeBancoDados)))
         {
 
             String querySelect = getQueryAttribute(table, _idColumnName, key);
+
+            var stopwatchGet = new org.springframework.util.StopWatch();
+            stopwatchGet.start();
             List<Record> results = session.run(querySelect).list();
+            stopwatchGet.stop();
+            TimeReport.putTimeNeo4j("GET",stopwatchGet.getTotalTimeSeconds());
 
             HashMap<String, String> props = new HashMap<>();
             for (int i = 0; i < results.size(); i++)
@@ -269,6 +333,8 @@ public class Neo4jConnector extends Connector
                 }
             }
 
+            stopwatchDeleteConnetor.stop();
+            TimeReport.putTimeConnector("GET-CONNECTOR",stopwatchDeleteConnetor.getTotalTimeSeconds());
             return props;
         }
     }

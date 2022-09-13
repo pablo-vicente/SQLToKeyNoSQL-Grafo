@@ -71,7 +71,9 @@ public class ExecutionEngine {
             throw new UnsupportedOperationException("A Tabela " + table.getName() + " já foi criada");
 
         tables.add(table);
-
+        var target = table.getTargetDB();
+        var connection = target.getConnection();
+        connection.create(table);
         DictionaryDAO.storeDictionary(dictionary);
     }
 

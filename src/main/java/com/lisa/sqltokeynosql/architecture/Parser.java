@@ -5,6 +5,8 @@
  */
 package com.lisa.sqltokeynosql.architecture;
 
+import com.google.common.base.Stopwatch;
+import com.lisa.sqltokeynosql.util.TimeReport;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
@@ -38,6 +40,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static java.util.stream.Collectors.toCollection;
 
@@ -59,6 +62,9 @@ public class Parser {
 
     public ArrayList<DataSet> run(final InputStream is) throws JSQLParserException, IOException
     {
+
+        var stopwatch = new org.springframework.util.StopWatch();
+        stopwatch.start();
         var dataSets = new ArrayList<DataSet>();
         var br = new BufferedReader(new InputStreamReader(is));
         String line;
@@ -100,14 +106,17 @@ public class Parser {
             query.append(parte2);
         }
 
-        if(query.toString().trim() == "")
-            return dataSets;
+        if(query.toString().trim() != "")
+        {
+            var dataSet = run(query.toString().trim());
+            query.setLength(0);
+            if(dataSet != null)
+                dataSets.add(dataSet);
+        }
 
-        var dataSet = run(query.toString().trim());
-        query.setLength(0);
-        if(dataSet != null)
-            dataSets.add(dataSet);
-
+        stopwatch.stop();
+        TimeReport.TotalSegundos = stopwatch.getTotalTimeSeconds();
+        TimeReport.GeneratCsvRepost();
         return dataSets;
     }
 
@@ -252,7 +261,7 @@ public class Parser {
             }
         }
 
-        System.out.println("Inserção executada com sucesso! " + j + " linhas inseridas;");
+//        System.out.println("Inserção executada com sucesso! " + j + " linhas inseridas;");
         return false;
     }
 
