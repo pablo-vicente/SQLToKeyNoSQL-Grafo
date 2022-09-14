@@ -19,7 +19,7 @@ public class Neo4jConnector extends Connector
 {
     private final Driver driver;
     private String _nomeBancoDados = "";
-    private final String _nodeKey = "__NODE_KEY";
+    private final String _nodeKey = "NODE_KEY";
 
     public Neo4jConnector()
     {
