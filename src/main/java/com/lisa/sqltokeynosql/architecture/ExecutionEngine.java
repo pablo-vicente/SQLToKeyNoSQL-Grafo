@@ -150,6 +150,26 @@ public class ExecutionEngine {
                 .ifPresent(table -> updateTable(tableName, acls, avl, filters, table));
     }
 
+    void dropTable(final String tableName)
+    {
+        var table = dictionary.getTable(tableName);
+        if(table.isEmpty())
+            throw new UnsupportedOperationException("Table " + tableName + " Not exists!!!");
+
+        var tableDb = table.get();
+        var connector = tableDb
+            .getTargetDB()
+            .getConnection();
+
+        dictionary
+                .getCurrentDb()
+                .getTables()
+                .remove(table.get());
+        connector.drop(tableDb);
+        DictionaryDAO.storeDictionary(dictionary);
+
+    }
+
     private void updateTable(String tableName, ArrayList acls, ArrayList avl, Stack<Object> filters, Table table) {
         System.out.print("Table: " + tableName + ", r: " + table.getKeys().size());
         List<String> cols = table.getAttributes();

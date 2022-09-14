@@ -143,12 +143,21 @@ public class Parser {
         else if (statement instanceof Update)
             update((Update) statement);
         else if (statement instanceof Drop)
-            System.out.println("Drop table");
+            drop((Drop) statement);
         else if (statement instanceof Alter)
             System.out.println("Alter table");
         else
             System.out.println("Não suportado!");
         return null;
+    }
+
+    private void drop(final Drop statement)
+    {
+        var drop = (Drop) statement;
+        var tableName = drop
+                .getName()
+                .getName();
+        executionEngine.dropTable(tableName);
     }
 
     private DataSet select(final Select statement) {

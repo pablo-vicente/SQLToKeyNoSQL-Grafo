@@ -23,6 +23,8 @@ public abstract class Connector {
 
     public void create(Table table) {}
 
+    public void drop(Table table) {}
+
     public abstract void put (com.lisa.sqltokeynosql.util.Dictionary dictionary, Table table, String key, LinkedList<String> cols, ArrayList<String> values);
 
     public abstract void delete(String table, String key);

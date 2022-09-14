@@ -10,7 +10,8 @@ import org.neo4j.driver.Record;
 import org.neo4j.driver.summary.SummaryCounters;
 
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
 
 import static org.neo4j.driver.Values.parameters;
 
@@ -18,7 +19,7 @@ public class Neo4jConnector extends Connector
 {
     private final Driver driver;
     private String _nomeBancoDados = "";
-    private final String _idColumnName = "id";
+    private final String _nodeKey = "__NODE_KEY";
 
     public Neo4jConnector()
     {
@@ -58,32 +59,73 @@ public class Neo4jConnector extends Connector
     @Override
     public void create(Table table)
     {
+        var stopwatchCreateConnetor = new org.springframework.util.StopWatch();
+        stopwatchCreateConnetor.start();
         try (Session session = driver.session(SessionConfig.forDatabase(_nomeBancoDados)))
         {
             var tableName = table.getName();
-            var constraintName = tableName + "_"+ "NODE_KEY";
+            var constraintName = getContraintNodeKeyName(tableName);
 
-            var shortName = "n";
-
-            var propertys = table
-                    .getPks()
-                    .stream()
-                    .map(x -> shortName + "." + x)
-                    .distinct()
-                    .collect(Collectors.toList());
-            var pk = shortName + "." + _idColumnName;
-            if(!propertys.contains(pk))
-                propertys.add(pk);
-
-            var queryPropertys = String.join(",", propertys);
             var query = "CREATE CONSTRAINT " + constraintName +"\n"+
                     "IF NOT EXISTS FOR (n:" + tableName + ")\n"+
-                    "REQUIRE (" + queryPropertys +  ") IS NODE KEY";
+                    "REQUIRE (n." + _nodeKey + ") IS NODE KEY";
 
+            var stopwatchCreate = new org.springframework.util.StopWatch();
+            stopwatchCreate.start();
             Result result =session.run(query);
+            stopwatchCreate.stop();
+            TimeReport.putTimeNeo4j("PUT",stopwatchCreate.getTotalTimeSeconds());
+
             SummaryCounters summaryCounters = result.consume().counters();
             verifyQueryResult(summaryCounters, query);
         }
+        stopwatchCreateConnetor.stop();
+        TimeReport.putTimeConnector("PUT-CONNECTOR",stopwatchCreateConnetor.getTotalTimeSeconds());
+    }
+
+    private String getContraintNodeKeyName(String table)
+    {
+        return table + "_"+ "NODE_KEY";
+    }
+
+    @Override
+    public void drop(Table table)
+    {
+        var stopwatchcDropConnetor = new org.springframework.util.StopWatch();
+        stopwatchcDropConnetor.start();
+
+        Session session1 = driver.session(SessionConfig.forDatabase(_nomeBancoDados));
+        Session session2 = driver.session(SessionConfig.forDatabase(_nomeBancoDados));
+
+        var tableName = table.getName();
+        var queryDropNodes = "MATCH(n:" + tableName +") DETACH DELETE (n)";
+        var constraintName = getContraintNodeKeyName(tableName);
+        var queryDropConstraints = "DROP CONSTRAINT " + constraintName;
+
+        AtomicReference<Result> resultDropNodes = new AtomicReference<>();
+        AtomicReference<Result> resultDropConstraints = new AtomicReference<>();
+
+        Thread taskDropNodes = new Thread(() -> resultDropNodes.set(session1.run(queryDropNodes)));
+        Thread taskDropConstraints = new Thread(() -> resultDropConstraints.set(session2.run(queryDropConstraints)));
+
+        var stopwatchDropp = new org.springframework.util.StopWatch();
+        stopwatchDropp.start();
+        Stream.of(taskDropNodes, taskDropConstraints)
+                .parallel()
+                .forEach(r -> r.run());
+        stopwatchDropp.stop();
+        TimeReport.putTimeNeo4j("DROP",stopwatchDropp.getTotalTimeSeconds());
+
+        SummaryCounters summaryCountersDropNodes = resultDropNodes.get().consume().counters();
+        SummaryCounters summaryCountersDropConstraints = resultDropConstraints.get().consume().counters();
+
+        var resuts  = new ArrayList<SummaryCounters>();
+        resuts.add(summaryCountersDropNodes);
+        resuts.add(summaryCountersDropConstraints);
+        verifyQueryResult(resuts, queryDropNodes + "\n" + queryDropConstraints);
+
+        stopwatchcDropConnetor.stop();
+        TimeReport.putTimeConnector("DROP-CONNECTOR",stopwatchcDropConnetor.getTotalTimeSeconds());
     }
 
     /**
@@ -197,7 +239,7 @@ public class Neo4jConnector extends Connector
 
     private void verifyDuplicateId(Table table, String key, Session session)
     {
-        String queryId =  getQueryAttribute(table.getName(), _idColumnName, key);
+        String queryId =  getQueryAttribute(table.getName(), _nodeKey, key);
         List<Record> results = session.run(queryId).list();
 
         if(results.size() >= 1)
@@ -207,7 +249,6 @@ public class Neo4jConnector extends Connector
     private Map<String, Object> getStringObjectMap(String key, LinkedList<String> cols, ArrayList<String> values)
     {
         Map<String,Object> props = new HashMap<>();
-        boolean contaisId = false;
         for (int i = 0; i < cols.size(); i++)
         {
             String name = Parser.removeInvalidCaracteres(cols.get(i));
@@ -216,7 +257,8 @@ public class Neo4jConnector extends Connector
             try
             {
                 props.put( name, Integer.parseInt(value));
-            }catch (NumberFormatException ex)
+            }
+            catch (NumberFormatException ex)
             {
                 try
                 {
@@ -226,12 +268,9 @@ public class Neo4jConnector extends Connector
                     props.put( name, value);
                 }
             }
-            if(_idColumnName.equalsIgnoreCase(name))
-                contaisId = true;
         }
 
-        if(!contaisId)
-            props.put( _idColumnName, Integer.parseInt(key));
+        props.put(_nodeKey, Integer.parseInt(key));
 
         return props;
     }
@@ -255,7 +294,7 @@ public class Neo4jConnector extends Connector
         try (Session session = driver.session(SessionConfig.forDatabase(_nomeBancoDados)))
         {
             String queryDelete = "MATCH (n:" + table + ") " +
-                    "WHERE n." + _idColumnName + "=" + key + " " +
+                    "WHERE n." + _nodeKey + "=" + key + " " +
                     "DETACH DELETE n";
 
             var stopwatchDelete = new org.springframework.util.StopWatch();
@@ -275,20 +314,29 @@ public class Neo4jConnector extends Connector
 
     private void verifyQueryResult(SummaryCounters summaryCounters, String query)
     {
+        var summarysCounters = new ArrayList<SummaryCounters>();
+        summarysCounters.add(summaryCounters);
+        verifyQueryResult(summarysCounters, query);
+    }
+    private void verifyQueryResult(ArrayList<SummaryCounters> summaryCounters, String query)
+    {
         var affectedNodes = 0;
 
-        affectedNodes += summaryCounters.nodesCreated();
-        affectedNodes += summaryCounters.nodesDeleted();
-        affectedNodes += summaryCounters.relationshipsCreated();
-        affectedNodes += summaryCounters.relationshipsDeleted();
-        affectedNodes += summaryCounters.propertiesSet();
-        affectedNodes += summaryCounters.labelsAdded();
-        affectedNodes += summaryCounters.labelsRemoved();
-        affectedNodes += summaryCounters.indexesAdded();
-        affectedNodes += summaryCounters.indexesRemoved();
-        affectedNodes += summaryCounters.constraintsAdded();
-        affectedNodes += summaryCounters.constraintsRemoved();
-        affectedNodes += summaryCounters.systemUpdates();
+        for (SummaryCounters summaryCounter : summaryCounters)
+        {
+            affectedNodes += summaryCounter.nodesCreated();
+            affectedNodes += summaryCounter.nodesDeleted();
+            affectedNodes += summaryCounter.relationshipsCreated();
+            affectedNodes += summaryCounter.relationshipsDeleted();
+            affectedNodes += summaryCounter.propertiesSet();
+            affectedNodes += summaryCounter.labelsAdded();
+            affectedNodes += summaryCounter.labelsRemoved();
+            affectedNodes += summaryCounter.indexesAdded();
+            affectedNodes += summaryCounter.indexesRemoved();
+            affectedNodes += summaryCounter.constraintsAdded();
+            affectedNodes += summaryCounter.constraintsRemoved();
+            affectedNodes += summaryCounter.systemUpdates();
+        }
 
         if(affectedNodes == 0)
             throw new UnsupportedOperationException("Os dados informados nao alteraram os dados do banco verifique a query. \n" + query);
@@ -308,7 +356,7 @@ public class Neo4jConnector extends Connector
         try (Session session = driver.session(SessionConfig.forDatabase(_nomeBancoDados)))
         {
 
-            String querySelect = getQueryAttribute(table, _idColumnName, key);
+            String querySelect = getQueryAttribute(table, _nodeKey, key);
 
             var stopwatchGet = new org.springframework.util.StopWatch();
             stopwatchGet.start();
