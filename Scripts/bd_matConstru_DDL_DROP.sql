@@ -1,0 +1,17 @@
+DROP TABLE funcao;
+DROP TABLE Banco;
+DROP TABLE funcionario;
+DROP TABLE usuario;
+DROP TABLE fluxo_caixa;
+DROP TABLE cliente;
+DROP TABLE fornecedor;
+DROP TABLE Fabricante;
+DROP TABLE Setor;
+DROP TABLE Produto;
+DROP TABLE Localizacao_Prod;
+DROP TABLE estoque;
+DROP TABLE Item_venda;
+DROP TABLE Forma_pag;
+DROP TABLE vendas;
+DROP TABLE veiculo;
+DROP TABLE entrega;
