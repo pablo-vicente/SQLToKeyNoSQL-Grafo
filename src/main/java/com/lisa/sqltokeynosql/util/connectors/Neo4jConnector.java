@@ -89,31 +89,17 @@ public class Neo4jConnector extends Connector
         var stopwatchcDropConnetor = new org.springframework.util.StopWatch();
         stopwatchcDropConnetor.start();
 
-        //TODO OTIMIZAR
-        Session session1 = driver.session(SessionConfig.forDatabase(_nomeBancoDados));
-        Session session2 = driver.session(SessionConfig.forDatabase(_nomeBancoDados));
-
         var tableName = table.getName();
         var queryDropNodes = "MATCH(n:" + tableName +") DETACH DELETE (n)";
         var constraintName = getContraintNodeKeyName(tableName);
         var queryDropConstraints = "DROP CONSTRAINT " + constraintName + " IF EXISTS" ;
 
-        AtomicReference<Result> resultDropNodes = new AtomicReference<>();
-        AtomicReference<Result> resultDropConstraints = new AtomicReference<>();
-
-        Thread taskDropNodes = new Thread(() -> resultDropNodes.set(session1.run(queryDropNodes)));
-        Thread taskDropConstraints = new Thread(() -> resultDropConstraints.set(session2.run(queryDropConstraints)));
-
         var stopwatchDropp = new org.springframework.util.StopWatch();
         stopwatchDropp.start();
-        Stream.of(taskDropNodes, taskDropConstraints)
-                .parallel()
-                .forEach(r -> r.run());
+        var summaryCountersDropNodes = Session.run(queryDropNodes).consume().counters();
+        var summaryCountersDropConstraints = Session.run(queryDropConstraints).consume().counters();
         stopwatchDropp.stop();
         TimeReport.putTimeNeo4j("DROP",stopwatchDropp.getTotalTimeSeconds());
-
-        SummaryCounters summaryCountersDropNodes = resultDropNodes.get().consume().counters();
-        SummaryCounters summaryCountersDropConstraints = resultDropConstraints.get().consume().counters();
 
         var resuts  = new ArrayList<SummaryCounters>();
         resuts.add(summaryCountersDropNodes);
