@@ -137,12 +137,19 @@ public class Neo4jConnector extends Connector
         stopwatchPutConnetor.start();
 
         var node = table.getName() + key;
-        String querysRelationships = verifyRelationships(table, values, node);
+
+        var relationships = verifyRelationships(table, values, node).entrySet().iterator().next();
+        var querysRelationships = relationships.getKey();
+        var qntRelationships = relationships.getValue();
+
         var queryRelationShipWithtable = ReconstructionRelationshipWithtable(dictionary, table, node);
 
         Map<String, Object> props = getStringObjectMap(key, cols, values);
-        String queryInsert =  "CREATE (" + node + ":" + table.getName() + " $props)\n" +
-                querysRelationships + queryRelationShipWithtable;
+        String queryInsert =  "CREATE (" + node + ":" + table.getName() + " $props)\n" + querysRelationships + queryRelationShipWithtable;
+
+        queryInsert += "WITH " + node + "\n"+
+                    "MATCH ("+ node + ") --> (z) \n" +
+                    "RETURN *";
 
         var stopwatchPut = new org.springframework.util.StopWatch();
         stopwatchPut.start();
@@ -151,7 +158,12 @@ public class Neo4jConnector extends Connector
         TimeReport.putTimeNeo4j("PUT",stopwatchPut.getTotalTimeSeconds());
 
         SummaryCounters summaryCounters = result.consume().counters();
-        verifyQueryResult(summaryCounters, queryInsert);
+        if(summaryCounters.relationshipsCreated() != qntRelationships || summaryCounters.nodesCreated() != 1)
+        {
+            Session.run("MATCH (n:"+ table.getName()+ ") WHERE n.NODE_KEY="+ props.get(_nodeKey) + " DETACH DELETE (n)");
+            throw new UnsupportedOperationException("Não foi possível criar relacionamentos. Chaves estrangeiras do relacionamento não estao inseridas no banco!");
+        }
+
         stopwatchPutConnetor.stop();
         TimeReport.putTimeConnector("PUT-CONNECTOR",stopwatchPutConnetor.getTotalTimeSeconds());
     }
@@ -186,47 +198,37 @@ public class Neo4jConnector extends Connector
         return queryRelationshipWithtable;
     }
 
-    private String verifyRelationships(Table table, ArrayList<String> values, String node)
+    private HashMap<String, Integer> verifyRelationships(Table table, ArrayList<String> values, String node)
     {
         String queryRelationShip = "";
-        ArrayList<String> erros = new ArrayList<>();
-        var pks = table.getFks();
-        for (ForeignKey pk : pks)
+        Integer fksNecessarias = 0;
+        var fks = table.getFks();
+        for (ForeignKey fk : fks)
         {
-            var attribute = pk.getAtt();
+            var attribute = fk.getAtt();
             int indexFkAttribute = table.getAttributes().indexOf(attribute);
             var valueFkAttribute = values.get(indexFkAttribute);
 
             if(valueFkAttribute.equalsIgnoreCase("NULL"))
                 continue;
 
-            var referenceTable = pk.getrTable();
-            var referenceAttribute = pk.getrAtt();
+            fksNecessarias++;
 
-            var queryFk = getQueryAttribute(referenceTable, referenceAttribute, valueFkAttribute);
-            List<Record> results = Session.run(queryFk).list();
+            var referenceTable = fk.getrTable();
+            var referenceAttribute = fk.getrAtt();
 
-            if(results.size() != 1)
-                erros.add("Nao foi possivel criar relacionamento entre atributo '" + attribute + " '" +
-                        " com a tabela '" + referenceTable + " (" + referenceAttribute + ")'" +
-                        " para o valor '" + valueFkAttribute + "' inexistente.");
-            else
-            {
-                String nodeShortCutName = referenceTable + "_" + referenceAttribute + "_" + attribute;
-                queryRelationShip +=    "WITH (" + node + ")\n" +
-                        "MATCH (" + nodeShortCutName + ":" + referenceTable + ")\n" +
-                        "WHERE " + nodeShortCutName + "." + referenceAttribute + " = " + valueFkAttribute + "\n" +
-                        "CREATE (" + node + ")-[:" + referenceAttribute + "]->(" + nodeShortCutName + ")\n";
-            }
+            var fkShortName = referenceTable + "_" + referenceAttribute + "_" + attribute;
+
+            queryRelationShip += "WITH (" + node + ")\n" +
+                    "MATCH (" + fkShortName + ":" + referenceTable + ")\n" +
+                    "WHERE " + fkShortName + "." + referenceAttribute + " = " + valueFkAttribute + "\n" +
+                    "CREATE (" + node + ")-[:" + referenceAttribute + "]->(" + fkShortName + ")\n";
         }
 
-        for (String erro : erros)
-            System.out.println(erro);
+        var result = new HashMap<String, Integer>();
+        result.put(queryRelationShip, fksNecessarias);
 
-        if(erros.size() > 0)
-            throw new UnsupportedOperationException("Não foi possível criar relacionamentos. Verifique os logs para mais detalhes sobre os erros");
-        else
-            return queryRelationShip;
+        return result;
     }
 
     private void verifyDuplicateId(Table table, String key, Session session)
