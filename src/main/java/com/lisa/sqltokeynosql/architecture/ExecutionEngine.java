@@ -36,9 +36,9 @@ public class ExecutionEngine {
                         .orElseGet(Dictionary::new);
     }
 
-    private void createDBR(final String name) {
+    private void createDBR(final String name)
+    {
         dictionary.getRdbms().add(new BDR(name, new ArrayList<>()));
-        DictionaryDAO.storeDictionary(dictionary);
     }
 
     public void changeCurrentDB(final String name)
@@ -52,7 +52,7 @@ public class ExecutionEngine {
             this.createDBR(name);
         }
         dictionary.setCurrentDb(name);
-        DictionaryDAO.storeDictionary(dictionary);
+        SaveDicitionary();
     }
 
     public void createTable(final Table table)
@@ -74,7 +74,6 @@ public class ExecutionEngine {
         var target = table.getTargetDB();
         var connection = target.getConnection();
         connection.create(table);
-        DictionaryDAO.storeDictionary(dictionary);
     }
 
     private String getKey(Table tableDb, LinkedList<String> columns, ArrayList<String> values)
@@ -166,8 +165,6 @@ public class ExecutionEngine {
                 .getTables()
                 .remove(table.get());
         connector.drop(tableDb);
-        DictionaryDAO.storeDictionary(dictionary);
-
     }
 
     private void updateTable(String tableName, ArrayList acls, ArrayList avl, Stack<Object> filters, Table table) {
@@ -340,7 +337,7 @@ public class ExecutionEngine {
 
     public void addTarget(NoSQL noSQL) {
         dictionary.addTarget(noSQL);
-        DictionaryDAO.storeDictionary(dictionary);
+        SaveDicitionary();
     }
 
     public List<NoSQL> getTargets() {
@@ -353,6 +350,11 @@ public class ExecutionEngine {
 
     public List<BDR> getRdbms() {
         return dictionary.getRdbms();
+    }
+
+    public void SaveDicitionary()
+    {
+        DictionaryDAO.storeDictionary(dictionary);
     }
 
     static class Result {

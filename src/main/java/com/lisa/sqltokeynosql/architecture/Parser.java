@@ -5,7 +5,6 @@
  */
 package com.lisa.sqltokeynosql.architecture;
 
-import com.google.common.base.Stopwatch;
 import com.lisa.sqltokeynosql.util.TimeReport;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.Expression;
@@ -40,7 +39,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 import static java.util.stream.Collectors.toCollection;
 
@@ -114,6 +112,7 @@ public class Parser {
                 dataSets.add(dataSet);
         }
 
+        executionEngine.SaveDicitionary();
         stopwatch.stop();
         TimeReport.TotalSegundos = stopwatch.getTotalTimeSeconds();
         TimeReport.GeneratCsvRepost();
@@ -127,8 +126,7 @@ public class Parser {
 
         var query = sql .trim().toLowerCase();
         var statement = CCJSqlParserUtil.parse(query);
-        var dataSet = run(statement);
-        return dataSet;
+        return run(statement);
     }
 
     private DataSet run(final Statement statement) {
@@ -153,8 +151,7 @@ public class Parser {
 
     private void drop(final Drop statement)
     {
-        var drop = (Drop) statement;
-        var tableName = drop
+        var tableName = statement
                 .getName()
                 .getName();
         executionEngine.dropTable(tableName);
@@ -228,16 +225,15 @@ public class Parser {
         executionEngine.deleteData(tableName, filters);
     }
 
-    private boolean insertInto(Insert statement) {
-        Insert insert = statement;
+    private void insertInto(Insert statement) {
         List<ExpressionList> exList;
-        if (insert.getItemsList() instanceof MultiExpressionList) {
-            exList = ((MultiExpressionList) insert.getItemsList()).getExprList();
+        if (statement.getItemsList() instanceof MultiExpressionList) {
+            exList = ((MultiExpressionList) statement.getItemsList()).getExprList();
         } else {
             exList = new ArrayList<>();
-            exList.add((ExpressionList) insert.getItemsList());
+            exList.add((ExpressionList) statement.getItemsList());
         }
-        var columns = insert.getColumns();
+        var columns = statement.getColumns();
         if(columns == null || columns.size() == 0)
             throw new UnsupportedOperationException("e necessario declarar as colunas no INSERT!");
 
@@ -245,14 +241,14 @@ public class Parser {
         LinkedList<String> cols;
         cols = new LinkedList<>();
         for (int i = 0; i < s; i++) {
-            cols.add(insert.getColumns().get(i).getColumnName());
+            cols.add(statement.getColumns().get(i).getColumnName());
         }
 
         for (ExpressionList e : exList) {
             List<Expression> values = e.getExpressions();
-            if (valuesDifferFromColumns(insert, values)) {
+            if (valuesDifferFromColumns(statement, values)) {
                 System.err.println("Problemas no insert colunas e valores diferentes");
-                return true;
+                return;
             }
             List<String> vals = new ArrayList<>();
             for (int i = 0; i < s; i++)
@@ -262,16 +258,13 @@ public class Parser {
 
                 vals.add(value);
             }
-            if (executionEngine.insertData(insert.getTable().getName(), cols, (ArrayList<String>) vals)) {
+            if (executionEngine.insertData(statement.getTable().getName(), cols, (ArrayList<String>) vals)) {
                 j++;
             } else {
                 System.out.println("Problemas na inserção! " + j + " linhas inseridas;");
-                return true;
+                return;
             }
         }
-
-//        System.out.println("Inserção executada com sucesso! " + j + " linhas inseridas;");
-        return false;
     }
 
     private boolean valuesDifferFromColumns(Insert insert, List<Expression> values) {
@@ -279,14 +272,12 @@ public class Parser {
     }
 
     private void createTable(CreateTable statement) {
-        System.out.println("Create table");
         CreateTable ct = statement;
         List<ColumnDefinition> cl = ct.getColumnDefinitions();
         LinkedList<String> cols = new LinkedList();
         ArrayList<String> pk = new ArrayList();
         ArrayList<ForeignKey> fk = new ArrayList();
         net.sf.jsqlparser.schema.Table schemaT = ct.getTable();
-        System.out.print("\n" + schemaT.getName() + "\n");
         for (ColumnDefinition c : cl) {
             cols.add(c.getColumnName());
             if (c.getColumnSpecs() != null) {
