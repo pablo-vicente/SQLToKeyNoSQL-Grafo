@@ -59,6 +59,7 @@ create table funcao(
 ### 4.1 Script DDL (Criação tabelas) - A camada não faz a leitura automatica das definições das tabelas de um banco.
  - CREATE
  - ALTER
+ - DROP
 ### 4.1 Script DML
 - INSERT
 - UPDATE
@@ -87,7 +88,7 @@ user_pwd varchar(20)
 ```
 ### DROP
 ```SQL
--- TODO Não Suportado (Atualizar)
+ DROP TABLE funcionario
 ```
 
 ### INSERT
