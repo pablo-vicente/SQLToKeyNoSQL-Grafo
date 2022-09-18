@@ -18,6 +18,7 @@ import static org.neo4j.driver.Values.parameters;
 public class Neo4jConnector extends Connector
 {
     private final Driver driver;
+    private Session Session;
     private String _nomeBancoDados = "";
     private final String _nodeKey = "NODE_KEY";
 
@@ -26,11 +27,6 @@ public class Neo4jConnector extends Connector
         String uri = "bolt://localhost:7687";
         String user = "neo4j";
         String password = "pAsSw0rD";
-        driver = GraphDatabase.driver( uri, AuthTokens.basic( user, password ));
-    }
-
-    public Neo4jConnector(String uri, String user, String password)
-    {
         driver = GraphDatabase.driver( uri, AuthTokens.basic( user, password ));
     }
 
@@ -51,6 +47,8 @@ public class Neo4jConnector extends Connector
             String query = "CREATE DATABASE " + _nomeBancoDados + " IF NOT EXISTS";
             session.run(query);
         }
+
+        Session = driver.session(SessionConfig.forDatabase(_nomeBancoDados));
     }
 
     /**
@@ -61,24 +59,21 @@ public class Neo4jConnector extends Connector
     {
         var stopwatchCreateConnetor = new org.springframework.util.StopWatch();
         stopwatchCreateConnetor.start();
-        try (Session session = driver.session(SessionConfig.forDatabase(_nomeBancoDados)))
-        {
-            var tableName = table.getName();
-            var constraintName = getContraintNodeKeyName(tableName);
+        var tableName = table.getName();
+        var constraintName = getContraintNodeKeyName(tableName);
 
-            var query = "CREATE CONSTRAINT " + constraintName +"\n"+
-                    "IF NOT EXISTS FOR (n:" + tableName + ")\n"+
-                    "REQUIRE (n." + _nodeKey + ") IS NODE KEY";
+        var query = "CREATE CONSTRAINT " + constraintName +"\n"+
+                "IF NOT EXISTS FOR (n:" + tableName + ")\n"+
+                "REQUIRE (n." + _nodeKey + ") IS NODE KEY";
 
-            var stopwatchCreate = new org.springframework.util.StopWatch();
-            stopwatchCreate.start();
-            Result result =session.run(query);
-            stopwatchCreate.stop();
-            TimeReport.putTimeNeo4j("PUT",stopwatchCreate.getTotalTimeSeconds());
+        var stopwatchCreate = new org.springframework.util.StopWatch();
+        stopwatchCreate.start();
+        Result result = Session.run(query);
+        stopwatchCreate.stop();
+        TimeReport.putTimeNeo4j("PUT",stopwatchCreate.getTotalTimeSeconds());
 
-            SummaryCounters summaryCounters = result.consume().counters();
-            verifyQueryResult(summaryCounters, query);
-        }
+        SummaryCounters summaryCounters = result.consume().counters();
+        verifyQueryResult(summaryCounters, query);
         stopwatchCreateConnetor.stop();
         TimeReport.putTimeConnector("PUT-CONNECTOR",stopwatchCreateConnetor.getTotalTimeSeconds());
     }
@@ -94,13 +89,14 @@ public class Neo4jConnector extends Connector
         var stopwatchcDropConnetor = new org.springframework.util.StopWatch();
         stopwatchcDropConnetor.start();
 
+        //TODO OTIMIZAR
         Session session1 = driver.session(SessionConfig.forDatabase(_nomeBancoDados));
         Session session2 = driver.session(SessionConfig.forDatabase(_nomeBancoDados));
 
         var tableName = table.getName();
         var queryDropNodes = "MATCH(n:" + tableName +") DETACH DELETE (n)";
         var constraintName = getContraintNodeKeyName(tableName);
-        var queryDropConstraints = "DROP CONSTRAINT " + constraintName;
+        var queryDropConstraints = "DROP CONSTRAINT " + constraintName + " IF EXISTS" ;
 
         AtomicReference<Result> resultDropNodes = new AtomicReference<>();
         AtomicReference<Result> resultDropConstraints = new AtomicReference<>();
@@ -140,26 +136,22 @@ public class Neo4jConnector extends Connector
         var stopwatchPutConnetor = new org.springframework.util.StopWatch();
         stopwatchPutConnetor.start();
 
-        try (Session session = driver.session(SessionConfig.forDatabase(_nomeBancoDados)))
-        {
-            var node = table.getName() + key;
-            verifyDuplicateId(table, key, session);
-            String querysRelationships = verifyRelationships(table, values, session, node);
-            var queryRelationShipWithtable = ReconstructionRelationshipWithtable(dictionary, table, node);
+        var node = table.getName() + key;
+        String querysRelationships = verifyRelationships(table, values, node);
+        var queryRelationShipWithtable = ReconstructionRelationshipWithtable(dictionary, table, node);
 
-            Map<String, Object> props = getStringObjectMap(key, cols, values);
-            String queryInsert =  "CREATE (" + node + ":" + table.getName() + " $props)\n" +
-                    querysRelationships + queryRelationShipWithtable;
+        Map<String, Object> props = getStringObjectMap(key, cols, values);
+        String queryInsert =  "CREATE (" + node + ":" + table.getName() + " $props)\n" +
+                querysRelationships + queryRelationShipWithtable;
 
-            var stopwatchPut = new org.springframework.util.StopWatch();
-            stopwatchPut.start();
-            Result result =session.run(queryInsert, parameters("props", props));
-            stopwatchPut.stop();
-            TimeReport.putTimeNeo4j("PUT",stopwatchPut.getTotalTimeSeconds());
+        var stopwatchPut = new org.springframework.util.StopWatch();
+        stopwatchPut.start();
+        Result result = Session.run(queryInsert, parameters("props", props));
+        stopwatchPut.stop();
+        TimeReport.putTimeNeo4j("PUT",stopwatchPut.getTotalTimeSeconds());
 
-            SummaryCounters summaryCounters = result.consume().counters();
-            verifyQueryResult(summaryCounters, queryInsert);
-        }
+        SummaryCounters summaryCounters = result.consume().counters();
+        verifyQueryResult(summaryCounters, queryInsert);
         stopwatchPutConnetor.stop();
         TimeReport.putTimeConnector("PUT-CONNECTOR",stopwatchPutConnetor.getTotalTimeSeconds());
     }
@@ -194,7 +186,7 @@ public class Neo4jConnector extends Connector
         return queryRelationshipWithtable;
     }
 
-    private String verifyRelationships(Table table, ArrayList<String> values, Session session, String node)
+    private String verifyRelationships(Table table, ArrayList<String> values, String node)
     {
         String queryRelationShip = "";
         ArrayList<String> erros = new ArrayList<>();
@@ -212,7 +204,7 @@ public class Neo4jConnector extends Connector
             var referenceAttribute = pk.getrAtt();
 
             var queryFk = getQueryAttribute(referenceTable, referenceAttribute, valueFkAttribute);
-            List<Record> results = session.run(queryFk).list();
+            List<Record> results = Session.run(queryFk).list();
 
             if(results.size() != 1)
                 erros.add("Nao foi possivel criar relacionamento entre atributo '" + attribute + " '" +
@@ -291,22 +283,18 @@ public class Neo4jConnector extends Connector
     {
         var stopwatchDeleteConnetor = new org.springframework.util.StopWatch();
         stopwatchDeleteConnetor.start();
-        try (Session session = driver.session(SessionConfig.forDatabase(_nomeBancoDados)))
-        {
-            String queryDelete = "MATCH (n:" + table + ") " +
-                    "WHERE n." + _nodeKey + "=" + key + " " +
-                    "DETACH DELETE n";
+        String queryDelete = "MATCH (n:" + table + ") " +
+                "WHERE n." + _nodeKey + "=" + key + " " +
+                "DETACH DELETE n";
 
-            var stopwatchDelete = new org.springframework.util.StopWatch();
-            stopwatchDelete.start();
-            Result result = session.run(queryDelete);
-            stopwatchDelete.stop();
-            TimeReport.putTimeNeo4j("DELETE",stopwatchDelete.getTotalTimeSeconds());
+        var stopwatchDelete = new org.springframework.util.StopWatch();
+        stopwatchDelete.start();
+        Result result = Session.run(queryDelete);
+        stopwatchDelete.stop();
+        TimeReport.putTimeNeo4j("DELETE",stopwatchDelete.getTotalTimeSeconds());
 
-            SummaryCounters summaryCounters = result.consume().counters();
-            verifyQueryResult(summaryCounters, queryDelete);
-
-        }
+        SummaryCounters summaryCounters = result.consume().counters();
+        verifyQueryResult(summaryCounters, queryDelete);
 
         stopwatchDeleteConnetor.stop();
         TimeReport.putTimeConnector("DELETE-CONNECTOR",stopwatchDeleteConnetor.getTotalTimeSeconds());
@@ -353,37 +341,33 @@ public class Neo4jConnector extends Connector
     {
         var stopwatchDeleteConnetor = new org.springframework.util.StopWatch();
         stopwatchDeleteConnetor.start();
-        try (Session session = driver.session(SessionConfig.forDatabase(_nomeBancoDados)))
+        String querySelect = getQueryAttribute(table, _nodeKey, key);
+
+        var stopwatchGet = new org.springframework.util.StopWatch();
+        stopwatchGet.start();
+        List<Record> results = Session.run(querySelect).list();
+        stopwatchGet.stop();
+        TimeReport.putTimeNeo4j("GET",stopwatchGet.getTotalTimeSeconds());
+
+        HashMap<String, String> props = new HashMap<>();
+        for (int i = 0; i < results.size(); i++)
         {
+            Map<String, Object> maps = results.get(i)
+                    .fields()
+                    .get(0)
+                    .value()
+                    .asMap();
 
-            String querySelect = getQueryAttribute(table, _nodeKey, key);
-
-            var stopwatchGet = new org.springframework.util.StopWatch();
-            stopwatchGet.start();
-            List<Record> results = session.run(querySelect).list();
-            stopwatchGet.stop();
-            TimeReport.putTimeNeo4j("GET",stopwatchGet.getTotalTimeSeconds());
-
-            HashMap<String, String> props = new HashMap<>();
-            for (int i = 0; i < results.size(); i++)
+            for (Map.Entry<String, Object> stringObjectEntry : maps.entrySet())
             {
-                Map<String, Object> maps = results.get(i)
-                        .fields()
-                        .get(0)
-                        .value()
-                        .asMap();
-
-                for (Map.Entry<String, Object> stringObjectEntry : maps.entrySet())
-                {
-                    String keyMap = stringObjectEntry.getKey();
-                    String valueMap = stringObjectEntry.getValue().toString();
-                    props.put(keyMap, valueMap);
-                }
+                String keyMap = stringObjectEntry.getKey();
+                String valueMap = stringObjectEntry.getValue().toString();
+                props.put(keyMap, valueMap);
             }
-
-            stopwatchDeleteConnetor.stop();
-            TimeReport.putTimeConnector("GET-CONNECTOR",stopwatchDeleteConnetor.getTotalTimeSeconds());
-            return props;
         }
+
+        stopwatchDeleteConnetor.stop();
+        TimeReport.putTimeConnector("GET-CONNECTOR",stopwatchDeleteConnetor.getTotalTimeSeconds());
+        return props;
     }
 }
