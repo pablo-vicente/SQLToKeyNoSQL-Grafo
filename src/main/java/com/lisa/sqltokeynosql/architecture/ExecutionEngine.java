@@ -166,7 +166,7 @@ public class ExecutionEngine {
     }
 
     private void updateTable(String tableName, ArrayList acls, ArrayList avl, Stack<Object> filters, Table table) {
-        System.out.print("Table: " + tableName + ", r: " + table.getKeys().size());
+//        System.out.print("Table: " + tableName + ", r: " + table.getKeys().size());
         List<String> cols = table.getAttributes();
         ArrayList<String> tables = new ArrayList<>();
         tables.add(tableName);
