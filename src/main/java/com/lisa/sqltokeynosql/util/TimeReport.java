@@ -73,7 +73,7 @@ public class TimeReport
         myWriter.write(report.toString());
         myWriter.close();
 
-        System.out.println("REPORT" + filePath);
+        System.out.println("EXECUÇÃO FINALIZADA: " + filePath);
         // Clear Reports
         TotalSegundos = 0l;
         TemposNeo4jSegundos = new HashMap<>();
