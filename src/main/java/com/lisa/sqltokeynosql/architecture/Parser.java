@@ -74,12 +74,14 @@ public class Parser {
                     .trim()
                     .toLowerCase();
 
-            if(lineClear.startsWith("--"))
+            if(lineClear.startsWith("--") || lineClear.startsWith("#"))
                 continue;
 
             if(!lineClear.contains(";"))
             {
-                query.append(line);
+                query
+                        .append(line)
+                        .append("\n");
                 continue;
             }
 
@@ -95,7 +97,9 @@ public class Parser {
                 parte2 = partes[1];
             }
 
-            query.append(parte1);
+            query
+                    .append(parte1)
+                    .append("\n");
             var dataSet = run(query.toString());
             if(dataSet != null)
                 dataSets.add(dataSet);
