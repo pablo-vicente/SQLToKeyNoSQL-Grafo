@@ -26,7 +26,7 @@ public class TimeReport
         stopWatch.stop();
         var time = stopWatch.getTotalTimeSeconds();
 
-        var key = key1 + "NEO4j";
+        var key = key1 + "-NEO4j";
         if(!TemposNeo4jSegundos.containsKey(key))
             TemposNeo4jSegundos.put(key, new ArrayList<>());
         TemposNeo4jSegundos.get(key).add(time);
@@ -36,7 +36,7 @@ public class TimeReport
     {
         stopWatch.stop();
         var time = stopWatch.getTotalTimeSeconds();
-        var key = key1 + "CONNECTOR";
+        var key = key1 + "-CONNECTOR";
         if(!TemposConnectorSegundos.containsKey(key))
             TemposConnectorSegundos.put(key, new ArrayList<>());
         TemposConnectorSegundos.get(key).add(time);
