@@ -41,8 +41,9 @@ public class ExecutionEngine {
         dictionary.getRdbms().add(new BDR(name, new ArrayList<>()));
     }
 
-    public void changeCurrentDB(final String name)
+    public void changeCurrentDB(final String name1)
     {
+        var name = name1.replace(".", "_");
         var dabaseExists = dictionary
                 .getRdbms()
                 .stream()
@@ -213,9 +214,7 @@ public class ExecutionEngine {
     }
 
     private ArrayList getNWrapper(final Table table, final LinkedList columns, final Stack<Object> filters, final int n) {
-        long begin = new Date().getTime();
         ArrayList result = table.getTargetDB().getConnection().getN(n, table.getName(), (ArrayList<String>) table.getKeys(), filters, columns);
-        System.out.println(String.format("Time: %d, ThreadName: %s", new Date().getTime() - begin, Thread.currentThread().getName()));
         return result;
     }
 
