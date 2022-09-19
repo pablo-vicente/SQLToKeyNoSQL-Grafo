@@ -222,8 +222,8 @@ public class Parser {
         return whereStatement.getParsedFilters();
     }
 
-    private void delete(Delete statement) {
-        System.out.println("Delete - ");
+    private void delete(Delete statement)
+    {
         String tableName = statement.getTable().getName();
         Stack<Object> filters = extractFilters(statement.getWhere());
         executionEngine.deleteData(tableName, filters);

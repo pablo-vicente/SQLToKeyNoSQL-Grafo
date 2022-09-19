@@ -1,0 +1,17 @@
+DELETE FROM funcao;
+DELETE FROM Banco;
+DELETE FROM funcionario;
+DELETE FROM usuario;
+DELETE FROM fluxo_caixa;
+DELETE FROM cliente;
+DELETE FROM fornecedor;
+DELETE FROM Fabricante;
+DELETE FROM Setor;
+DELETE FROM Produto;
+DELETE FROM Localizacao_Prod;
+DELETE FROM estoque;
+DELETE FROM Item_venda;
+DELETE FROM Forma_pag;
+DELETE FROM vendas;
+DELETE FROM veiculo;
+DELETE FROM entrega;

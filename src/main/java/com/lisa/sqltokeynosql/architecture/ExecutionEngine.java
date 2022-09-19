@@ -122,7 +122,6 @@ public class ExecutionEngine {
 
     void deleteData(final String table, final Stack<Object> filters) {
         Table t = dictionary.getCurrentDb().getTable(table).get();
-        System.out.print("Table: " + table + ", r: " + t.getKeys().size());
         ArrayList<String> tables = new ArrayList<>();
         tables.add(table);
         DataSet ds = getDataSetBl(tables, t.getAttributes(), filters);
@@ -140,8 +139,6 @@ public class ExecutionEngine {
             t.getTargetDB().getConnection().delete(table, key);
             t.getKeys().remove(key);
         }
-
-        System.out.println(" new: " + t.getKeys().size());
     }
 
     void updateData(final String tableName, final ArrayList acls, final ArrayList avl, final Stack<Object> filters) {
