@@ -1,16 +1,12 @@
 package com.lisa.sqltokeynosql.architecture;
 
-import com.lisa.sqltokeynosql.util.Dictionary;
 import com.lisa.sqltokeynosql.util.sql.Table;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.schema.Column;
 import com.lisa.sqltokeynosql.util.operations.Operator;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Stack;
+import java.util.*;
 
 import static java.util.stream.Collectors.toCollection;
 
@@ -46,12 +42,13 @@ public abstract class Connector {
                 .collect(toCollection(ArrayList::new));
     }
 
-    protected boolean applyFilterR(Stack<Object> filters, HashMap tuple) {
+    protected boolean applyFilterR(List<Object> filters, HashMap tuple)
+    {
         if (filters == null) {
             return true;
         }
         boolean result;
-        Object o = filters.pop();
+        Object o = filters.get(2);
         if (o instanceof AndExpression) {
             result = applyFilterR(filters, tuple);
             if (!result) {
@@ -62,11 +59,9 @@ public abstract class Connector {
             result = applyFilterR(filters, tuple);
             result = (result || applyFilterR(filters, tuple));
         } else {
-            String col = null;
-            Object val = Parser.removeInvalidCaracteres(filters.pop().toString());
-            Operator op = null;
-            op = ((Operator) o);
-            col = ((Column) filters.pop()).getColumnName();
+            Object val = Parser.removeInvalidCaracteres(filters.get(1).toString());
+            var op = ((Operator) o);
+            var col = ((Column) filters.get(0)).getColumnName();
             result = compare((String) tuple.get(col), op, val);
         }
         return result;
