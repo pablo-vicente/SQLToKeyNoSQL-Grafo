@@ -196,7 +196,6 @@ public class Parser {
     }
 
     private void update(final Update statement) {
-        System.out.println("Update");
         final String tableName = statement.getTable().getName();
 
         ArrayList<String> cols = new ArrayList<>();
