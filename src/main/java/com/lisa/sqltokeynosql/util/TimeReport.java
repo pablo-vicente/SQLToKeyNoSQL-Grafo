@@ -1,5 +1,7 @@
 package com.lisa.sqltokeynosql.util;
 
+import org.springframework.util.StopWatch;
+
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -19,15 +21,22 @@ public class TimeReport
     private static Map<String, ArrayList<Double>> TemposNeo4jSegundos = new HashMap<>();
     private static Map<String, ArrayList<Double>> TemposConnectorSegundos = new HashMap<>();
 
-    public static void putTimeNeo4j(String key, Double time)
+    public static void putTimeNeo4j(String key1, StopWatch stopWatch)
     {
+        stopWatch.stop();
+        var time = stopWatch.getTotalTimeSeconds();
+
+        var key = key1 + "NEO4j";
         if(!TemposNeo4jSegundos.containsKey(key))
             TemposNeo4jSegundos.put(key, new ArrayList<>());
         TemposNeo4jSegundos.get(key).add(time);
     }
 
-    public static void putTimeConnector(String key, Double time)
+    public static void putTimeConnector(String key1, StopWatch stopWatch)
     {
+        stopWatch.stop();
+        var time = stopWatch.getTotalTimeSeconds();
+        var key = key1 + "CONNECTOR";
         if(!TemposConnectorSegundos.containsKey(key))
             TemposConnectorSegundos.put(key, new ArrayList<>());
         TemposConnectorSegundos.get(key).add(time);
@@ -44,10 +53,10 @@ public class TimeReport
         var totalSecondsNeo4j = SumGenerateReport(append, TemposNeo4jSegundos);
 
         var report = new StringBuilder();
-        report.append("TOTAL;MINUTOS;SEGUNDOS;Overhead" + "\n");
-        report.append("GERAL;" + printNumber(TotalSegundos/ 60) + ";" + printNumber(TotalSegundos ) + ";" +  printNumber(TotalSegundos/ totalSecondsConnector -1) + "\n");
-        report.append("CONNECTOR" + ";" + printNumber(totalSecondsConnector/ 60) + ";" + printNumber(totalSecondsConnector) + ";" +  printNumber(totalSecondsConnector / totalSecondsNeo4j -1) + "\n");
-        report.append("NEO4J" + ";" + printNumber(totalSecondsNeo4j/ 60) + ";" + printNumber(totalSecondsNeo4j) + "\n");
+        report.append("TOTAL;MINUTOS;SEGUNDOS;OVERHEAD(%);OVERHEAD(Segundos)" + "\n");
+        report.append("GERAL;" + PrintInMinuts(TotalSegundos) + ";" + printNumber(TotalSegundos) + ";" + PrintOverHead(TotalSegundos, totalSecondsConnector) + "\n");
+        report.append("CONNECTOR" + ";" + PrintInMinuts(totalSecondsConnector) + ";" + printNumber(totalSecondsConnector) + ";" +  PrintOverHead(totalSecondsConnector , totalSecondsNeo4j) + "\n");
+        report.append("NEO4J" + ";" + PrintInMinuts(totalSecondsNeo4j) + ";" + printNumber(totalSecondsNeo4j) + "\n");
 
         report.append("\n");
         report.append(append);
@@ -64,11 +73,24 @@ public class TimeReport
         myWriter.write(report.toString());
         myWriter.close();
 
+        System.out.println("REPORT" + filePath);
         // Clear Reports
         TotalSegundos = 0l;
         TemposNeo4jSegundos = new HashMap<>();
         TemposConnectorSegundos = new HashMap<>();
 
+    }
+    private static String PrintInMinuts(double value)
+    {
+        return printNumber(value/ 60);
+    }
+
+    private static String PrintOverHead(double total, double subTotal)
+    {
+        var percentual =  printNumber(total/ subTotal  -1);
+        var diferenca =  printNumber(total- subTotal);
+
+        return percentual + ";" + diferenca;
     }
 
     private static Double SumGenerateReport(StringBuilder linhas, Map<String, ArrayList<Double>> dados)
@@ -90,4 +112,10 @@ public class TimeReport
         return totalSeconds;
     }
 
+    public static StopWatch CreateAndStartStopwatch()
+    {
+        var stopwatch = new org.springframework.util.StopWatch();
+        stopwatch.start();
+        return stopwatch;
+    }
 }

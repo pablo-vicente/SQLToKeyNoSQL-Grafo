@@ -10,8 +10,6 @@ import org.neo4j.driver.Record;
 import org.neo4j.driver.summary.SummaryCounters;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Stream;
 
 import static org.neo4j.driver.Values.parameters;
 
@@ -57,8 +55,9 @@ public class Neo4jConnector extends Connector
     @Override
     public void create(Table table)
     {
-        var stopwatchCreateConnetor = new org.springframework.util.StopWatch();
-        stopwatchCreateConnetor.start();
+        String CREATE = "CREATE";
+        var stopwatchCreateConnetor = TimeReport.CreateAndStartStopwatch();
+
         var tableName = table.getName();
         var constraintName = getContraintNodeKeyName(tableName);
 
@@ -66,16 +65,13 @@ public class Neo4jConnector extends Connector
                 "IF NOT EXISTS FOR (n:" + tableName + ")\n"+
                 "REQUIRE (n." + _nodeKey + ") IS NODE KEY";
 
-        var stopwatchCreate = new org.springframework.util.StopWatch();
-        stopwatchCreate.start();
+        var stopwatchCreate = TimeReport.CreateAndStartStopwatch();
         Result result = Session.run(query);
-        stopwatchCreate.stop();
-        TimeReport.putTimeNeo4j("PUT",stopwatchCreate.getTotalTimeSeconds());
+        TimeReport.putTimeNeo4j(CREATE,stopwatchCreate);
 
         SummaryCounters summaryCounters = result.consume().counters();
         verifyQueryResult(summaryCounters, query);
-        stopwatchCreateConnetor.stop();
-        TimeReport.putTimeConnector("PUT-CONNECTOR",stopwatchCreateConnetor.getTotalTimeSeconds());
+        TimeReport.putTimeConnector(CREATE,stopwatchCreateConnetor);
     }
 
     private String getContraintNodeKeyName(String table)
@@ -86,28 +82,25 @@ public class Neo4jConnector extends Connector
     @Override
     public void drop(Table table)
     {
-        var stopwatchcDropConnetor = new org.springframework.util.StopWatch();
-        stopwatchcDropConnetor.start();
+        String DROP = "DROP";
+        var stopwatchcDropConnetor = TimeReport.CreateAndStartStopwatch();
 
         var tableName = table.getName();
         var queryDropNodes = "MATCH(n:" + tableName +") DETACH DELETE (n)";
         var constraintName = getContraintNodeKeyName(tableName);
         var queryDropConstraints = "DROP CONSTRAINT " + constraintName + " IF EXISTS" ;
 
-        var stopwatchDropp = new org.springframework.util.StopWatch();
-        stopwatchDropp.start();
+        var stopwatchDrop = TimeReport.CreateAndStartStopwatch();
         var summaryCountersDropNodes = Session.run(queryDropNodes).consume().counters();
         var summaryCountersDropConstraints = Session.run(queryDropConstraints).consume().counters();
-        stopwatchDropp.stop();
-        TimeReport.putTimeNeo4j("DROP",stopwatchDropp.getTotalTimeSeconds());
+        TimeReport.putTimeNeo4j(DROP, stopwatchDrop);
 
         var resuts  = new ArrayList<SummaryCounters>();
         resuts.add(summaryCountersDropNodes);
         resuts.add(summaryCountersDropConstraints);
         verifyQueryResult(resuts, queryDropNodes + "\n" + queryDropConstraints);
 
-        stopwatchcDropConnetor.stop();
-        TimeReport.putTimeConnector("DROP-CONNECTOR",stopwatchcDropConnetor.getTotalTimeSeconds());
+        TimeReport.putTimeConnector(DROP,stopwatchcDropConnetor);
     }
 
     /**
@@ -119,8 +112,8 @@ public class Neo4jConnector extends Connector
     @Override
     public void put(com.lisa.sqltokeynosql.util.Dictionary dictionary, Table table, String key, LinkedList<String> cols, ArrayList<String> values)
     {
-        var stopwatchPutConnetor = new org.springframework.util.StopWatch();
-        stopwatchPutConnetor.start();
+        String PUT = "PUT";
+        var stopwatchPutConnetor = TimeReport.CreateAndStartStopwatch();
 
         var node = table.getName() + key;
 
@@ -137,11 +130,9 @@ public class Neo4jConnector extends Connector
                     "MATCH ("+ node + ") --> (z) \n" +
                     "RETURN *";
 
-        var stopwatchPut = new org.springframework.util.StopWatch();
-        stopwatchPut.start();
+        var stopwatchPut = TimeReport.CreateAndStartStopwatch();
         Result result = Session.run(queryInsert, parameters("props", props));
-        stopwatchPut.stop();
-        TimeReport.putTimeNeo4j("PUT",stopwatchPut.getTotalTimeSeconds());
+        TimeReport.putTimeNeo4j(PUT, stopwatchPut);
 
         SummaryCounters summaryCounters = result.consume().counters();
         if(summaryCounters.relationshipsCreated() != qntRelationships || summaryCounters.nodesCreated() != 1)
@@ -150,8 +141,7 @@ public class Neo4jConnector extends Connector
             throw new UnsupportedOperationException("Não foi possível criar relacionamentos. Chaves estrangeiras do relacionamento não estao inseridas no banco!");
         }
 
-        stopwatchPutConnetor.stop();
-        TimeReport.putTimeConnector("PUT-CONNECTOR",stopwatchPutConnetor.getTotalTimeSeconds());
+        TimeReport.putTimeConnector(PUT, stopwatchPutConnetor);
     }
 
     private String ReconstructionRelationshipWithtable(com.lisa.sqltokeynosql.util.Dictionary dictionary, Table table, String node)
@@ -269,23 +259,22 @@ public class Neo4jConnector extends Connector
     @Override
     public void delete(String table, String key)
     {
-        var stopwatchDeleteConnetor = new org.springframework.util.StopWatch();
-        stopwatchDeleteConnetor.start();
+        String DELETE = "DELETE";
+
+        var stopwatchDeleteConnetor = TimeReport.CreateAndStartStopwatch();
+
         String queryDelete = "MATCH (n:" + table + ") " +
                 "WHERE n." + _nodeKey + "=" + key + " " +
                 "DETACH DELETE n";
 
-        var stopwatchDelete = new org.springframework.util.StopWatch();
-        stopwatchDelete.start();
+        var stopwatchDelete = TimeReport.CreateAndStartStopwatch();
         Result result = Session.run(queryDelete);
-        stopwatchDelete.stop();
-        TimeReport.putTimeNeo4j("DELETE",stopwatchDelete.getTotalTimeSeconds());
+        TimeReport.putTimeNeo4j(DELETE, stopwatchDelete);
 
         SummaryCounters summaryCounters = result.consume().counters();
         verifyQueryResult(summaryCounters, queryDelete);
 
-        stopwatchDeleteConnetor.stop();
-        TimeReport.putTimeConnector("DELETE-CONNECTOR",stopwatchDeleteConnetor.getTotalTimeSeconds());
+        TimeReport.putTimeConnector(DELETE,stopwatchDeleteConnetor);
     }
 
     private void verifyQueryResult(SummaryCounters summaryCounters, String query)
@@ -327,15 +316,14 @@ public class Neo4jConnector extends Connector
     @Override
     public HashMap<String, String> get(int n, String table, String key)
     {
-        var stopwatchDeleteConnetor = new org.springframework.util.StopWatch();
-        stopwatchDeleteConnetor.start();
+        String GET = "GET";
+        var stopwatchDeleteConnetor = TimeReport.CreateAndStartStopwatch();
+
         String querySelect = getQueryAttribute(table, _nodeKey, key);
 
-        var stopwatchGet = new org.springframework.util.StopWatch();
-        stopwatchGet.start();
+        var stopwatchGet = TimeReport.CreateAndStartStopwatch();
         List<Record> results = Session.run(querySelect).list();
-        stopwatchGet.stop();
-        TimeReport.putTimeNeo4j("GET",stopwatchGet.getTotalTimeSeconds());
+        TimeReport.putTimeNeo4j(GET, stopwatchGet);
 
         HashMap<String, String> props = new HashMap<>();
         for (int i = 0; i < results.size(); i++)
@@ -354,8 +342,7 @@ public class Neo4jConnector extends Connector
             }
         }
 
-        stopwatchDeleteConnetor.stop();
-        TimeReport.putTimeConnector("GET-CONNECTOR",stopwatchDeleteConnetor.getTotalTimeSeconds());
+        TimeReport.putTimeConnector(GET, stopwatchDeleteConnetor);
         return props;
     }
 }
