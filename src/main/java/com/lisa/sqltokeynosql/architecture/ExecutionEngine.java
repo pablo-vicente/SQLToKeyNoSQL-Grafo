@@ -183,8 +183,6 @@ public class ExecutionEngine {
             table.getTargetDB().getConnection().delete(tableName, key);
             table.getTargetDB().getConnection().put(dictionary, table, key, (LinkedList<String>) cols, values);
         }
-
-        System.out.println(" new: " + table.getKeys().size());
     }
 
     DataSet getDataSetBl(final List<String> tableNames, final List<String> cols, final Stack<Object> filters) {
