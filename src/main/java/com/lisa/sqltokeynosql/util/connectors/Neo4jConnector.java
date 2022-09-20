@@ -116,29 +116,37 @@ public class Neo4jConnector extends Connector
         var stopwatchPutConnetor = TimeReport.CreateAndStartStopwatch();
 
         var node = table.getName() + key;
+        var queryRelationShipWithtable = ReconstructionRelationshipWithtable(dictionary, table, node);
 
         var relationships = verifyRelationships(table, values, node).entrySet().iterator().next();
         var querysRelationships = relationships.getKey();
         var qntRelationships = relationships.getValue();
 
-        var queryRelationShipWithtable = ReconstructionRelationshipWithtable(dictionary, table, node);
 
         Map<String, Object> props = getStringObjectMap(key, cols, values);
-        String queryInsert =  "CREATE (" + node + ":" + table.getName() + " $props)\n" + querysRelationships + queryRelationShipWithtable;
+        String queryInsert =  "CREATE (" + node + ":" + table.getName() + " $props)\n"
+                + querysRelationships
+                + queryRelationShipWithtable;
 
-        queryInsert += "WITH " + node + "\n"+
+        queryInsert += "\nWITH " + node + "\n"+
                     "MATCH ("+ node + ") --> (z) \n" +
-                    "RETURN *";
+                    "RETURN (z)";
 
         var stopwatchPut = TimeReport.CreateAndStartStopwatch();
         Result result = Session.run(queryInsert, parameters("props", props));
         TimeReport.putTimeNeo4j(PUT, stopwatchPut);
 
+        var relationsShips = result
+            .list()
+            .size();
+
         SummaryCounters summaryCounters = result.consume().counters();
-        if(summaryCounters.relationshipsCreated() != qntRelationships || summaryCounters.nodesCreated() != 1)
+
+        if(relationsShips != qntRelationships || summaryCounters.nodesCreated() != 1)
         {
             Session.run("MATCH (n:"+ table.getName()+ ") WHERE n.NODE_KEY="+ props.get(_nodeKey) + " DETACH DELETE (n)");
-            throw new UnsupportedOperationException("Não foi possível criar relacionamentos. Chaves estrangeiras do relacionamento não estao inseridas no banco!");
+            System.out.println(queryInsert);
+            throw new UnsupportedOperationException("Não foi possível criar relacionamentos. Chaves estrangeiras do relacionamento não estao inseridas no banco!" + "\n" + queryInsert);
         }
 
         TimeReport.putTimeConnector(PUT, stopwatchPutConnetor);
@@ -164,14 +172,21 @@ public class Neo4jConnector extends Connector
                 var attribute = foreignKey.getAtt();
 
                 var nodeShortCutName = tableWithFk.getName() + "_" + referenceAttribute + "_" + attribute;
-                queryRelationshipWithtable +=  "WITH (" +  node +")\n" +
+                queryRelationshipWithtable +=  "\nWITH (" +  node +")\n" +
                         "MATCH (" + nodeShortCutName + ":" + tableWithFk.getName() + ")\n" +
                         "WHERE " + nodeShortCutName + "." + attribute + " = " + node +"." + referenceAttribute + "\n" +
                         "CREATE (" + nodeShortCutName + ")-[:" + referenceAttribute + "]->(" + node + ")\n";
             }
         }
 
-        return queryRelationshipWithtable;
+        if(queryRelationshipWithtable == "")
+            return "";
+
+        return "\nWITH (" + node + ")\n" +
+                "CALL\n{" +
+                queryRelationshipWithtable +
+                "\n}";
+
     }
 
     private HashMap<String, Integer> verifyRelationships(Table table, ArrayList<String> values, String node)
@@ -195,7 +210,7 @@ public class Neo4jConnector extends Connector
 
             var fkShortName = referenceTable + "_" + referenceAttribute + "_" + attribute;
 
-            queryRelationShip += "WITH (" + node + ")\n" +
+            queryRelationShip += "\nWITH (" + node + ")\n" +
                     "MATCH (" + fkShortName + ":" + referenceTable + ")\n" +
                     "WHERE " + fkShortName + "." + referenceAttribute + " = " + valueFkAttribute + "\n" +
                     "CREATE (" + node + ")-[:" + referenceAttribute + "]->(" + fkShortName + ")\n";
