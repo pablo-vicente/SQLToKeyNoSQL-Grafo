@@ -342,22 +342,59 @@ public class Neo4jConnector extends Connector
 
         HashMap<String, String> props = new HashMap<>();
         for (int i = 0; i < results.size(); i++)
-        {
-            Map<String, Object> maps = results.get(i)
-                    .fields()
-                    .get(0)
-                    .value()
-                    .asMap();
-
-            for (Map.Entry<String, Object> stringObjectEntry : maps.entrySet())
-            {
-                String keyMap = stringObjectEntry.getKey();
-                String valueMap = stringObjectEntry.getValue().toString();
-                props.put(keyMap, valueMap);
-            }
-        }
+            props = getStringStringHashMap(results.get(i));
 
         TimeReport.putTimeConnector(GET, stopwatchDeleteConnetor);
         return props;
+    }
+
+    private static HashMap<String, String> getStringStringHashMap(Record record)
+    {
+        HashMap<String, String> props = new HashMap<>();
+        var tuple = record
+                .get(0)
+                .asMap(x -> Parser.removeInvalidCaracteres(x.toString()));
+
+        for (var stringObjectEntry : tuple.entrySet())
+        {
+            String keyMap = stringObjectEntry.getKey();
+            String valueMap = stringObjectEntry.getValue();
+            props.put(keyMap, valueMap);
+        }
+        return props;
+    }
+
+    @Override
+    public ArrayList getN(int n, String table, ArrayList<String> keys, Stack<Object> filters, LinkedList<String> cols)
+    {
+        String CREATE = "GETN";
+        var stopwatchGetNConnetor = TimeReport.CreateAndStartStopwatch();
+        var query = "MATCH(n:" + table + ") RETURN (n)";
+
+        var stopwatchGetN = TimeReport.CreateAndStartStopwatch();
+        var result = Session.run(query).list();
+        TimeReport.putTimeNeo4j(CREATE, stopwatchGetN);
+
+        var results = new ArrayList<String[]>();
+        for (Record record : result)
+        {
+            var tuple = getStringStringHashMap(record);
+            if(!applyFilterR(filters, tuple))
+                continue;
+
+            var tupleR = new String[cols.size()];
+            for (int i = 0; i < cols.size(); i++)
+            {
+                var col = cols.get(i);
+                var data = tuple.get(col);
+                tupleR[i] = data;
+            }
+
+            results.add(tupleR);
+        }
+
+        TimeReport.putTimeConnector(CREATE,stopwatchGetNConnetor);
+
+        return results;
     }
 }
