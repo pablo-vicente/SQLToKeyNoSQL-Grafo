@@ -6,7 +6,6 @@
 package com.lisa.sqltokeynosql.architecture;
 
 import net.sf.jsqlparser.expression.Expression;
-import net.sf.jsqlparser.statement.select.FromItem;
 import net.sf.jsqlparser.statement.select.Join;
 import net.sf.jsqlparser.util.deparser.ExpressionDeParser;
 import com.lisa.sqltokeynosql.util.Dictionary;
@@ -171,18 +170,20 @@ public class ExecutionEngine {
         ArrayList<String> tables = new ArrayList<>();
         tables.add(tableName);
         DataSet ds = getDataSetBl(tables, cols, filters);
-        for (String[] tuple : ds.getData()) {
-            for (int i = 0; i < acls.size(); i++)
-            {
-                var coluna = acls.get(i);
-                int indexColuna = cols.indexOf(coluna);
-                tuple[indexColuna] = (String) avl.get(i);
-            }
+
+        var dados = new HashMap<String, ArrayList<String>>();
+
+        for (String[] tuple : ds.getData())
+        {
             ArrayList<String> values = new ArrayList<>(Arrays.asList(tuple));
             String key = getKey(table,(LinkedList<String>) cols, values);
-            table.getTargetDB().getConnection().delete(tableName, key);
-            table.getTargetDB().getConnection().put(dictionary, table, key, (LinkedList<String>) cols, values);
+            dados.put(key, values);
         }
+
+        table
+                .getTargetDB()
+                .getConnection()
+                .update(dictionary, table, acls, avl, dados);
     }
 
     DataSet getDataSetBl(final List<String> tableNames, final List<String> cols, final Stack<Object> filters) {

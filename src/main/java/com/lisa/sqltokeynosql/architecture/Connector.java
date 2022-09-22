@@ -6,6 +6,8 @@ import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.schema.Column;
 import com.lisa.sqltokeynosql.util.operations.Operator;
 
+import com.lisa.sqltokeynosql.util.Dictionary;
+
 import java.util.*;
 
 import static java.util.stream.Collectors.toCollection;
@@ -21,7 +23,7 @@ public abstract class Connector {
 
     public void drop(Table table) {}
 
-    public abstract void put (com.lisa.sqltokeynosql.util.Dictionary dictionary, Table table, String key, LinkedList<String> cols, ArrayList<String> values);
+    public abstract void put (Dictionary dictionary, Table table, String key, LinkedList<String> cols, ArrayList<String> values);
 
     public abstract void delete(String table, String key);
 
@@ -40,6 +42,24 @@ public abstract class Connector {
                     return tupleR;
                 })
                 .collect(toCollection(ArrayList::new));
+    }
+
+    public void update(Dictionary dictionary, Table table, ArrayList<String> colsUpdate, ArrayList<String> valuesUpdate, HashMap<String, ArrayList<String>> dataSet)
+    {
+        List<String> cols = table.getAttributes();
+        for (Map.Entry<String, ArrayList<String>> stringArrayListEntry : dataSet.entrySet())
+        {
+            var key = stringArrayListEntry.getKey();
+            var tuple = stringArrayListEntry.getValue();
+            for (int i = 0; i < colsUpdate.size(); i++)
+            {
+                var coluna = colsUpdate.get(i);
+                int indexColuna = cols.indexOf(coluna);
+                tuple.set(indexColuna, valuesUpdate.get(i));
+            }
+            delete(table.getName(), key);
+            put(dictionary, table, key, (LinkedList<String>) cols, tuple);
+        }
     }
 
     protected boolean applyFilterR(List<Object> filters, HashMap tuple)
