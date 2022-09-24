@@ -113,44 +113,46 @@ public class Neo4jConnector extends Connector
     @Override
     public void put(Table table, String key, LinkedList<String> cols, ArrayList<String> values)
     {
-//        String PUT = "PUT";
-//        var stopwatchPutConnetor = TimeReport.CreateAndStartStopwatch();
-//
-//        var node = table.getName() + key;
-//        var queryRelationShipWithtable = ReconstructionRelationshipWithtable(dictionary, table, node);
-//
-//        var relationships = verifyRelationships(table, values, node).entrySet().iterator().next();
-//        var querysRelationships = String.join("\n", relationships.getKey());
-//        var qntRelationships = relationships.getValue().size();
-//
-//
-//        Map<String, Object> props = getStringObjectMap(key, cols, values);
-//        String queryInsert =  "CREATE (" + node + ":" + table.getName() + " $props)\n"
-//                + querysRelationships
-//                + queryRelationShipWithtable;
-//
-//        queryInsert += "\nWITH " + node + "\n"+
-//                    "MATCH ("+ node + ") --> (z) \n" +
-//                    "RETURN (z)";
-//
-//        var stopwatchPut = TimeReport.CreateAndStartStopwatch();
-//        Result result = Session.run(queryInsert, parameters("props", props));
-//        TimeReport.putTimeNeo4j(PUT, stopwatchPut);
-//
-//        var relationsShips = result
-//            .list()
-//            .size();
-//
-//        SummaryCounters summaryCounters = result.consume().counters();
-//
-//        if(relationsShips != qntRelationships || summaryCounters.nodesCreated() != 1)
-//        {
-//            Session.run("MATCH (n:"+ table.getName()+ ") WHERE n."+ _nodeKey + "="+ props.get(_nodeKey) + " DETACH DELETE (n)");
-//            System.out.println(queryInsert);
-//            throw new UnsupportedOperationException("Não foi possível criar relacionamentos. Chaves estrangeiras do relacionamento não estao inseridas no banco!" + "\n" + queryInsert);
-//        }
-//
-//        TimeReport.putTimeConnector(PUT, stopwatchPutConnetor);
+        String PUT = "PUT";
+        var stopwatchPutConnetor = TimeReport.CreateAndStartStopwatch();
+
+        var node = table.getName() + key;
+
+        var relationships = verifyRelationships(table, values, node)
+                .entrySet()
+                .iterator()
+                .next();
+
+        var queryRelationships = String.join("\n", relationships.getKey());
+
+        Map<String, Object> props = getStringObjectMap(key, cols, values);
+        String queryInsert =  "CREATE (" + node + ":" + table.getName() + " $props)\n"
+                + queryRelationships;
+
+        queryInsert += "\nWITH " + node + "\n"+
+                    "MATCH ("+ node + ") -[chave_estrangeira]-> (z) \n" +
+                    "RETURN (chave_estrangeira)";
+
+        var stopwatchPut = TimeReport.CreateAndStartStopwatch();
+        Result result = Session.run(queryInsert, parameters("props", props));
+        TimeReport.putTimeNeo4j(PUT, stopwatchPut);
+
+        var relationsShips = result
+            .list()
+            .size();
+
+        SummaryCounters summaryCounters = result.consume().counters();
+
+        if(relationsShips != relationships.getKey().size() || summaryCounters.nodesCreated() != 1)
+        {
+            Session.run("MATCH (n:"+ table.getName()+ ")\n" +
+                    "WHERE n."+ _nodeKey + "="+ props.get(_nodeKey) + "\n" +
+                    "DETACH DELETE (n)");
+            System.out.println(queryInsert);
+            throw new UnsupportedOperationException("Não foi possível criar relacionamentos. Chaves estrangeiras do relacionamento não estao inseridas no banco!" + "\n" + queryInsert);
+        }
+
+        TimeReport.putTimeConnector(PUT, stopwatchPutConnetor);
     }
 
     private String ReconstructionRelationshipWithtable(com.lisa.sqltokeynosql.util.Dictionary dictionary, Table table, String node)
