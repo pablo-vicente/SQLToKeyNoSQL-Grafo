@@ -465,7 +465,9 @@ public class Neo4jConnector extends Connector
         if(queriesVerificacaoDistinct.size() > 0)
         {
             var queryVerificaca = String.join("\nUNION\n", queriesVerificacaoDistinct);
+            var stopwatchUPDATEComiit = TimeReport.CreateAndStartStopwatch();
             var resultVerificacao = Session.run(queryVerificaca);
+            TimeReport.putTimeNeo4j(UPDATE, stopwatchUPDATEComiit);
             var relationsShips = resultVerificacao
                     .list()
                     .size();
