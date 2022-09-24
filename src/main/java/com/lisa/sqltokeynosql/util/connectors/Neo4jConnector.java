@@ -381,7 +381,6 @@ public class Neo4jConnector extends Connector
     @Override
     public void update(Table table, HashMap<String, ArrayList<String>> dataSet)
     {
-        // // TODO NAO PERMITIR CHAVE PRIMARIA
         String UPDATE = "UPDATE";
         var stopwatchUPDATEConnetor = TimeReport.CreateAndStartStopwatch();
 

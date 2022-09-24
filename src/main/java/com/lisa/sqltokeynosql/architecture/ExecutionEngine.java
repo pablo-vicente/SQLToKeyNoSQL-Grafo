@@ -173,8 +173,19 @@ public class ExecutionEngine {
         connector.drop(tableDb);
     }
 
-    private void updateTable(String tableName, ArrayList acls, ArrayList avl, Stack<Object> filters, Table table) {
-//        System.out.print("Table: " + tableName + ", r: " + table.getKeys().size());
+    private void updateTable(String tableName, ArrayList acls, ArrayList avl, Stack<Object> filters, Table table)
+    {
+        for (Object acl : acls)
+        {
+            var pks = table
+                    .getPks()
+                    .stream()
+                    .anyMatch(x -> x.equalsIgnoreCase((String) acl));
+
+            if(pks)
+                throw new UnsupportedOperationException("Não é suportado a mudança de Chave Primaria");
+        }
+
         List<String> cols = table.getAttributes();
         ArrayList<String> tables = new ArrayList<>();
         tables.add(tableName);
