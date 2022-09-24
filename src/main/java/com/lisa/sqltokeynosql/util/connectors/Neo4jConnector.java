@@ -87,7 +87,9 @@ public class Neo4jConnector extends Connector
         var stopwatchcDropConnetor = TimeReport.CreateAndStartStopwatch();
 
         var tableName = table.getName();
-        var queryDropNodes = "MATCH(n:" + tableName +") DELETE (n)";
+        var queryDropNodes = "MATCH(n:" + table.getName() + ")\n"+
+                             "OPTIONAL MATCH(n:" + table.getName() + ") -[chave_estrangeira]-> (ce)\n" +
+                             "DELETE n, chave_estrangeira";
         var constraintName = getContraintNodeKeyName(tableName);
         var queryDropConstraints = "DROP CONSTRAINT " + constraintName + " IF EXISTS" ;
 
@@ -214,7 +216,7 @@ public class Neo4jConnector extends Connector
             queryRelationShip.add("WITH (" + node + ")\n" +
                     "MATCH (" + fkShortName + ":" + referenceTable + ")\n" +
                     "WHERE " + fkShortName + "." + referenceAttribute + " = " + valueFkAttribute + "\n" +
-                    "CREATE (" + node + ")-[:" + referenceAttribute + "]->(" + fkShortName + ")\n");
+                    "CREATE (" + node + ")-[:" + attribute + "__" + referenceAttribute + "]->(" + fkShortName + ")\n");
 
             queryVerifyFks.add(
                     "MATCH (n:" + referenceTable + ")\n" +
@@ -273,11 +275,18 @@ public class Neo4jConnector extends Connector
                 "RETURN n";
     }
 
-    private String QueryDelete(String table, String...key)
+    private String QueryDelete(String table, String...keys)
     {
-        return  "MATCH(n:" + table + ") -[chaves_estrangeiras]-> (ce)\n"+
-                "WHERE n." + _nodeKey + " in " + key + "\n" +
-                "DELETE n, chaves_estrangeiras";
+        var query = "";
+        for (String key : keys)
+        {
+            query += "MATCH(n:" + table + ")\n" +
+                    "OPTIONAL MATCH(n:" + table + ") -[chaves_estrangeiras]-> (ce)\n"+
+                    "WHERE n." + _nodeKey + " in " + key + "\n" +
+                    "DELETE chaves_estrangeiras,n";
+        }
+
+        return  query;
     }
 
     /**
