@@ -145,9 +145,8 @@ public class Neo4jConnector extends Connector
 
         if(relationsShips != relationships.getKey().size() || summaryCounters.nodesCreated() != 1)
         {
-            Session.run("MATCH (n:"+ table.getName()+ ")\n" +
-                    "WHERE n."+ _nodeKey + "="+ props.get(_nodeKey) + "\n" +
-                    "DETACH DELETE (n)");
+            var queryDelete = QueryDelete(table.getName(), key);
+            Session.run(queryDelete);
             System.out.println(queryInsert);
             throw new UnsupportedOperationException("Não foi possível criar relacionamentos. Chaves estrangeiras do relacionamento não estao inseridas no banco!" + "\n" + queryInsert);
         }
@@ -274,6 +273,19 @@ public class Neo4jConnector extends Connector
                 "RETURN n";
     }
 
+    private String QueryDelete(String table, String...key)
+    {
+        return "CALL\n" +
+                "{\n"+
+                "   MATCH(n:" + table + ") -[chave_estrangeira]-> (z)\n"+
+                "   WHERE n." + _nodeKey + " in " + key + "\n" +
+                "   DELETE (chave_estrangeira)\n"+
+                "}\n"+
+                "MATCH(m:" + table + ")\n"+
+                "WHERE m." + _nodeKey + " in " + key + "\n" +
+                "DELETE m";
+    }
+
     /**
      * @param table
      * @param keys
@@ -283,21 +295,7 @@ public class Neo4jConnector extends Connector
     {
         String DELETE = "DELETE";
         var stopwatchDeleteConnetor = TimeReport.CreateAndStartStopwatch();
-
-        var queryDelete = "";
-        for (String key : keys)
-        {
-            queryDelete +=
-                    "CALL\n" +
-                            "{\n"+
-                            "   MATCH(n:" + table + ") -[chave_estrangeira]-> (z)\n"+
-                            "   WHERE n." + _nodeKey + " in " + key + "\n" +
-                            "   DELETE (chave_estrangeira)\n"+
-                            "}\n"+
-                            "MATCH(m:" + table + ")\n"+
-                            "WHERE m." + _nodeKey + " in " + key + "\n" +
-                            "DELETE m";
-        }
+        var queryDelete = QueryDelete(table, keys);
 
         var stopwatchDelete = TimeReport.CreateAndStartStopwatch();
         Result result = Session.run(queryDelete);
