@@ -10,6 +10,7 @@ import org.neo4j.driver.Record;
 import org.neo4j.driver.summary.SummaryCounters;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.neo4j.driver.Values.parameters;
 
@@ -110,46 +111,46 @@ public class Neo4jConnector extends Connector
      * @param values
      */
     @Override
-    public void put(com.lisa.sqltokeynosql.util.Dictionary dictionary, Table table, String key, LinkedList<String> cols, ArrayList<String> values)
+    public void put(Table table, String key, LinkedList<String> cols, ArrayList<String> values)
     {
-        String PUT = "PUT";
-        var stopwatchPutConnetor = TimeReport.CreateAndStartStopwatch();
-
-        var node = table.getName() + key;
-        var queryRelationShipWithtable = ReconstructionRelationshipWithtable(dictionary, table, node);
-
-        var relationships = verifyRelationships(table, values, node).entrySet().iterator().next();
-        var querysRelationships = relationships.getKey();
-        var qntRelationships = relationships.getValue();
-
-
-        Map<String, Object> props = getStringObjectMap(key, cols, values);
-        String queryInsert =  "CREATE (" + node + ":" + table.getName() + " $props)\n"
-                + querysRelationships
-                + queryRelationShipWithtable;
-
-        queryInsert += "\nWITH " + node + "\n"+
-                    "MATCH ("+ node + ") --> (z) \n" +
-                    "RETURN (z)";
-
-        var stopwatchPut = TimeReport.CreateAndStartStopwatch();
-        Result result = Session.run(queryInsert, parameters("props", props));
-        TimeReport.putTimeNeo4j(PUT, stopwatchPut);
-
-        var relationsShips = result
-            .list()
-            .size();
-
-        SummaryCounters summaryCounters = result.consume().counters();
-
-        if(relationsShips != qntRelationships || summaryCounters.nodesCreated() != 1)
-        {
-            Session.run("MATCH (n:"+ table.getName()+ ") WHERE n.NODE_KEY="+ props.get(_nodeKey) + " DETACH DELETE (n)");
-            System.out.println(queryInsert);
-            throw new UnsupportedOperationException("Não foi possível criar relacionamentos. Chaves estrangeiras do relacionamento não estao inseridas no banco!" + "\n" + queryInsert);
-        }
-
-        TimeReport.putTimeConnector(PUT, stopwatchPutConnetor);
+//        String PUT = "PUT";
+//        var stopwatchPutConnetor = TimeReport.CreateAndStartStopwatch();
+//
+//        var node = table.getName() + key;
+//        var queryRelationShipWithtable = ReconstructionRelationshipWithtable(dictionary, table, node);
+//
+//        var relationships = verifyRelationships(table, values, node).entrySet().iterator().next();
+//        var querysRelationships = String.join("\n", relationships.getKey());
+//        var qntRelationships = relationships.getValue().size();
+//
+//
+//        Map<String, Object> props = getStringObjectMap(key, cols, values);
+//        String queryInsert =  "CREATE (" + node + ":" + table.getName() + " $props)\n"
+//                + querysRelationships
+//                + queryRelationShipWithtable;
+//
+//        queryInsert += "\nWITH " + node + "\n"+
+//                    "MATCH ("+ node + ") --> (z) \n" +
+//                    "RETURN (z)";
+//
+//        var stopwatchPut = TimeReport.CreateAndStartStopwatch();
+//        Result result = Session.run(queryInsert, parameters("props", props));
+//        TimeReport.putTimeNeo4j(PUT, stopwatchPut);
+//
+//        var relationsShips = result
+//            .list()
+//            .size();
+//
+//        SummaryCounters summaryCounters = result.consume().counters();
+//
+//        if(relationsShips != qntRelationships || summaryCounters.nodesCreated() != 1)
+//        {
+//            Session.run("MATCH (n:"+ table.getName()+ ") WHERE n."+ _nodeKey + "="+ props.get(_nodeKey) + " DETACH DELETE (n)");
+//            System.out.println(queryInsert);
+//            throw new UnsupportedOperationException("Não foi possível criar relacionamentos. Chaves estrangeiras do relacionamento não estao inseridas no banco!" + "\n" + queryInsert);
+//        }
+//
+//        TimeReport.putTimeConnector(PUT, stopwatchPutConnetor);
     }
 
     private String ReconstructionRelationshipWithtable(com.lisa.sqltokeynosql.util.Dictionary dictionary, Table table, String node)
@@ -189,11 +190,12 @@ public class Neo4jConnector extends Connector
 
     }
 
-    private HashMap<String, Integer> verifyRelationships(Table table, ArrayList<String> values, String node)
+    private HashMap<ArrayList<String>, ArrayList<String>> verifyRelationships(Table table, ArrayList<String> values, String node)
     {
-        String queryRelationShip = "";
-        Integer fksNecessarias = 0;
+        var queryRelationShip = new ArrayList<String>();
+
         var fks = table.getFks();
+        var queryVerifyFks = new ArrayList<String>();
         for (ForeignKey fk : fks)
         {
             var attribute = fk.getAtt();
@@ -203,21 +205,24 @@ public class Neo4jConnector extends Connector
             if(valueFkAttribute.equalsIgnoreCase("NULL"))
                 continue;
 
-            fksNecessarias++;
-
             var referenceTable = fk.getrTable();
             var referenceAttribute = fk.getrAtt();
 
             var fkShortName = referenceTable + "_" + referenceAttribute + "_" + attribute;
 
-            queryRelationShip += "\nWITH (" + node + ")\n" +
+            queryRelationShip.add("WITH (" + node + ")\n" +
                     "MATCH (" + fkShortName + ":" + referenceTable + ")\n" +
                     "WHERE " + fkShortName + "." + referenceAttribute + " = " + valueFkAttribute + "\n" +
-                    "CREATE (" + node + ")-[:" + referenceAttribute + "]->(" + fkShortName + ")\n";
+                    "CREATE (" + node + ")-[:" + referenceAttribute + "]->(" + fkShortName + ")\n");
+
+            queryVerifyFks.add(
+                    "MATCH (n:" + referenceTable + ")\n" +
+                    "WHERE n." + referenceAttribute + " = " + valueFkAttribute + "\n" +
+                    "RETURN (n)\n");
         }
 
-        var result = new HashMap<String, Integer>();
-        result.put(queryRelationShip, fksNecessarias);
+        var result = new HashMap<ArrayList<String>, ArrayList<String>>();
+        result.put(queryRelationShip,  queryVerifyFks);
 
         return result;
     }
@@ -396,5 +401,87 @@ public class Neo4jConnector extends Connector
         TimeReport.putTimeConnector(CREATE,stopwatchGetNConnetor);
 
         return results;
+    }
+
+    @Override
+    public void update(Table table, HashMap<String, ArrayList<String>> dataSet)
+    {
+        // // TODO NAO PERMITIR CHAVE PRIMARIA
+        String UPDATE = "UPDATE";
+        var stopwatchUPDATEConnetor = TimeReport.CreateAndStartStopwatch();
+
+        var queriesUpdates = new ArrayList<StringBuilder>();
+        var queriesVerifyFks = new ArrayList<String>();
+
+        Map<String,Object> params = new HashMap<>();
+        var cols = table.getAttributes();
+        for (var tuple : dataSet.entrySet())
+        {
+            StringBuilder queryUpdate = new StringBuilder();
+
+            var key = tuple.getKey();
+            var node = table.getName() + key;
+            var values = tuple.getValue();
+
+            var relationships = verifyRelationships(table, values, node)
+                    .entrySet()
+                    .iterator()
+                    .next();
+
+            var querysRelationships = relationships.getKey();
+            queriesVerifyFks.addAll(relationships.getValue());
+            var queryRelationships = String.join("\n", querysRelationships);
+
+            var propsName = "props" + key;
+            Map<String, Object> props = getStringObjectMap(key, (LinkedList<String>) cols, values);
+            params.put(propsName, props);
+
+            queryUpdate
+                    .append("MATCH (").append(node).append(":").append(table.getName()).append(")").append("\n")
+                    .append("WHERE ").append(node).append(".").append(_nodeKey).append("=").append(key).append("\n")
+                    .append("SET ").append(node).append(" = $").append(propsName).append("\n")
+                    .append("\n")
+                    .append("WITH ").append(node).append("\n")
+                    .append("CALL") .append("\n")
+                    .append("   {").append("\n")
+                    .append("   WITH ").append(node).append("\n")
+                    .append("   MATCH (").append(node).append(")-[relacionamento]->(relacionamento_apontado) DELETE relacionamento").append("\n")
+                    .append("}").append("\n")
+                    .append("\n")
+                    .append(queryRelationships).append("\n")
+                    .append("WITH ").append(node).append("\n")
+                    .append("MATCH (").append(node).append(") -[chave_estrangeira]-> (apontado)").append("\n")
+                    .append("RETURN (chave_estrangeira)").append("\n");
+
+            queriesUpdates.add(queryUpdate);
+
+        }
+
+        var queriesVerificacaoDistinct = queriesVerifyFks
+                .stream()
+                .distinct()
+                .collect(Collectors.toList());
+
+        if(queriesVerificacaoDistinct.size() > 0)
+        {
+            var queryVerificaca = String.join("\nUNION\n", queriesVerificacaoDistinct);
+            var resultVerificacao = Session.run(queryVerificaca);
+            var relationsShips = resultVerificacao
+                    .list()
+                    .size();
+            if(relationsShips != queriesVerificacaoDistinct.size())
+            {
+                System.out.println(resultVerificacao);
+                throw new UnsupportedOperationException("Não foi possível criar relacionamentos. Chaves estrangeiras do relacionamento não estao inseridas no banco!" + "\n" + queryVerificaca);
+            }
+        }
+
+        var query = String.join("\nUNION\n\n", queriesUpdates);
+
+        var stopwatchUPDATEComiit = TimeReport.CreateAndStartStopwatch();
+        Session.run(query, params);
+        TimeReport.putTimeNeo4j(UPDATE, stopwatchUPDATEComiit);
+
+        TimeReport.putTimeConnector(UPDATE,stopwatchUPDATEConnetor);
     }
 }
