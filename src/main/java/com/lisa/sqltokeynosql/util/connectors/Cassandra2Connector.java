@@ -52,7 +52,7 @@ public class Cassandra2Connector extends Connector {
     }
 
     @Override
-    public void put(com.lisa.sqltokeynosql.util.Dictionary dictionary, Table table, String key, LinkedList<String> cols, ArrayList<String> values) {
+    public void put(Table table, String key, LinkedList<String> cols, ArrayList<String> values) {
         ColumnFamily<String, String> TABLE
                 = new ColumnFamily<String, String>(
                         table.getName(), // Column Family Name

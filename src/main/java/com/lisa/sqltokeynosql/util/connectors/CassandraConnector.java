@@ -33,7 +33,7 @@ public class CassandraConnector extends Connector {
     }
 
     @Override
-    public void put(com.lisa.sqltokeynosql.util.Dictionary dictionary, Table table, String key, LinkedList<String> cols, ArrayList<String> values) {
+    public void put(Table table, String key, LinkedList<String> cols, ArrayList<String> values) {
         String cql = "INSERT INTO " + table.getName() + " ";
         String c = "(key, ", v = "('" + key + "', ";
         for (int i = 0; i < cols.size(); i++) {

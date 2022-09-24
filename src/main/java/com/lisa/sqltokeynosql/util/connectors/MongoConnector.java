@@ -35,7 +35,7 @@ public class MongoConnector extends Connector{
     }
 
     @Override
-    public void put(com.lisa.sqltokeynosql.util.Dictionary dictionary, Table table, String key, LinkedList<String> cols, ArrayList<String> values) {
+    public void put(Table table, String key, LinkedList<String> cols, ArrayList<String> values) {
         BasicDBObject c = new BasicDBObject("_id", key);
         for (int i = 0; i < cols.size(); i++) {
             c.append(cols.get(i), values.get(i));

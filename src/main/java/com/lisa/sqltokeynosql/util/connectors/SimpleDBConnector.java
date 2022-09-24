@@ -49,7 +49,7 @@ public class SimpleDBConnector extends Connector {
     }
 
     @Override
-    public void put(com.lisa.sqltokeynosql.util.Dictionary dictionary, Table table, String key, LinkedList<String> cols, ArrayList<String> values) {
+    public void put(Table table, String key, LinkedList<String> cols, ArrayList<String> values) {
 
         if (null == this.client) {
             System.err.println("Problemas na conexão com o SimpleDB");
