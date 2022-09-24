@@ -112,7 +112,7 @@ public class ExecutionEngine {
         long now = new Date().getTime();
         NoSQL targetDb = table.getTargetDB();
         Connector connection = targetDb.getConnection();
-        connection.put(dictionary, table, key, columns, values);
+        connection.put(table, key, columns, values);
 
         TimeConter.current = (new Date().getTime()) - now;
         table.getKeys().add(key);
@@ -177,13 +177,20 @@ public class ExecutionEngine {
         {
             ArrayList<String> values = new ArrayList<>(Arrays.asList(tuple));
             String key = getKey(table,(LinkedList<String>) cols, values);
+            for (int i = 0; i < acls.size(); i++)
+            {
+                var coluna = acls.get(i);
+                int indexColuna = cols.indexOf(coluna);
+                values.set(indexColuna, (String) avl.get(i));
+            }
+
             dados.put(key, values);
         }
 
         table
                 .getTargetDB()
                 .getConnection()
-                .update(dictionary, table, acls, avl, dados);
+                .update(table, dados);
     }
 
     DataSet getDataSetBl(final List<String> tableNames, final List<String> cols, final Stack<Object> filters) {

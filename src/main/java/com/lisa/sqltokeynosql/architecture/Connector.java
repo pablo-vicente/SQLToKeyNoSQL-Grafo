@@ -23,7 +23,7 @@ public abstract class Connector {
 
     public void drop(Table table) {}
 
-    public abstract void put (Dictionary dictionary, Table table, String key, LinkedList<String> cols, ArrayList<String> values);
+    public abstract void put (Table table, String key, LinkedList<String> cols, ArrayList<String> values);
 
     public abstract void delete(String table, String key);
 
@@ -44,21 +44,15 @@ public abstract class Connector {
                 .collect(toCollection(ArrayList::new));
     }
 
-    public void update(Dictionary dictionary, Table table, ArrayList<String> colsUpdate, ArrayList<String> valuesUpdate, HashMap<String, ArrayList<String>> dataSet)
+    public void update(Table table, HashMap<String, ArrayList<String>> dataSet)
     {
         List<String> cols = table.getAttributes();
         for (Map.Entry<String, ArrayList<String>> stringArrayListEntry : dataSet.entrySet())
         {
             var key = stringArrayListEntry.getKey();
             var tuple = stringArrayListEntry.getValue();
-            for (int i = 0; i < colsUpdate.size(); i++)
-            {
-                var coluna = colsUpdate.get(i);
-                int indexColuna = cols.indexOf(coluna);
-                tuple.set(indexColuna, valuesUpdate.get(i));
-            }
             delete(table.getName(), key);
-            put(dictionary, table, key, (LinkedList<String>) cols, tuple);
+            put(table, key, (LinkedList<String>) cols, tuple);
         }
     }
 
