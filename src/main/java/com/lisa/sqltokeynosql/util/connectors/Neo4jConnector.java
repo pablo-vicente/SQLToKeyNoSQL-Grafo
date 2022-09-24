@@ -156,43 +156,6 @@ public class Neo4jConnector extends Connector
         TimeReport.putTimeConnector(PUT, stopwatchPutConnetor);
     }
 
-    private String ReconstructionRelationshipWithtable(com.lisa.sqltokeynosql.util.Dictionary dictionary, Table table, String node)
-    {
-        var tables = dictionary.getCurrentDb().getTables();
-        String queryRelationshipWithtable = "";
-
-        for (Table tableWithFk : tables)
-        {
-            if(tableWithFk.getName().equalsIgnoreCase(table.getName()))
-                continue;
-
-            var fks = tableWithFk.getFks();
-            for (ForeignKey foreignKey : fks)
-            {
-                if(!foreignKey.getrTable().equalsIgnoreCase(table.getName()))
-                    continue;
-
-                var referenceAttribute = foreignKey.getrAtt();
-                var attribute = foreignKey.getAtt();
-
-                var nodeShortCutName = tableWithFk.getName() + "_" + referenceAttribute + "_" + attribute;
-                queryRelationshipWithtable +=  "\nWITH (" +  node +")\n" +
-                        "MATCH (" + nodeShortCutName + ":" + tableWithFk.getName() + ")\n" +
-                        "WHERE " + nodeShortCutName + "." + attribute + " = " + node +"." + referenceAttribute + "\n" +
-                        "CREATE (" + nodeShortCutName + ")-[:" + referenceAttribute + "]->(" + node + ")\n";
-            }
-        }
-
-        if(queryRelationshipWithtable == "")
-            return "";
-
-        return "\nWITH (" + node + ")\n" +
-                "CALL\n{" +
-                queryRelationshipWithtable +
-                "\n}";
-
-    }
-
     private HashMap<ArrayList<String>, ArrayList<String>> verifyRelationships(Table table, ArrayList<String> values, String node)
     {
         var queryRelationShip = new ArrayList<String>();
@@ -228,15 +191,6 @@ public class Neo4jConnector extends Connector
         result.put(queryRelationShip,  queryVerifyFks);
 
         return result;
-    }
-
-    private void verifyDuplicateId(Table table, String key, Session session)
-    {
-        String queryId =  getQueryAttribute(table.getName(), _nodeKey, key);
-        List<Record> results = session.run(queryId).list();
-
-        if(results.size() >= 1)
-            throw new UnsupportedOperationException("Duplicate register for id " + key);
     }
 
     private Map<String, Object> getStringObjectMap(String key, LinkedList<String> cols, ArrayList<String> values)
@@ -277,16 +231,25 @@ public class Neo4jConnector extends Connector
 
     private String QueryDelete(String table, String...keys)
     {
-        var query = "";
+        StringBuilder query = new StringBuilder();
         for (String key : keys)
         {
-            query += "MATCH(n:" + table + ")\n" +
-                    "OPTIONAL MATCH(n:" + table + ") -[chaves_estrangeiras]-> (ce)\n"+
-                    "WHERE n." + _nodeKey + " in " + key + "\n" +
-                    "DELETE chaves_estrangeiras,n";
+            query
+                    .append("MATCH(n:")
+                    .append(table)
+                    .append(")\n")
+                    .append("OPTIONAL MATCH(n:")
+                    .append(table)
+                    .append(") -[chaves_estrangeiras]-> (ce)\n")
+                    .append("WHERE n.")
+                    .append(_nodeKey)
+                    .append(" in ")
+                    .append(key)
+                    .append("\n")
+                    .append("DELETE chaves_estrangeiras,n");
         }
 
-        return  query;
+        return query.toString();
     }
 
     /**
@@ -359,8 +322,7 @@ public class Neo4jConnector extends Connector
         TimeReport.putTimeNeo4j(GET, stopwatchGet);
 
         HashMap<String, String> props = new HashMap<>();
-        for (int i = 0; i < results.size(); i++)
-            props = getStringStringHashMap(results.get(i));
+        for (Record result : results) props = getStringStringHashMap(result);
 
         TimeReport.putTimeConnector(GET, stopwatchDeleteConnetor);
         return props;
