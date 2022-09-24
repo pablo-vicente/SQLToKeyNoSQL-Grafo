@@ -87,7 +87,7 @@ public class Neo4jConnector extends Connector
         var stopwatchcDropConnetor = TimeReport.CreateAndStartStopwatch();
 
         var tableName = table.getName();
-        var queryDropNodes = "MATCH(n:" + tableName +") DETACH DELETE (n)";
+        var queryDropNodes = "MATCH(n:" + tableName +") DELETE (n)";
         var constraintName = getContraintNodeKeyName(tableName);
         var queryDropConstraints = "DROP CONSTRAINT " + constraintName + " IF EXISTS" ;
 
@@ -275,15 +275,9 @@ public class Neo4jConnector extends Connector
 
     private String QueryDelete(String table, String...key)
     {
-        return "CALL\n" +
-                "{\n"+
-                "   MATCH(n:" + table + ") -[chave_estrangeira]-> (z)\n"+
-                "   WHERE n." + _nodeKey + " in " + key + "\n" +
-                "   DELETE (chave_estrangeira)\n"+
-                "}\n"+
-                "MATCH(m:" + table + ")\n"+
-                "WHERE m." + _nodeKey + " in " + key + "\n" +
-                "DELETE m";
+        return  "MATCH(n:" + table + ") -[chaves_estrangeiras]-> (ce)\n"+
+                "WHERE n." + _nodeKey + " in " + key + "\n" +
+                "DELETE n, chaves_estrangeiras";
     }
 
     /**
