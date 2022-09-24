@@ -88,6 +88,7 @@ user_pwd varchar(20)
 ```
 ### DROP
 ```SQL
+-- Não é permitido deletar registros que são chaves estrangeiras de outros registros
  DROP TABLE funcionario
 ```
 
@@ -95,13 +96,15 @@ user_pwd varchar(20)
 ```SQL
 -- Obrigatório Declarar todas as colunas, inclusive a Chave Primaria mesmo Sendo Id
 -- Auto incremento ainda não é suportado
+-- Não é permitido inserir registros com Chaves estrangeiras inexistentes.
 insert into usuario (user_id, func_id, user_log, user_pwd)  -- 
 values (1,1,'adm','adm');
 ```
 
 ### UPDATE
 ```SQL
--- TODO Suporta apenas uma COLUNA (Atualizar)
+-- Não é permitido atulizar registros com Chaves estrangeiras inexistentes.
+-- Suporta Apenas uma Coluna
 UPDATE funcionario
 SET razao_social = 'Razão Social'
 WHERE id = 1;
@@ -109,16 +112,14 @@ WHERE id = 1;
 
 ### SELECT
 ```SQL
--- TODO (Atualizar)
-SELECT column1, column2,
-FROM table_name;
+SELECT * FROM funcionario;
+SELECT id FROM funcionario WHERE nome = "Nome";
 ```
 
 ### DELETE
 ```SQL
--- TODO Atualizar
-DELETE FROM table_name 
-WHERE condition;
+-- Não é permitido deletar registros que são Chaves estrangeiras de outros registros.
+DELETE FROM funcionario WHERE id >= "1";
 ```
 
 
