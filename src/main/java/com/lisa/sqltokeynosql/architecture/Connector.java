@@ -25,7 +25,7 @@ public abstract class Connector {
 
     public abstract void put (Table table, String key, LinkedList<String> cols, ArrayList<String> values);
 
-    public abstract void delete(String table, String key);
+    public abstract void delete(String table, String...keys);
 
     public abstract HashMap<String, String> get(int n, String table, String key);
 

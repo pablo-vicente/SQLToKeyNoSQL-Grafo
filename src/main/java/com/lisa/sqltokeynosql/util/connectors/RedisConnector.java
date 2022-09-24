@@ -44,8 +44,10 @@ public class RedisConnector extends Connector{
     }
 
     @Override
-    public void delete(String t, String k) {
-        jedis.del(db+"::"+t+"::"+k);
+    public void delete(String t, String...keys)
+    {
+        for (String k : keys)
+            jedis.del(db+"::"+t+"::"+k);
     }
 
     @Override

@@ -52,11 +52,15 @@ public class CassandraConnector extends Connector {
     }
 
     @Override
-    public void delete(String t, String k) {
-        String cql = "DELETE FROM "+t+" WHERE key='"+k+"'";
-        session.execute(cql);
-    }
+    public void delete(String t, String...keys)
+    {
+        for (String key : keys)
+        {
+            String cql = "DELETE FROM "+t+" WHERE key='"+key+"'";
+            session.execute(cql);
+        }
 
+    }
     @Override
     public HashMap<String, String> get(int n, String t, String key) {
         HashMap<String, String> current = new HashMap<>();

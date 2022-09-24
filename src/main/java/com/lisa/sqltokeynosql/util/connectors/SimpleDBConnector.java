@@ -96,9 +96,13 @@ public class SimpleDBConnector extends Connector {
     }
 
     @Override
-    public void delete(String t, String key) {
-        DeleteAttributesRequest del = new DeleteAttributesRequest(t, key);
-        this.client.deleteAttributes(del);
+    public void delete(String t, String...keys)
+    {
+        for (String key : keys)
+        {
+            DeleteAttributesRequest del = new DeleteAttributesRequest(t, key);
+            this.client.deleteAttributes(del);
+        }
     }
 
     @Override

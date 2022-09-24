@@ -120,24 +120,33 @@ public class ExecutionEngine {
     }
 
     void deleteData(final String table, final Stack<Object> filters) {
-        Table t = dictionary.getCurrentDb().getTable(table).get();
+        Table table1 = dictionary.getCurrentDb().getTable(table).get();
         ArrayList<String> tables = new ArrayList<>();
         tables.add(table);
-        DataSet ds = getDataSetBl(tables, t.getAttributes(), filters);
+        DataSet ds = getDataSetBl(tables, table1.getAttributes(), filters);
         var tuples = ds.getData();
 
         if(tuples.size() == 0)
-            throw new UnsupportedOperationException("Nenhum registro encontrado.");
+            return;
 
-        for(String [] tuple : tuples){
+        var keys = new ArrayList<String>();
+        for (String[] tuple : tuples)
+        {
             ArrayList<String> val = new ArrayList();
-            for (int i = 0; i < t.getAttributes().size();i++)
+            for (int i = 0; i < table1.getAttributes().size();i++)
                 val.add(tuple[i]);
+            String key = getKey(table1, (LinkedList<String>)table1.getAttributes(), val);
 
-            String key = getKey(t, (LinkedList<String>)t.getAttributes(), val);
-            t.getTargetDB().getConnection().delete(table, key);
-            t.getKeys().remove(key);
+            keys.add(key);
         }
+        table1
+                .getTargetDB()
+                .getConnection()
+                .delete(table, String.valueOf(keys));
+
+        for (var key : keys)
+            table1.getKeys().remove(key);
+
     }
 
     void updateData(final String tableName, final ArrayList acls, final ArrayList avl, final Stack<Object> filters) {

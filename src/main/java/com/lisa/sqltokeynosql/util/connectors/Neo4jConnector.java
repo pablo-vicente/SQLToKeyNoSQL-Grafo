@@ -276,26 +276,28 @@ public class Neo4jConnector extends Connector
 
     /**
      * @param table
-     * @param key
+     * @param keys
      */
     @Override
-    public void delete(String table, String key)
+    public void delete(String table, String...keys)
     {
         String DELETE = "DELETE";
-
         var stopwatchDeleteConnetor = TimeReport.CreateAndStartStopwatch();
 
-        var queryDelete =
-                "CALL\n" +
-                "{\n"+
-                "   MATCH(n:" + table + ") -[chave_estrangeira]-> (z)\n"+
-                "   WHERE n." + _nodeKey + "=" + key + "\n" +
-                "   DELETE (chave_estrangeira)\n"+
-                "}\n"+
-                "MATCH(m:" + table + ")\n"+
-                "WHERE m." + _nodeKey + "=" + key + "\n" +
-                "DELETE m";
-
+        var queryDelete = "";
+        for (String key : keys)
+        {
+            queryDelete +=
+                    "CALL\n" +
+                            "{\n"+
+                            "   MATCH(n:" + table + ") -[chave_estrangeira]-> (z)\n"+
+                            "   WHERE n." + _nodeKey + " in " + key + "\n" +
+                            "   DELETE (chave_estrangeira)\n"+
+                            "}\n"+
+                            "MATCH(m:" + table + ")\n"+
+                            "WHERE m." + _nodeKey + " in " + key + "\n" +
+                            "DELETE m";
+        }
 
         var stopwatchDelete = TimeReport.CreateAndStartStopwatch();
         Result result = Session.run(queryDelete);

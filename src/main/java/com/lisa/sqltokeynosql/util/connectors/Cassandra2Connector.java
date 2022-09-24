@@ -73,7 +73,7 @@ public class Cassandra2Connector extends Connector {
     }
 
     @Override
-    public void delete(String t, String k) {
+    public void delete(String t, String...keys) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
