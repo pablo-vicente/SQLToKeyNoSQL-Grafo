@@ -179,7 +179,7 @@ public class Neo4jConnector extends Connector
             queryRelationShip.add("WITH (" + node + ")\n" +
                     "MATCH (" + fkShortName + ":" + referenceTable + ")\n" +
                     "WHERE " + fkShortName + "." + referenceAttribute + " = " + valueFkAttribute + "\n" +
-                    "CREATE (" + node + ")-[:" + attribute + "__" + referenceAttribute + "]->(" + fkShortName + ")\n");
+                    "CREATE (" + node + ")-[:" + attribute + "]->(" + fkShortName + ")\n");
 
             queryVerifyFks.add(
                     "MATCH (n:" + referenceTable + ")\n" +
