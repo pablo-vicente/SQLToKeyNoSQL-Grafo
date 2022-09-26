@@ -64,7 +64,8 @@ public class Neo4jConnector extends Connector
 
         var query = "CREATE CONSTRAINT " + constraintName +"\n"+
                 "IF NOT EXISTS FOR (n:" + tableName + ")\n"+
-                "REQUIRE (n." + _nodeKey + ") IS NODE KEY";
+                "REQUIRE (n." + _nodeKey + ") IS UNIQUE";
+//                "REQUIRE (n." + _nodeKey + ") IS NODE KEY";
 
         var stopwatchCreate = TimeReport.CreateAndStartStopwatch();
         Result result = Session.run(query);
