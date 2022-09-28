@@ -47,7 +47,7 @@ public final class Dictionary implements Serializable {
     public Optional<BDR> getBDR(String dbName) {
 
         for (BDR db : rdbms) {
-            if (dbName.equals(db.getName())) {
+            if (dbName.equalsIgnoreCase(db.getName())) {
                 return Optional.of(db);
             }
         }
