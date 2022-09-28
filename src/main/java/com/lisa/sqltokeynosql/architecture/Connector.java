@@ -6,7 +6,7 @@ import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.schema.Column;
 import com.lisa.sqltokeynosql.util.operations.Operator;
 
-import com.lisa.sqltokeynosql.util.Dictionary;
+import net.sf.jsqlparser.statement.alter.AlterOperation;
 
 import java.util.*;
 
@@ -88,4 +88,7 @@ public abstract class Connector {
         return operation.compare(v1, val);
     }
 
+    public void alterTable(Table table, HashMap<AlterOperation, ArrayList<String[]>> dados)
+    {
+    }
 }
