@@ -5,7 +5,10 @@
  */
 package com.lisa.sqltokeynosql.architecture;
 
+import com.lisa.sqltokeynosql.util.sql.ForeignKey;
 import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.statement.alter.AlterExpression;
+import net.sf.jsqlparser.statement.alter.AlterOperation;
 import net.sf.jsqlparser.statement.select.Join;
 import net.sf.jsqlparser.util.deparser.ExpressionDeParser;
 import com.lisa.sqltokeynosql.util.Dictionary;
@@ -19,6 +22,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 
@@ -377,6 +381,115 @@ public class ExecutionEngine {
     public void SaveDicitionary()
     {
         DictionaryDAO.storeDictionary(dictionary);
+    }
+
+    public void AlterTable(String tablename, List<AlterExpression> alterExpressions)
+    {
+        var tableOptional = dictionary.getTable(tablename);
+
+        if(tableOptional.isEmpty())
+            throw new UnsupportedOperationException("Tabela" + tablename + "inexistente!!!");
+
+        var table = tableOptional.get();
+        var cols = table.getAttributes();
+
+        var novasFks = table
+                .getFks()
+                .stream()
+                .map(x -> new ForeignKey(x.getAtt(), x.getrAtt(), x.getrTable()))
+                .collect(toList());
+
+        var novosAtributos = new ArrayList<>(table.getAttributes());
+
+        var dados = new HashMap<AlterOperation, ArrayList<String[]>>();
+        for (AlterExpression alterExpression : alterExpressions)
+        {
+            var alter = alterExpression.getOperation();
+            var colunas = dados.get(alter);
+            if(colunas == null)
+            {
+                colunas = new ArrayList<>();
+                dados.put(alter, colunas);
+            }
+
+            String colunaExistente = "";
+            String colunaNova = "";
+            switch (alter)
+            {
+                case ADD:
+                    colunaNova = alterExpression
+                            .getColDataTypeList()
+                            .get(0)
+                            .getColumnName();
+
+                    validarColunaDuplicada(cols, tablename, colunaNova);
+                    novosAtributos.add(colunaNova);
+                    break;
+
+                case DROP:
+                    colunaExistente = alterExpression.getColumnName();
+                    validarColunaInexistente(cols, tablename, colunaExistente);
+
+                    novosAtributos.remove(colunaExistente);
+                    String finalColunaExistente = colunaExistente;
+                    novasFks = novasFks
+                            .stream()
+                            .filter(x ->!x.getAtt().equalsIgnoreCase(finalColunaExistente))
+                            .collect(Collectors.toList());
+                    break;
+
+                case RENAME:
+
+                    colunaExistente = alterExpression.getColumnOldName();
+                    colunaNova = alterExpression.getColumnName();
+
+                    validarColunaInexistente(cols, tablename, colunaExistente);
+                    validarColunaDuplicada(cols, tablename, colunaNova);
+
+                    var indexAtual = novosAtributos.indexOf(colunaExistente);
+                    novosAtributos.set(indexAtual, colunaNova);
+
+                    for (ForeignKey novaFk : novasFks)
+                    {
+                        var atributeFk = novaFk.getAtt();
+                        if(!atributeFk.equalsIgnoreCase(colunaExistente))
+                            continue;
+                        novaFk.setAtt(colunaNova);
+                    }
+
+                    break;
+
+                default:
+                    throw new UnsupportedOperationException("Operação Não Suportada!!");
+            }
+
+            colunas.add(new String[]
+                    {
+                            colunaExistente,
+                            colunaNova
+                    });
+        }
+
+        var target = table.getTargetDB();
+        var connection = target.getConnection();
+        connection.alterTable(table, dados);
+
+        table.setAttributes(novosAtributos);
+        table.setFks(novasFks);
+
+    }
+
+    public void validarColunaDuplicada(List<String> cols, String tablename, String colunaNova)
+    {
+        if(cols.contains(colunaNova))
+            throw new UnsupportedOperationException("Coluna "+ colunaNova + "Tabela" + tablename + "Duplicada!!!");
+
+    }
+
+    public void validarColunaInexistente(List<String> cols, String tablename, String colunaExistente)
+    {
+        if(!cols.contains(colunaExistente))
+            throw new UnsupportedOperationException("Coluna "+ colunaExistente + "Tabela" + tablename + "inexistente!!!");
     }
 
     static class Result {
