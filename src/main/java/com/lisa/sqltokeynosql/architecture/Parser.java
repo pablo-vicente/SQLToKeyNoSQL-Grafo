@@ -147,10 +147,17 @@ public class Parser {
         else if (statement instanceof Drop)
             drop((Drop) statement);
         else if (statement instanceof Alter)
-            System.out.println("Alter table");
+            alterTable((Alter) statement);
         else
             System.out.println("Não suportado!");
         return null;
+    }
+
+    private void alterTable(Alter statement)
+    {
+        var tableName = statement.getTable().getName();
+        var expressions =  statement.getAlterExpressions();
+        executionEngine.AlterTable(tableName, expressions);
     }
 
     private void drop(final Drop statement)
