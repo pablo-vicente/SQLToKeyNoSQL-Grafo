@@ -2,6 +2,7 @@ package com.lisa.sqltokeynosql.util.connectors;
 
 import com.lisa.sqltokeynosql.architecture.Connector;
 import com.lisa.sqltokeynosql.architecture.Parser;
+import com.lisa.sqltokeynosql.util.AlterDto;
 import com.lisa.sqltokeynosql.util.TimeReport;
 import com.lisa.sqltokeynosql.util.sql.ForeignKey;
 import com.lisa.sqltokeynosql.util.sql.Table;
@@ -79,6 +80,51 @@ public class Neo4jConnector extends Connector
     private String getContraintNodeKeyName(String table)
     {
         return table + "_"+ "NODE_KEY";
+    }
+
+    @Override
+    public void alterTable(Table table, ArrayList<AlterDto> dados)
+    {
+
+        var queries = new ArrayList<String>();
+        var queriesRelationships= new ArrayList<String>();
+        var shortName = "n";
+        queriesRelationships.add("MATCH(" + shortName + ":" + table.getName() + ")");
+
+        for (AlterDto dado : dados)
+        {
+            var shortNameRelacao = shortName + dado.ColunaExistente;
+            if(!dado.ColunaExistente.equalsIgnoreCase(""))
+                queriesRelationships.add("OPTIONAL MATCH(" + shortName + ":" + table.getName() + ") -[" + dado.ColunaExistente + ":" + dado.ColunaExistente + "]-> (" + shortNameRelacao + ")");
+
+            switch (dado.AlterOperation)
+            {
+                case DROP:
+                    queries.add("REMOVE " + shortName + "." + dado.ColunaExistente);
+                    queries.add("DELETE " + dado.ColunaExistente);
+                    break;
+
+                case RENAME:
+
+                    queries.add("SET " + shortName + "." + dado.ColunaNova + " = " + shortName + "." + dado.ColunaExistente);
+                    queries.add("REMOVE " + shortName + "." + dado.ColunaExistente);
+                    queries.add("CREATE (" + shortName +  ")-[:" + dado.ColunaNova +"]->(" + shortNameRelacao + ")");
+                    queries.add("DELETE " + dado.ColunaExistente);
+
+                    break;
+
+                default:
+                    throw new UnsupportedOperationException("Operação Não Suportada!!");
+            }
+        }
+
+        var query = String.join("\n", queriesRelationships) +
+                "\n"
+                + String.join("\n", queries);
+
+        var  result = Session.run(query);
+        SummaryCounters summaryCounters = result.consume().counters();
+        verifyQueryResult(summaryCounters, query);
     }
 
     @Override

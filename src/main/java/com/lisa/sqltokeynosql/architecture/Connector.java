@@ -1,5 +1,6 @@
 package com.lisa.sqltokeynosql.architecture;
 
+import com.lisa.sqltokeynosql.util.AlterDto;
 import com.lisa.sqltokeynosql.util.sql.Table;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
@@ -88,7 +89,7 @@ public abstract class Connector {
         return operation.compare(v1, val);
     }
 
-    public void alterTable(Table table, HashMap<AlterOperation, ArrayList<String[]>> dados)
+    public void alterTable(Table table, ArrayList<AlterDto> dados)
     {
     }
 }

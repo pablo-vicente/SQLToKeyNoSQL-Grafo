@@ -8,7 +8,6 @@ package com.lisa.sqltokeynosql.architecture;
 import com.lisa.sqltokeynosql.util.sql.ForeignKey;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.statement.alter.AlterExpression;
-import net.sf.jsqlparser.statement.alter.AlterOperation;
 import net.sf.jsqlparser.statement.select.Join;
 import net.sf.jsqlparser.util.deparser.ExpressionDeParser;
 import com.lisa.sqltokeynosql.util.Dictionary;
@@ -227,7 +226,10 @@ public class ExecutionEngine {
                     DataSet dataSet = new DataSet();
                     dataSet.setColumns(getColumnsForResultingDataSet(cols, table));
                     long now = new Date().getTime();
-                    dataSet.setData(getNWrapper(table, (LinkedList<String>) getColumnsForResultingDataSet(cols, table), filters, 0));
+
+                    var columnsForResultingDataSet = (LinkedList<String>) getColumnsForResultingDataSet(cols, table);
+                    var wrapper = getNWrapper(table, columnsForResultingDataSet, filters, 0);
+                    dataSet.setData(wrapper);
                     TimeConter.current = (new Date().getTime()) - now;
                     return dataSet;
                 }).findAny().orElse(null);
@@ -392,6 +394,7 @@ public class ExecutionEngine {
 
         var table = tableOptional.get();
         var cols = table.getAttributes();
+        var pks = table.getPks();
 
         var novasFks = table
                 .getFks()
@@ -401,16 +404,10 @@ public class ExecutionEngine {
 
         var novosAtributos = new ArrayList<>(table.getAttributes());
 
-        var dados = new HashMap<AlterOperation, ArrayList<String[]>>();
+        var dados = new ArrayList<AlterDto>();
         for (AlterExpression alterExpression : alterExpressions)
         {
             var alter = alterExpression.getOperation();
-            var colunas = dados.get(alter);
-            if(colunas == null)
-            {
-                colunas = new ArrayList<>();
-                dados.put(alter, colunas);
-            }
 
             String colunaExistente = "";
             String colunaNova = "";
@@ -463,11 +460,11 @@ public class ExecutionEngine {
                     throw new UnsupportedOperationException("Operação Não Suportada!!");
             }
 
-            colunas.add(new String[]
-                    {
-                            colunaExistente,
-                            colunaNova
-                    });
+            if(pks.contains(colunaExistente))
+                throw new UnsupportedOperationException("Não é permitido alterar chaves primarias!!");
+
+            var dado = new AlterDto(alter, colunaExistente, colunaNova);
+            dados.add(dado);
         }
 
         var target = table.getTargetDB();
