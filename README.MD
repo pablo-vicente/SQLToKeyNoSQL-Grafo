@@ -84,7 +84,15 @@ user_pwd varchar(20)
 ```
 ### ALTER
 ```SQL
--- TODO Não Suportado (Atualizar)
+-- Não é permitido alterar CHAVE PRIMARIA
+-- Pertimido Renomear Coluna
+-- Pertimido Remover Coluna
+-- Pertimido Adicionar Coluna
+-- Suporta mais de uma Instrução
+ALTER TABLE funcionario
+  RENAME COLUMN razao_social TO nome_pessoa_juridica,
+  DROP COLUMN nome_pessoa_juridica,
+  ADD razao_social varchar(100);
 ```
 ### DROP
 ```SQL
@@ -104,9 +112,8 @@ values (1,1,'adm','adm');
 ### UPDATE
 ```SQL
 -- Não é permitido atulizar registros com Chaves estrangeiras inexistentes.
--- Suporta Apenas uma Coluna
 UPDATE funcionario
-SET razao_social = 'Razão Social'
+SET razao_social = 'Razão Social', nome = "Homer Simpsons"
 WHERE id = 1;
 ```
 
