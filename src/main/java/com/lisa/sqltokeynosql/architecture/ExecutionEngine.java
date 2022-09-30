@@ -489,14 +489,14 @@ public class ExecutionEngine {
     public void validarColunaDuplicada(List<String> cols, String tablename, String colunaNova)
     {
         if(cols.contains(colunaNova))
-            throw new UnsupportedOperationException("Coluna "+ colunaNova + "Tabela" + tablename + "Duplicada!!!");
+            throw new UnsupportedOperationException("Coluna "+ colunaNova + " Tabela " + tablename + " Duplicada!!!");
 
     }
 
     public void validarColunaInexistente(List<String> cols, String tablename, String colunaExistente)
     {
         if(!cols.contains(colunaExistente))
-            throw new UnsupportedOperationException("Coluna "+ colunaExistente + "Tabela" + tablename + "inexistente!!!");
+            throw new UnsupportedOperationException("Coluna "+ colunaExistente + " Tabela " + tablename + " inexistente!!!");
     }
 
     static class Result {

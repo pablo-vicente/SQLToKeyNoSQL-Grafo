@@ -86,6 +86,9 @@ public class Neo4jConnector extends Connector
     public void alterTable(Table table, ArrayList<AlterDto> dados)
     {
 
+        String ALTER = "ALTER";
+        var stopwatchAlterConnetor = TimeReport.CreateAndStartStopwatch();
+
         var queries = new ArrayList<String>();
         var queriesRelationships= new ArrayList<String>();
         var shortName = "n";
@@ -128,9 +131,14 @@ public class Neo4jConnector extends Connector
                 "\n"
                 + String.join("\n", queries);
 
-        var  result = Session.run(query);
+        var stopwatchAlter = TimeReport.CreateAndStartStopwatch();
+        var result = Session.run(query);
+        TimeReport.putTimeNeo4j(ALTER, stopwatchAlter);
+
         SummaryCounters summaryCounters = result.consume().counters();
         verifyQueryResult(summaryCounters, query);
+
+        TimeReport.putTimeConnector(ALTER, stopwatchAlterConnetor);
     }
 
     @Override
