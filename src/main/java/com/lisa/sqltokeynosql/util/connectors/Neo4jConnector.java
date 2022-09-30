@@ -94,22 +94,28 @@ public class Neo4jConnector extends Connector
         for (AlterDto dado : dados)
         {
             var shortNameRelacao = shortName + dado.ColunaExistente;
-            if(!dado.ColunaExistente.equalsIgnoreCase(""))
+            if(dado.ChaveEstrangeira)
                 queriesRelationships.add("OPTIONAL MATCH(" + shortName + ":" + table.getName() + ") -[" + dado.ColunaExistente + ":" + dado.ColunaExistente + "]-> (" + shortNameRelacao + ")");
 
             switch (dado.AlterOperation)
             {
                 case DROP:
                     queries.add("REMOVE " + shortName + "." + dado.ColunaExistente);
-                    queries.add("DELETE " + dado.ColunaExistente);
+
+                    if(dado.ChaveEstrangeira)
+                        queries.add("DELETE " + dado.ColunaExistente);
+
                     break;
 
                 case RENAME:
 
                     queries.add("SET " + shortName + "." + dado.ColunaNova + " = " + shortName + "." + dado.ColunaExistente);
                     queries.add("REMOVE " + shortName + "." + dado.ColunaExistente);
-                    queries.add("CREATE (" + shortName +  ")-[:" + dado.ColunaNova +"]->(" + shortNameRelacao + ")");
-                    queries.add("DELETE " + dado.ColunaExistente);
+                    if(dado.ChaveEstrangeira)
+                    {
+                        queries.add("CREATE (" + shortName +  ")-[:" + dado.ColunaNova +"]->(" + shortNameRelacao + ")");
+                        queries.add("DELETE " + dado.ColunaExistente);
+                    }
 
                     break;
 

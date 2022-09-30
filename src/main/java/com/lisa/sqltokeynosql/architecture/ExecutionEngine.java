@@ -411,6 +411,7 @@ public class ExecutionEngine {
 
             String colunaExistente = "";
             String colunaNova = "";
+            boolean chaveEstrangeira = false;
             switch (alter)
             {
                 case ADD:
@@ -429,10 +430,18 @@ public class ExecutionEngine {
 
                     novosAtributos.remove(colunaExistente);
                     String finalColunaExistente = colunaExistente;
-                    novasFks = novasFks
-                            .stream()
-                            .filter(x ->!x.getAtt().equalsIgnoreCase(finalColunaExistente))
-                            .collect(Collectors.toList());
+
+                    var novasFksDrop = new ArrayList<>(novasFks);
+                    for (ForeignKey foreignKey : novasFksDrop)
+                    {
+                        if(foreignKey.getAtt().equalsIgnoreCase(finalColunaExistente))
+                        {
+                            novasFks.remove(foreignKey);
+                            chaveEstrangeira = true;
+                        }
+                    }
+
+
                     break;
 
                 case RENAME:
@@ -452,6 +461,7 @@ public class ExecutionEngine {
                         if(!atributeFk.equalsIgnoreCase(colunaExistente))
                             continue;
                         novaFk.setAtt(colunaNova);
+                        chaveEstrangeira = true;
                     }
 
                     break;
@@ -463,7 +473,7 @@ public class ExecutionEngine {
             if(pks.contains(colunaExistente))
                 throw new UnsupportedOperationException("Não é permitido alterar chaves primarias!!");
 
-            var dado = new AlterDto(alter, colunaExistente, colunaNova);
+            var dado = new AlterDto(alter, colunaExistente, colunaNova, chaveEstrangeira);
             dados.add(dado);
         }
 
