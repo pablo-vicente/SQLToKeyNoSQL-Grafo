@@ -8,10 +8,7 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
+import java.util.*;
 
 /**
  *
@@ -30,17 +27,22 @@ public class RedisConnector extends Connector{
     }
 
     @Override
-    public void put(Table table, String key, LinkedList<String> cols, ArrayList<String> values) {
-        if (jedis != null){
-            HashMap<String, String> current = new HashMap<>();
-            for (int i = 0; i < cols.size(); i++) {
-                current.put(cols.get(i), values.get(i));
+    public void put(Table table, List<String> cols, Map<String, List<String>> dados)
+    {
+        for (Map.Entry<String, List<String>> stringListEntry : dados.entrySet())
+        {
+            var key = stringListEntry.getKey();
+            var values = stringListEntry.getValue();
+            if (jedis != null){
+                HashMap<String, String> current = new HashMap<>();
+                for (int i = 0; i < cols.size(); i++) {
+                    current.put(cols.get(i), values.get(i));
+                }
+                String rkey = db+"::"+table.getName()+"::"+key;
+                jedis.set(rkey, current.toString());
+                //jedis.close();
             }
-            String rkey = db+"::"+table.getName()+"::"+key;
-            jedis.set(rkey, current.toString());
-            //jedis.close();
         }
-        
     }
 
     @Override

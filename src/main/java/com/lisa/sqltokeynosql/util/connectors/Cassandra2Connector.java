@@ -16,9 +16,8 @@ import com.netflix.astyanax.model.ColumnFamily;
 import com.netflix.astyanax.model.ColumnList;
 import com.netflix.astyanax.serializers.StringSerializer;
 import com.netflix.astyanax.thrift.ThriftFamilyFactory;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
+
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -52,7 +51,8 @@ public class Cassandra2Connector extends Connector {
     }
 
     @Override
-    public void put(Table table, String key, LinkedList<String> cols, ArrayList<String> values) {
+    public void put(Table table, List<String> cols, Map<String, List<String>> dados)
+    {
         ColumnFamily<String, String> TABLE
                 = new ColumnFamily<String, String>(
                         table.getName(), // Column Family Name
@@ -61,13 +61,18 @@ public class Cassandra2Connector extends Connector {
 
         MutationBatch m = keyspace.prepareMutationBatch();
 
-        for (int i = 0; i < cols.size(); i++) {
-            m.withRow(TABLE, key).putColumn(cols.get(i), values.get(i), null);
-        }
-        try {
-            OperationResult<Void> result = m.execute();
-        } catch (ConnectionException e) {
-            System.err.println("Problemas conxão Cassandra!!");
+        for (Map.Entry<String, List<String>> stringListEntry : dados.entrySet())
+        {
+            var key = stringListEntry.getKey();
+            var values = stringListEntry.getValue();
+            for (int i = 0; i < cols.size(); i++) {
+                m.withRow(TABLE, key).putColumn(cols.get(i), values.get(i), null);
+            }
+            try {
+                OperationResult<Void> result = m.execute();
+            } catch (ConnectionException e) {
+                System.err.println("Problemas conxão Cassandra!!");
+            }
         }
 
     }

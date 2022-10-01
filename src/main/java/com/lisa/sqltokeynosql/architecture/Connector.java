@@ -24,7 +24,7 @@ public abstract class Connector {
 
     public void drop(Table table) {}
 
-    public abstract void put (Table table, String key, LinkedList<String> cols, ArrayList<String> values);
+    public abstract void put (Table table, List<String> cols, Map<String, List<String>> dados);
 
     public abstract void delete(String table, String...keys);
 
@@ -53,7 +53,10 @@ public abstract class Connector {
             var key = stringArrayListEntry.getKey();
             var tuple = stringArrayListEntry.getValue();
             delete(table.getName(), key);
-            put(table, key, (LinkedList<String>) cols, tuple);
+
+            var put = new HashMap<String, List<String>>();
+            put.put(key, tuple);
+            put(table, cols, put);
         }
     }
 

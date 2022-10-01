@@ -15,11 +15,7 @@ import com.amazonaws.services.simpledb.model.SelectRequest;
 import com.amazonaws.services.simpledb.model.SelectResult;
 import com.lisa.sqltokeynosql.architecture.Connector;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 
 import com.lisa.sqltokeynosql.util.sql.Table;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
@@ -49,24 +45,30 @@ public class SimpleDBConnector extends Connector {
     }
 
     @Override
-    public void put(Table table, String key, LinkedList<String> cols, ArrayList<String> values) {
+    public void put(Table table, List<String> cols, Map<String, List<String>> dados)
+    {
+        for (Map.Entry<String, List<String>> stringListEntry : dados.entrySet())
+        {
+            var key = stringListEntry.getKey();
+            var values = stringListEntry.getValue();
 
-        if (null == this.client) {
-            System.err.println("Problemas na conexão com o SimpleDB");
-            //this.client.setEndpoint("sdb.amazonaws.com");
-            return;
-        }
-        //if (!doesDomainExist(table)) {
-        //  this.client.createDomain(new CreateDomainRequest(table));
-        //}
+            if (null == this.client) {
+                System.err.println("Problemas na conexão com o SimpleDB");
+                //this.client.setEndpoint("sdb.amazonaws.com");
+                return;
+            }
+            //if (!doesDomainExist(table)) {
+            //  this.client.createDomain(new CreateDomainRequest(table));
+            //}
 
-        ArrayList<ReplaceableAttribute> attributes = new ArrayList<ReplaceableAttribute>();
-        ReplaceableAttribute att;
-        for (int i = 0; i < cols.size(); i++) {
-            att = new ReplaceableAttribute(cols.get(i), values.get(i), Boolean.TRUE);
-            attributes.add(att);
+            ArrayList<ReplaceableAttribute> attributes = new ArrayList<ReplaceableAttribute>();
+            ReplaceableAttribute att;
+            for (int i = 0; i < cols.size(); i++) {
+                att = new ReplaceableAttribute(cols.get(i), values.get(i), Boolean.TRUE);
+                attributes.add(att);
+            }
+            this.client.putAttributes(new PutAttributesRequest(table.getName(), key, attributes));
         }
-        this.client.putAttributes(new PutAttributesRequest(table.getName(), key, attributes));
     }
 
     protected List<String> getAllDomains() {

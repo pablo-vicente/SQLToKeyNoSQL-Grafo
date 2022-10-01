@@ -8,9 +8,7 @@ import voldemort.client.SocketStoreClientFactory;
 import voldemort.client.StoreClient;
 import voldemort.client.StoreClientFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.*;
 
 /**
  * @author geomar
@@ -31,13 +29,19 @@ public class VoldemortConnector extends Connector {
     }
 
     @Override
-    public void put(Table table, String key, LinkedList<String> cols, ArrayList<String> values) {
-        HashMap<String, String> current = new HashMap<>();
-        for (int i = 0; i < cols.size(); i++) {
-            current.put(cols.get(i), values.get(i));
+    public void put(Table table, List<String> cols, Map<String, List<String>> dados)
+    {
+        for (Map.Entry<String, List<String>> stringListEntry : dados.entrySet())
+        {
+            var key = stringListEntry.getKey();
+            var values = stringListEntry.getValue();
+            HashMap<String, String> current = new HashMap<>();
+            for (int i = 0; i < cols.size(); i++) {
+                current.put(cols.get(i), values.get(i));
+            }
+            JSONObject json = new JSONObject(current);
+            client.put(table.getName() + "." + key, current.toString());
         }
-        JSONObject json = new JSONObject(current);
-        client.put(table.getName() + "." + key, current.toString());
     }
 
     @Override

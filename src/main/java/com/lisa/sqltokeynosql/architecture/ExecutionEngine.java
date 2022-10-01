@@ -79,7 +79,7 @@ public class ExecutionEngine {
         connection.create(table);
     }
 
-    private String getKey(Table tableDb, LinkedList<String> columns, ArrayList<String> values)
+    private String getKey(Table tableDb, List<String> columns, List<String> values)
     {
         boolean equal;
         String key = "";
@@ -92,34 +92,34 @@ public class ExecutionEngine {
                     break;
                 }
             }
-            if (!equal) {
-                System.out.println("Falta uma pk");
-                return "";
-            }
+            if (!equal)
+                throw new UnsupportedOperationException("Falta uma pk");
         }
 
         return key;
     }
 
-    public boolean insertData(final String tableName, final LinkedList<String> columns, final ArrayList<String> values) {
+    public void insertData(final String tableName, final List<String> columns, final List<List<String>> values) {
         Optional<Table> optionalTable = dictionary.getCurrentDb().getTable(tableName);
-        if (optionalTable.isEmpty()) {
-            System.out.println("Tabela não Existe!");
-            return false;
-        }
-        Table table = optionalTable.get();
-        String key = getKey(table, columns, values);
-        if (key == "")
-            return false;
+        if (optionalTable.isEmpty())
+            throw new UnsupportedOperationException("Tabela " +  tableName + " não Existe!");
 
-        long now = new Date().getTime();
+        Table table = optionalTable.get();
+
+        var dados = new HashMap<String, List<String>>();
+        for (List<String> value : values)
+        {
+            String key = getKey(table, columns, value);
+            dados.put(key, value);
+        }
+
         NoSQL targetDb = table.getTargetDB();
         Connector connection = targetDb.getConnection();
-        connection.put(table, key, columns, values);
+        connection.put(table, columns, dados);
 
-        TimeConter.current = (new Date().getTime()) - now;
-        table.getKeys().add(key);
-        return true;
+        for (var stringListEntry : dados.entrySet())
+            table.getKeys().add(stringListEntry.getKey());
+
     }
 
     void deleteData(final String table, final Stack<Object> filters) {
@@ -138,7 +138,7 @@ public class ExecutionEngine {
             ArrayList<String> val = new ArrayList();
             for (int i = 0; i < table1.getAttributes().size();i++)
                 val.add(tuple[i]);
-            String key = getKey(table1, (LinkedList<String>)table1.getAttributes(), val);
+            String key = getKey(table1, table1.getAttributes(), val);
 
             keys.add(key);
         }
@@ -199,7 +199,7 @@ public class ExecutionEngine {
         for (String[] tuple : ds.getData())
         {
             ArrayList<String> values = new ArrayList<>(Arrays.asList(tuple));
-            String key = getKey(table,(LinkedList<String>) cols, values);
+            String key = getKey(table,cols, values);
             for (int i = 0; i < acls.size(); i++)
             {
                 var coluna = acls.get(i);

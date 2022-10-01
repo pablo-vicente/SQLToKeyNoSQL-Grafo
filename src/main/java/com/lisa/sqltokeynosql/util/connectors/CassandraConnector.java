@@ -8,11 +8,7 @@ import com.datastax.driver.core.Session;
 import com.lisa.sqltokeynosql.architecture.Connector;
 import com.lisa.sqltokeynosql.util.sql.Table;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  *
@@ -33,22 +29,28 @@ public class CassandraConnector extends Connector {
     }
 
     @Override
-    public void put(Table table, String key, LinkedList<String> cols, ArrayList<String> values) {
-        String cql = "INSERT INTO " + table.getName() + " ";
-        String c = "(key, ", v = "('" + key + "', ";
-        for (int i = 0; i < cols.size(); i++) {
-            c += cols.get(i);
-            v += values.get(i);
+    public void put(Table table, List<String> cols, Map<String, List<String>> dados)
+    {
+        for (Map.Entry<String, List<String>> stringListEntry : dados.entrySet())
+        {
+            var key = stringListEntry.getKey();
+            var values = stringListEntry.getValue();
+            String cql = "INSERT INTO " + table.getName() + " ";
+            String c = "(key, ", v = "('" + key + "', ";
+            for (int i = 0; i < cols.size(); i++) {
+                c += cols.get(i);
+                v += values.get(i);
 
-            if (i != cols.size() - 1) {
-                c += ", ";
-                v += ", ";
-            } else {
-                c += ")";
-                v += ")";
+                if (i != cols.size() - 1) {
+                    c += ", ";
+                    v += ", ";
+                } else {
+                    c += ")";
+                    v += ")";
+                }
             }
+            session.execute(cql + c + " VALUES " + v);
         }
-        session.execute(cql + c + " VALUES " + v);
     }
 
     @Override

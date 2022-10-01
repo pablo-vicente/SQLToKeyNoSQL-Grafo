@@ -9,6 +9,7 @@ import com.lisa.sqltokeynosql.util.sql.Table;
 import org.neo4j.driver.*;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.summary.SummaryCounters;
+import org.springframework.util.StopWatch;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -45,7 +46,7 @@ public class Neo4jConnector extends Connector
         try (Session session = driver.session())
         {
             String query = "CREATE DATABASE " + _nomeBancoDados + " IF NOT EXISTS";
-            session.run(query);
+            session.run(query).consume();
         }
 
         Session = driver.session(SessionConfig.forDatabase(_nomeBancoDados));
@@ -169,55 +170,91 @@ public class Neo4jConnector extends Connector
 
     /**
      * @param table
-     * @param key
      * @param cols
-     * @param values
+     * @param dados
      */
     @Override
-    public void put(Table table, String key, LinkedList<String> cols, ArrayList<String> values)
+    public void put(Table table, List<String> cols, Map<String, List<String>> dados)
     {
         String PUT = "PUT";
         var stopwatchPutConnetor = TimeReport.CreateAndStartStopwatch();
 
-        var node = table.getName() + key;
+        var queriesInserts = new ArrayList<StringBuilder>();
+        var queriesVerifyFks = new ArrayList<String>();
 
-        var relationships = verifyRelationships(table, values, node)
-                .entrySet()
-                .iterator()
-                .next();
-
-        var queryRelationships = String.join("\n", relationships.getKey());
-
-        Map<String, Object> props = getStringObjectMap(key, cols, values);
-        String queryInsert =  "CREATE (" + node + ":" + table.getName() + " $props)\n"
-                + queryRelationships;
-
-        queryInsert += "\nWITH " + node + "\n"+
-                    "MATCH ("+ node + ") -[chave_estrangeira]-> (z) \n" +
-                    "RETURN (chave_estrangeira)";
-
-        var stopwatchPut = TimeReport.CreateAndStartStopwatch();
-        Result result = Session.run(queryInsert, parameters("props", props));
-        TimeReport.putTimeNeo4j(PUT, stopwatchPut);
-
-        var relationsShips = result
-            .list()
-            .size();
-
-        SummaryCounters summaryCounters = result.consume().counters();
-
-        if(relationsShips != relationships.getKey().size() || summaryCounters.nodesCreated() != 1)
+        Map<String,Object> params = new HashMap<>();
+        for (var tuple : dados.entrySet())
         {
-            var queryDelete = QueryDelete(table.getName(), key);
-            Session.run(queryDelete);
-            System.out.println(queryInsert);
-            throw new UnsupportedOperationException("Não foi possível criar relacionamentos. Chaves estrangeiras do relacionamento não estao inseridas no banco!" + "\n" + queryInsert);
+            StringBuilder queryInsert = new StringBuilder();
+
+            var key = tuple.getKey();
+            var node = table.getName() + key;
+            var values = tuple.getValue();
+
+            var relationships = verifyRelationships(table, values, node)
+                    .entrySet()
+                    .iterator()
+                    .next();
+
+            var querysRelationships = relationships.getKey();
+            queriesVerifyFks.addAll(relationships.getValue());
+            var queryRelationships = String.join("\n", querysRelationships);
+
+            var propsName = "props" + key;
+            Map<String, Object> props = getStringObjectMap(key, cols, values);
+            params.put(propsName, props);
+
+            queryInsert
+                    .append("CREATE (").append(node).append(":").append(table.getName()).append(" $").append(propsName).append(")").append("\n")
+                    .append(queryRelationships).append("\n")
+                    .append("WITH ").append(node).append("\n")
+                    .append("MATCH (").append(node).append(") -[chave_estrangeira]-> (apontado)").append("\n")
+                    .append("RETURN (chave_estrangeira)").append("\n");
+
+            queriesInserts.add(queryInsert);
+
         }
 
-        TimeReport.putTimeConnector(PUT, stopwatchPutConnetor);
+        InserirDados(PUT, stopwatchPutConnetor, queriesInserts, queriesVerifyFks, params);
     }
 
-    private HashMap<ArrayList<String>, ArrayList<String>> verifyRelationships(Table table, ArrayList<String> values, String node)
+    private void InserirDados(
+            String PUT,
+            StopWatch stopwatchPutConnetor,
+            List<StringBuilder> queriesInserts,
+            List<String> queriesVerifyFks,
+            Map<String, Object> params)
+    {
+        var queriesVerificacaoDistinct = queriesVerifyFks
+                .stream()
+                .distinct()
+                .collect(Collectors.toList());
+
+        if(queriesVerificacaoDistinct.size() > 0)
+        {
+            var queryVerificaca = String.join("\nUNION\n", queriesVerificacaoDistinct);
+            var stopwatchPut = TimeReport.CreateAndStartStopwatch();
+            var resultVerificacao = Session.run(queryVerificaca);
+            TimeReport.putTimeNeo4j(PUT, stopwatchPut);
+            var relationsShips = resultVerificacao
+                    .list()
+                    .size();
+            if(relationsShips != queriesVerificacaoDistinct.size())
+            {
+                System.out.println(resultVerificacao);
+                throw new UnsupportedOperationException("Não foi possível criar relacionamentos. Chaves estrangeiras do relacionamento não estao inseridas no banco!" + "\n" + queryVerificaca);
+            }
+        }
+
+        var query = String.join("\nUNION\n\n", queriesInserts);
+        var stopwatchInsert = TimeReport.CreateAndStartStopwatch();
+        Session.run(query, params).consume();
+        TimeReport.putTimeNeo4j(PUT, stopwatchInsert);
+
+        TimeReport.putTimeConnector(PUT,stopwatchPutConnetor);
+    }
+
+    private HashMap<ArrayList<String>, ArrayList<String>> verifyRelationships(Table table, List<String> values, String node)
     {
         var queryRelationShip = new ArrayList<String>();
 
@@ -254,7 +291,7 @@ public class Neo4jConnector extends Connector
         return result;
     }
 
-    private Map<String, Object> getStringObjectMap(String key, LinkedList<String> cols, ArrayList<String> values)
+    private Map<String, Object> getStringObjectMap(String key, List<String> cols, List<String> values)
     {
         Map<String,Object> props = new HashMap<>();
         for (int i = 0; i < cols.size(); i++)
@@ -468,7 +505,7 @@ public class Neo4jConnector extends Connector
             var queryRelationships = String.join("\n", querysRelationships);
 
             var propsName = "props" + key;
-            Map<String, Object> props = getStringObjectMap(key, (LinkedList<String>) cols, values);
+            Map<String, Object> props = getStringObjectMap(key, cols, values);
             params.put(propsName, props);
 
             queryUpdate
@@ -492,33 +529,6 @@ public class Neo4jConnector extends Connector
 
         }
 
-        var queriesVerificacaoDistinct = queriesVerifyFks
-                .stream()
-                .distinct()
-                .collect(Collectors.toList());
-
-        if(queriesVerificacaoDistinct.size() > 0)
-        {
-            var queryVerificaca = String.join("\nUNION\n", queriesVerificacaoDistinct);
-            var stopwatchUPDATEComiit = TimeReport.CreateAndStartStopwatch();
-            var resultVerificacao = Session.run(queryVerificaca);
-            TimeReport.putTimeNeo4j(UPDATE, stopwatchUPDATEComiit);
-            var relationsShips = resultVerificacao
-                    .list()
-                    .size();
-            if(relationsShips != queriesVerificacaoDistinct.size())
-            {
-                System.out.println(resultVerificacao);
-                throw new UnsupportedOperationException("Não foi possível criar relacionamentos. Chaves estrangeiras do relacionamento não estao inseridas no banco!" + "\n" + queryVerificaca);
-            }
-        }
-
-        var query = String.join("\nUNION\n\n", queriesUpdates);
-
-        var stopwatchUPDATEComiit = TimeReport.CreateAndStartStopwatch();
-        Session.run(query, params);
-        TimeReport.putTimeNeo4j(UPDATE, stopwatchUPDATEComiit);
-
-        TimeReport.putTimeConnector(UPDATE,stopwatchUPDATEConnetor);
+        InserirDados(UPDATE, stopwatchUPDATEConnetor, queriesUpdates, queriesVerifyFks, params);
     }
 }

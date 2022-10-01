@@ -8,8 +8,8 @@ package com.lisa.sqltokeynosql.architecture;
 import com.lisa.sqltokeynosql.util.TimeReport;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.RowConstructor;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
-import net.sf.jsqlparser.expression.operators.relational.MultiExpressionList;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.Statement;
@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toCollection;
 
@@ -235,51 +236,40 @@ public class Parser {
         executionEngine.deleteData(tableName, filters);
     }
 
-    private void insertInto(Insert statement) {
-        List<ExpressionList> exList;
-        if (statement.getItemsList() instanceof MultiExpressionList) {
-            exList = ((MultiExpressionList) statement.getItemsList()).getExprList();
-        } else {
-            exList = new ArrayList<>();
-            exList.add((ExpressionList) statement.getItemsList());
-        }
-        var columns = statement.getColumns();
-        if(columns == null || columns.size() == 0)
+    private void insertInto(Insert statement)
+    {
+        var expressions = ((ExpressionList)statement.getItemsList()).getExpressions();
+
+        List<String> cols = statement
+                .getColumns()
+                .stream()
+                .map(Column::getColumnName)
+                .collect(Collectors.toList());
+
+        if(cols.size() == 0)
             throw new UnsupportedOperationException("e necessario declarar as colunas no INSERT!");
 
-        int s = columns.size(), j = 0;
-        LinkedList<String> cols;
-        cols = new LinkedList<>();
-        for (int i = 0; i < s; i++) {
-            cols.add(statement.getColumns().get(i).getColumnName());
+        var values = new ArrayList<List<String>>();
+        for (Expression expression : expressions)
+        {
+            var row = ((RowConstructor) expression)
+                    .getExprList()
+                    .getExpressions()
+                    .stream()
+                    .map(x -> removeInvalidCaracteres(x.toString()))
+                    .collect(Collectors.toList());
+
+            if (row.size() != cols.size())
+                throw new UnsupportedOperationException("Problemas no insert colunas e valores diferentes");
+
+            values.add(row);
+
         }
 
-        for (ExpressionList e : exList) {
-            List<Expression> values = e.getExpressions();
-            if (valuesDifferFromColumns(statement, values)) {
-                System.err.println("Problemas no insert colunas e valores diferentes");
-                return;
-            }
-            List<String> vals = new ArrayList<>();
-            for (int i = 0; i < s; i++)
-            {
-                Expression valueExpression = values.get(i);
-                String value = removeInvalidCaracteres(valueExpression.toString());
-
-                vals.add(value);
-            }
-            if (executionEngine.insertData(statement.getTable().getName(), cols, (ArrayList<String>) vals)) {
-                j++;
-            } else {
-                System.out.println("Problemas na inserção! " + j + " linhas inseridas;");
-                return;
-            }
-        }
+        var tableName = statement.getTable().getName();
+        executionEngine.insertData(tableName, cols, values);
     }
 
-    private boolean valuesDifferFromColumns(Insert insert, List<Expression> values) {
-        return insert.getColumns().size() != values.size();
-    }
 
     private void createTable(CreateTable statement) {
         CreateTable ct = statement;

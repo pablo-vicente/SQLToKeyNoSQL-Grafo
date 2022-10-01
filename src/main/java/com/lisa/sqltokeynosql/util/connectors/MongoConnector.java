@@ -35,12 +35,19 @@ public class MongoConnector extends Connector{
     }
 
     @Override
-    public void put(Table table, String key, LinkedList<String> cols, ArrayList<String> values) {
-        BasicDBObject c = new BasicDBObject("_id", key);
-        for (int i = 0; i < cols.size(); i++) {
-            c.append(cols.get(i), values.get(i));
+    public void put(Table table, List<String> cols, Map<String, List<String>> dados)
+    {
+        for (Map.Entry<String, List<String>> stringListEntry : dados.entrySet())
+        {
+            var key = stringListEntry.getKey();
+            var values = stringListEntry.getValue();
+            BasicDBObject c = new BasicDBObject("_id", key);
+            for (int i = 0; i < cols.size(); i++) {
+                c.append(cols.get(i), values.get(i));
+            }
+            mongoDatabase.getCollection(table.getName()).insert(c);
         }
-        mongoDatabase.getCollection(table.getName()).insert(c);
+
     }
 
     @Override
