@@ -24,7 +24,9 @@ import net.sf.jsqlparser.statement.insert.Insert;
 import net.sf.jsqlparser.statement.select.Join;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
+import net.sf.jsqlparser.statement.select.SetOperationList;
 import net.sf.jsqlparser.statement.update.Update;
+import net.sf.jsqlparser.statement.values.ValuesStatement;
 import net.sf.jsqlparser.util.TablesNamesFinder;
 import org.springframework.stereotype.Service;
 import com.lisa.sqltokeynosql.util.BDR;
@@ -130,7 +132,8 @@ public class Parser {
             return null;
 
         var query = sql .trim().toLowerCase();
-        var statement = CCJSqlParserUtil.parse(query);
+        var statement = CCJSqlParserUtil.parse(query,
+                ccjSqlParser -> ccjSqlParser.withTimeOut(Integer.MAX_VALUE));
         return run(statement);
     }
 
@@ -238,7 +241,10 @@ public class Parser {
 
     private void insertInto(Insert statement)
     {
-        var expressions = ((ExpressionList)statement.getItemsList()).getExpressions();
+        var setOperationList = (SetOperationList) statement.getSelect().getSelectBody();
+        var valuesStatement = (ValuesStatement) setOperationList.getSelects().get(0);
+        var expressions = ((ExpressionList)valuesStatement.getExpressions()).getExpressions();
+
 
         List<String> cols = statement
                 .getColumns()
@@ -252,22 +258,25 @@ public class Parser {
         var values = new ArrayList<List<String>>();
         for (Expression expression : expressions)
         {
-            var row = ((RowConstructor) expression)
-                    .getExprList()
-                    .getExpressions()
-                    .stream()
-                    .map(x -> removeInvalidCaracteres(x.toString()))
-                    .collect(Collectors.toList());
-
-            if (row.size() != cols.size())
-                throw new UnsupportedOperationException("Problemas no insert colunas e valores diferentes");
-
-            values.add(row);
-
+            List<String> value = getValue(((RowConstructor) expression).getExprList(), cols);
+            values.add(value);
         }
 
         var tableName = statement.getTable().getName();
         executionEngine.insertData(tableName, cols, values);
+    }
+
+    private static List<String> getValue(ExpressionList expression, List<String> cols)
+    {
+        var value = expression
+                .getExpressions()
+                .stream()
+                .map(x -> removeInvalidCaracteres(x.toString()))
+                .collect(Collectors.toList());
+
+        if (value.size() != cols.size())
+            throw new UnsupportedOperationException("Problemas no insert colunas e valores diferentes");
+        return value;
     }
 
 
