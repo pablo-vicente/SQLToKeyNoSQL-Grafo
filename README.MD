@@ -71,7 +71,7 @@ O Parse SQL utilizado suporta um conjunto limitado de sintaxe, para mais detalhe
 ### Exemplo utilizados no Experimento:
 ### CREATE
 ```SQL
-create table usuario(
+CREATE TABLE usuario(
 -- TODOS os campos devem ser declarados, os tipos São ignorados
 user_id int primary key auto_increment, -- Declaração Primary Key
 func_id int not null,
@@ -104,9 +104,12 @@ ALTER TABLE funcionario
 ```SQL
 -- Obrigatório Declarar todas as colunas, inclusive a Chave Primaria mesmo Sendo Id
 -- Auto incremento ainda não é suportado
+-- Suporta N Values
 -- Não é permitido inserir registros com Chaves estrangeiras inexistentes.
-insert into usuario (user_id, func_id, user_log, user_pwd)  -- 
-values (1,1,'adm','adm');
+INSERT INTO usuario (user_id, func_id, user_log, user_pwd)  -- 
+VALUES 
+    (1,1,'adm','adm'), 
+    (2,1,'adm','adm')
 ```
 
 ### UPDATE
