@@ -84,7 +84,7 @@ public class Neo4jConnector extends Connector
     }
 
     @Override
-    public void alterTable(Table table, ArrayList<AlterDto> dados)
+    public void alter(Table table, ArrayList<AlterDto> dados)
     {
 
         String ALTER = "ALTER";
