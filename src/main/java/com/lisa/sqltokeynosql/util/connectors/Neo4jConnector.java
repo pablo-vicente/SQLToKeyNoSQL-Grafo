@@ -14,7 +14,6 @@ import org.springframework.util.StopWatch;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.neo4j.driver.Values.parameters;
 
 public class Neo4jConnector extends Connector
 {
@@ -206,10 +205,10 @@ public class Neo4jConnector extends Connector
 
             queryInsert
                     .append("CREATE (").append(node).append(":").append(table.getName()).append(" $").append(propsName).append(")").append("\n")
-                    .append(queryRelationships).append("\n")
-                    .append("WITH ").append(node).append("\n")
-                    .append("MATCH (").append(node).append(") -[chave_estrangeira]-> (apontado)").append("\n")
-                    .append("RETURN (chave_estrangeira)").append("\n");
+                    .append(queryRelationships).append("\n");
+//                    .append("WITH ").append(node).append("\n")
+//                    .append("MATCH (").append(node).append(") -[chave_estrangeira]-> (apontado)").append("\n")
+//                    .append("RETURN (chave_estrangeira)").append("\n");
 
             queriesInserts.add(queryInsert);
 
@@ -520,10 +519,10 @@ public class Neo4jConnector extends Connector
                     .append("   MATCH (").append(node).append(")-[relacionamento]->(relacionamento_apontado) DELETE relacionamento").append("\n")
                     .append("}").append("\n")
                     .append("\n")
-                    .append(queryRelationships).append("\n")
-                    .append("WITH ").append(node).append("\n")
-                    .append("MATCH (").append(node).append(") -[chave_estrangeira]-> (apontado)").append("\n")
-                    .append("RETURN (chave_estrangeira)").append("\n");
+                    .append(queryRelationships).append("\n");
+//                    .append("WITH ").append(node).append("\n")
+//                    .append("MATCH (").append(node).append(") -[chave_estrangeira]-> (apontado)").append("\n")
+//                    .append("RETURN (chave_estrangeira)").append("\n");
 
             queriesUpdates.add(queryUpdate);
 
