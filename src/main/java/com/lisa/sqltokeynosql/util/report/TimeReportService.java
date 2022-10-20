@@ -1,19 +1,12 @@
-package com.lisa.sqltokeynosql.util;
+package com.lisa.sqltokeynosql.util.report;
 
 import org.springframework.util.StopWatch;
 
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TimeReport
+public class TimeReportService
 {
     //
     public static double TotalSegundos;
@@ -46,39 +39,47 @@ public class TimeReport
     {
         return Double.toString(value).replace(".", ",");
     }
-    public static void GeneratCsvRepost() throws IOException {
+    public static TimerResponse GeneratCsvRepost()
+    {
         var append = new StringBuilder();
         append.append("COMANDO;MINUTOS;SEGUNDOS" + "\n");
         var totalSecondsConnector = SumGenerateReport(append, TemposConnectorSegundos);
         var totalSecondsNeo4j = SumGenerateReport(append, TemposNeo4jSegundos);
 
-        var report = new StringBuilder();
-        report.append("TOTAL;MINUTOS;SEGUNDOS;OVERHEAD(%);OVERHEAD(Segundos)" + "\n");
-        report.append("GERAL;" + PrintInMinuts(TotalSegundos) + ";" + printNumber(TotalSegundos) + ";" + PrintOverHead(TotalSegundos, totalSecondsConnector) + "\n");
-        report.append("CONNECTOR" + ";" + PrintInMinuts(totalSecondsConnector) + ";" + printNumber(totalSecondsConnector) + ";" +  PrintOverHead(totalSecondsConnector , totalSecondsNeo4j) + "\n");
-        report.append("NEO4J" + ";" + PrintInMinuts(totalSecondsNeo4j) + ";" + printNumber(totalSecondsNeo4j) + "\n");
+        var tempoTotalFormatado = TotalSegundos;
 
-        report.append("\n");
-        report.append(append);
+//        var report = new StringBuilder();
+//        report.append("TOTAL;MINUTOS;SEGUNDOS;OVERHEAD(%);OVERHEAD(Segundos)" + "\n");
+//        report.append("GERAL;" + PrintInMinuts(TotalSegundos) + ";" +  printNumber(TotalSegundos) + ";" + PrintOverHead(TotalSegundos, totalSecondsConnector) + "\n");
+//        report.append("CONNECTOR" + ";" + PrintInMinuts(totalSecondsConnector) + ";" + printNumber(totalSecondsConnector) + ";" +  PrintOverHead(totalSecondsConnector , totalSecondsNeo4j) + "\n");
+//        report.append("NEO4J" + ";" + PrintInMinuts(totalSecondsNeo4j) + ";" + printNumber(totalSecondsNeo4j) + "\n");
 
-        String formattedDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyy-MM-dd HH-mm-ss"));
+//        report.append("\n");
+//        report.append(append);
 
-        var fileName = "report-" +formattedDate + ".csv";
-        var folder = Paths.get("reports");
-        if(!Files.exists(folder))
-            Files.createDirectory(folder);
+//        String formattedDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyy-MM-dd HH-mm-ss"));
 
-        var filePath = Paths.get(folder.toString(), fileName);
-        FileWriter myWriter = new FileWriter(filePath.toString(), StandardCharsets.ISO_8859_1);
-        myWriter.write(report.toString());
-        myWriter.close();
+//        var fileName = "report-" +formattedDate + ".csv";
+//        var folder = Paths.get("reports");
+//        if(!Files.exists(folder))
+//            Files.createDirectory(folder);
 
-        System.out.println("EXECUÇÃO FINALIZADA: " + filePath);
+//        var filePath = Paths.get(folder.toString(), fileName);
+//        FileWriter myWriter = new FileWriter(filePath.toString(), StandardCharsets.ISO_8859_1);
+//        myWriter.write(report.toString());
+//        myWriter.close();
+
+//        System.out.println("EXECUÇÃO FINALIZADA: " + filePath);
         // Clear Reports
         TotalSegundos = 0l;
         TemposNeo4jSegundos = new HashMap<>();
         TemposConnectorSegundos = new HashMap<>();
 
+
+        return new TimerResponse(
+                tempoTotalFormatado,
+                totalSecondsConnector,
+                totalSecondsNeo4j);
     }
     private static String PrintInMinuts(double value)
     {

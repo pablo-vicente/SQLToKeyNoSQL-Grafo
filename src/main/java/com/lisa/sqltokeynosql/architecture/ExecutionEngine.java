@@ -5,6 +5,7 @@
  */
 package com.lisa.sqltokeynosql.architecture;
 
+import com.lisa.sqltokeynosql.util.report.TimeConter;
 import com.lisa.sqltokeynosql.util.sql.ForeignKey;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.statement.alter.AlterExpression;

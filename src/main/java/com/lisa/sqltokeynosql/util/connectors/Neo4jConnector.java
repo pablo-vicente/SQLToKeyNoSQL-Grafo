@@ -3,7 +3,7 @@ package com.lisa.sqltokeynosql.util.connectors;
 import com.lisa.sqltokeynosql.architecture.Connector;
 import com.lisa.sqltokeynosql.architecture.Parser;
 import com.lisa.sqltokeynosql.util.AlterDto;
-import com.lisa.sqltokeynosql.util.TimeReport;
+import com.lisa.sqltokeynosql.util.report.TimeReportService;
 import com.lisa.sqltokeynosql.util.sql.ForeignKey;
 import com.lisa.sqltokeynosql.util.sql.Table;
 import org.neo4j.driver.*;
@@ -58,7 +58,7 @@ public class Neo4jConnector extends Connector
     public void create(Table table)
     {
         String CREATE = "CREATE";
-        var stopwatchCreateConnetor = TimeReport.CreateAndStartStopwatch();
+        var stopwatchCreateConnetor = TimeReportService.CreateAndStartStopwatch();
 
         var tableName = table.getName();
         var constraintName = getContraintNodeKeyName(tableName);
@@ -68,13 +68,13 @@ public class Neo4jConnector extends Connector
                 "REQUIRE (n." + _nodeKey + ") IS UNIQUE";
 //                "REQUIRE (n." + _nodeKey + ") IS NODE KEY";
 
-        var stopwatchCreate = TimeReport.CreateAndStartStopwatch();
+        var stopwatchCreate = TimeReportService.CreateAndStartStopwatch();
         Result result = Session.run(query);
-        TimeReport.putTimeNeo4j(CREATE,stopwatchCreate);
+        TimeReportService.putTimeNeo4j(CREATE,stopwatchCreate);
 
         SummaryCounters summaryCounters = result.consume().counters();
         verifyQueryResult(summaryCounters, query);
-        TimeReport.putTimeConnector(CREATE,stopwatchCreateConnetor);
+        TimeReportService.putTimeConnector(CREATE,stopwatchCreateConnetor);
     }
 
     private String getContraintNodeKeyName(String table)
@@ -87,7 +87,7 @@ public class Neo4jConnector extends Connector
     {
 
         String ALTER = "ALTER";
-        var stopwatchAlterConnetor = TimeReport.CreateAndStartStopwatch();
+        var stopwatchAlterConnetor = TimeReportService.CreateAndStartStopwatch();
 
         var queries = new ArrayList<String>();
         var queriesRelationships= new ArrayList<String>();
@@ -131,21 +131,21 @@ public class Neo4jConnector extends Connector
                 "\n"
                 + String.join("\n", queries);
 
-        var stopwatchAlter = TimeReport.CreateAndStartStopwatch();
+        var stopwatchAlter = TimeReportService.CreateAndStartStopwatch();
         var result = Session.run(query);
-        TimeReport.putTimeNeo4j(ALTER, stopwatchAlter);
+        TimeReportService.putTimeNeo4j(ALTER, stopwatchAlter);
 
         SummaryCounters summaryCounters = result.consume().counters();
         verifyQueryResult(summaryCounters, query);
 
-        TimeReport.putTimeConnector(ALTER, stopwatchAlterConnetor);
+        TimeReportService.putTimeConnector(ALTER, stopwatchAlterConnetor);
     }
 
     @Override
     public void drop(Table table)
     {
         String DROP = "DROP";
-        var stopwatchcDropConnetor = TimeReport.CreateAndStartStopwatch();
+        var stopwatchcDropConnetor = TimeReportService.CreateAndStartStopwatch();
 
         var tableName = table.getName();
         var queryDropNodes = "MATCH(n:" + table.getName() + ")\n"+
@@ -154,17 +154,17 @@ public class Neo4jConnector extends Connector
         var constraintName = getContraintNodeKeyName(tableName);
         var queryDropConstraints = "DROP CONSTRAINT " + constraintName + " IF EXISTS" ;
 
-        var stopwatchDrop = TimeReport.CreateAndStartStopwatch();
+        var stopwatchDrop = TimeReportService.CreateAndStartStopwatch();
         var summaryCountersDropNodes = Session.run(queryDropNodes).consume().counters();
         var summaryCountersDropConstraints = Session.run(queryDropConstraints).consume().counters();
-        TimeReport.putTimeNeo4j(DROP, stopwatchDrop);
+        TimeReportService.putTimeNeo4j(DROP, stopwatchDrop);
 
         var resuts  = new ArrayList<SummaryCounters>();
         resuts.add(summaryCountersDropNodes);
         resuts.add(summaryCountersDropConstraints);
         verifyQueryResult(resuts, queryDropNodes + "\n" + queryDropConstraints);
 
-        TimeReport.putTimeConnector(DROP,stopwatchcDropConnetor);
+        TimeReportService.putTimeConnector(DROP,stopwatchcDropConnetor);
     }
 
     /**
@@ -176,7 +176,7 @@ public class Neo4jConnector extends Connector
     public void put(Table table, List<String> cols, Map<String, List<String>> dados)
     {
         String PUT = "PUT";
-        var stopwatchPutConnetor = TimeReport.CreateAndStartStopwatch();
+        var stopwatchPutConnetor = TimeReportService.CreateAndStartStopwatch();
 
         var queriesInserts = new ArrayList<StringBuilder>();
         var queriesVerifyFks = new ArrayList<String>();
@@ -232,9 +232,9 @@ public class Neo4jConnector extends Connector
         if(queriesVerificacaoDistinct.size() > 0)
         {
             var queryVerificaca = String.join("\nUNION\n", queriesVerificacaoDistinct);
-            var stopwatchPut = TimeReport.CreateAndStartStopwatch();
+            var stopwatchPut = TimeReportService.CreateAndStartStopwatch();
             var resultVerificacao = Session.run(queryVerificaca);
-            TimeReport.putTimeNeo4j(PUT, stopwatchPut);
+            TimeReportService.putTimeNeo4j(PUT, stopwatchPut);
             var relationsShips = resultVerificacao
                     .list()
                     .size();
@@ -246,11 +246,11 @@ public class Neo4jConnector extends Connector
         }
 
         var query = String.join("\nUNION\n\n", queriesInserts);
-        var stopwatchInsert = TimeReport.CreateAndStartStopwatch();
+        var stopwatchInsert = TimeReportService.CreateAndStartStopwatch();
         Session.run(query, params).consume();
-        TimeReport.putTimeNeo4j(PUT, stopwatchInsert);
+        TimeReportService.putTimeNeo4j(PUT, stopwatchInsert);
 
-        TimeReport.putTimeConnector(PUT,stopwatchPutConnetor);
+        TimeReportService.putTimeConnector(PUT,stopwatchPutConnetor);
     }
 
     private HashMap<ArrayList<String>, ArrayList<String>> verifyRelationships(Table table, List<String> values, String node)
@@ -357,17 +357,17 @@ public class Neo4jConnector extends Connector
     public void delete(String table, String...keys)
     {
         String DELETE = "DELETE";
-        var stopwatchDeleteConnetor = TimeReport.CreateAndStartStopwatch();
+        var stopwatchDeleteConnetor = TimeReportService.CreateAndStartStopwatch();
         var queryDelete = QueryDelete(table, keys);
 
-        var stopwatchDelete = TimeReport.CreateAndStartStopwatch();
+        var stopwatchDelete = TimeReportService.CreateAndStartStopwatch();
         Result result = Session.run(queryDelete);
-        TimeReport.putTimeNeo4j(DELETE, stopwatchDelete);
+        TimeReportService.putTimeNeo4j(DELETE, stopwatchDelete);
 
         SummaryCounters summaryCounters = result.consume().counters();
         verifyQueryResult(summaryCounters, queryDelete);
 
-        TimeReport.putTimeConnector(DELETE,stopwatchDeleteConnetor);
+        TimeReportService.putTimeConnector(DELETE,stopwatchDeleteConnetor);
     }
 
     private void verifyQueryResult(SummaryCounters summaryCounters, String query)
@@ -410,18 +410,18 @@ public class Neo4jConnector extends Connector
     public HashMap<String, String> get(int n, String table, String key)
     {
         String GET = "GET";
-        var stopwatchDeleteConnetor = TimeReport.CreateAndStartStopwatch();
+        var stopwatchDeleteConnetor = TimeReportService.CreateAndStartStopwatch();
 
         String querySelect = getQueryAttribute(table, _nodeKey, key);
 
-        var stopwatchGet = TimeReport.CreateAndStartStopwatch();
+        var stopwatchGet = TimeReportService.CreateAndStartStopwatch();
         List<Record> results = Session.run(querySelect).list();
-        TimeReport.putTimeNeo4j(GET, stopwatchGet);
+        TimeReportService.putTimeNeo4j(GET, stopwatchGet);
 
         HashMap<String, String> props = new HashMap<>();
         for (Record result : results) props = getStringStringHashMap(result);
 
-        TimeReport.putTimeConnector(GET, stopwatchDeleteConnetor);
+        TimeReportService.putTimeConnector(GET, stopwatchDeleteConnetor);
         return props;
     }
 
@@ -445,12 +445,12 @@ public class Neo4jConnector extends Connector
     public ArrayList getN(int n, String table, ArrayList<String> keys, Stack<Object> filters, LinkedList<String> cols)
     {
         String CREATE = "GETN";
-        var stopwatchGetNConnetor = TimeReport.CreateAndStartStopwatch();
+        var stopwatchGetNConnetor = TimeReportService.CreateAndStartStopwatch();
         var query = "MATCH(n:" + table + ") RETURN (n)";
 
-        var stopwatchGetN = TimeReport.CreateAndStartStopwatch();
+        var stopwatchGetN = TimeReportService.CreateAndStartStopwatch();
         var result = Session.run(query).list();
-        TimeReport.putTimeNeo4j(CREATE, stopwatchGetN);
+        TimeReportService.putTimeNeo4j(CREATE, stopwatchGetN);
 
         var results = new ArrayList<String[]>();
         for (Record record : result)
@@ -470,7 +470,7 @@ public class Neo4jConnector extends Connector
             results.add(tupleR);
         }
 
-        TimeReport.putTimeConnector(CREATE,stopwatchGetNConnetor);
+        TimeReportService.putTimeConnector(CREATE,stopwatchGetNConnetor);
 
         return results;
     }
@@ -479,7 +479,7 @@ public class Neo4jConnector extends Connector
     public void update(Table table, HashMap<String, ArrayList<String>> dataSet)
     {
         String UPDATE = "UPDATE";
-        var stopwatchUPDATEConnetor = TimeReport.CreateAndStartStopwatch();
+        var stopwatchUPDATEConnetor = TimeReportService.CreateAndStartStopwatch();
 
         var queriesUpdates = new ArrayList<StringBuilder>();
         var queriesVerifyFks = new ArrayList<String>();

@@ -5,7 +5,8 @@
  */
 package com.lisa.sqltokeynosql.architecture;
 
-import com.lisa.sqltokeynosql.util.TimeReport;
+import com.lisa.sqltokeynosql.util.*;
+import com.lisa.sqltokeynosql.util.report.TimeReportService;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.RowConstructor;
@@ -29,9 +30,6 @@ import net.sf.jsqlparser.statement.update.Update;
 import net.sf.jsqlparser.statement.values.ValuesStatement;
 import net.sf.jsqlparser.util.TablesNamesFinder;
 import org.springframework.stereotype.Service;
-import com.lisa.sqltokeynosql.util.BDR;
-import com.lisa.sqltokeynosql.util.DataSet;
-import com.lisa.sqltokeynosql.util.NoSQL;
 import com.lisa.sqltokeynosql.util.sql.ForeignKey;
 import com.lisa.sqltokeynosql.util.sql.Table;
 import com.lisa.sqltokeynosql.util.sql.WhereStatement;
@@ -61,7 +59,7 @@ public class Parser {
         stack.push(1);
     }
 
-    public ArrayList<DataSet> run(final InputStream is) throws JSQLParserException, IOException
+    public ExecutionResponse run(final InputStream is) throws JSQLParserException, IOException
     {
 
         var stopwatch = new org.springframework.util.StopWatch();
@@ -121,9 +119,9 @@ public class Parser {
 
         executionEngine.SaveDicitionary();
         stopwatch.stop();
-        TimeReport.TotalSegundos = stopwatch.getTotalTimeSeconds();
-        TimeReport.GeneratCsvRepost();
-        return dataSets;
+        TimeReportService.TotalSegundos = stopwatch.getTotalTimeSeconds();
+        var timerResponse = TimeReportService.GeneratCsvRepost();
+        return new ExecutionResponse(dataSets, timerResponse);
     }
 
     private DataSet run(final String sql) throws JSQLParserException

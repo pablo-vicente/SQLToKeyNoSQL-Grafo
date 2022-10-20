@@ -1,4 +1,4 @@
-package com.lisa.sqltokeynosql.util;
+package com.lisa.sqltokeynosql.util.report;
 
 /**
  *
