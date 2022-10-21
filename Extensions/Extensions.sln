@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeradorSQL", "GeradorSQL\GeradorSQL.csproj", "{BECA8F77-6ECB-4380-A85E-81C52B9A876A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnaliseResultado", "AnaliseResultado\AnaliseResultado.csproj", "{3A17B00A-FC03-4B29-8AF9-D530A1BCBB32}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BECA8F77-6ECB-4380-A85E-81C52B9A876A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BECA8F77-6ECB-4380-A85E-81C52B9A876A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BECA8F77-6ECB-4380-A85E-81C52B9A876A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BECA8F77-6ECB-4380-A85E-81C52B9A876A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3A17B00A-FC03-4B29-8AF9-D530A1BCBB32}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3A17B00A-FC03-4B29-8AF9-D530A1BCBB32}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3A17B00A-FC03-4B29-8AF9-D530A1BCBB32}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3A17B00A-FC03-4B29-8AF9-D530A1BCBB32}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

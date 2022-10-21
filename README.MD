@@ -2,6 +2,9 @@
 
 - Baixar [DOCKER](https://www.docker.com/)
 - Rodar Arquivo ```docker-compose.yml```, instâncias dos bancos de dados utlizados ([Mongo](https://www.mongodb.com/) e [Neo4j](https://neo4j.com/))
+```
+docker-compose up docker-compose.yml
+```
 - MONGO: acessível através do [localhost:8081](http://localhost:8081) (utilizado para armazenar dicionario)
   - User: ``root``
   - PWS: ``root``
