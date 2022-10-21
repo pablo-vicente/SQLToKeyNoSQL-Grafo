@@ -27,7 +27,7 @@ ALTER TABLE estoque
     RENAME COLUMN dataADD TO dataADD_renomeada;
 ALTER TABLE Localizacao_Prod
     RENAME COLUMN Corredor TO Corredor_renomeada,
-    RENAME COLUMN partilhera TO partilhera_renomeada
+    RENAME COLUMN partilhera TO partilhera_renomeada,
     RENAME COLUMN gaveta TO gaveta_renomeada;
 ALTER TABLE fornecedor
     RENAME COLUMN Nome TO Nome_renomeada,
@@ -57,7 +57,7 @@ ALTER TABLE entrega
     RENAME COLUMN cep TO cep_renomeada;
 ALTER TABLE veiculo
     RENAME COLUMN desc_veiculo TO desc_veiculo_renomeada,
-    RENAME COLUMN ano_veiculo TO ano_veiculo_renomeada
+    RENAME COLUMN ano_veiculo TO ano_veiculo_renomeada,
     RENAME COLUMN placa_veiculo TO placa_veiculo_renomeada;
 ALTER TABLE vendas
     RENAME COLUMN fun_id TO fun_id_renomeada,
@@ -74,7 +74,7 @@ ALTER TABLE Item_venda
     RENAME COLUMN prec_unitario TO prec_unitario_renomeada;
 ALTER TABLE Produto
     RENAME COLUMN id_Setor TO id_Setor_renomeada,
-    RENAME COLUMN id_fabricante TO id_fabricante_renomeada;
+    RENAME COLUMN id_fabricante TO id_fabricante_renomeada,
     RENAME COLUMN cod_barra TO cod_barra_renomeada,
     RENAME COLUMN descricao TO descricao_renomeada,
     RENAME COLUMN marca TO marca_renomeada,
