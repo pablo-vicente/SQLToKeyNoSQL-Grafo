@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using GeradorSQL.Enums;
 using GeradorSQL.Seeds;
+using GeradorSQL.Services;
 
 while (true)
 {
@@ -8,7 +9,7 @@ while (true)
     Console.WriteLine("GERADOR SQL BANCO DB_MATCONSTRU");
     Console.WriteLine("-----------------------------------------------------------------------------------------------------------");
     Console.WriteLine("Quantidade CONSULTAS?");
-    var digitado = Console.ReadLine().Replace("_", "");
+    var digitado = Console.ReadLine()!.Replace("_", "");
 
     int linhas;
     Consulta tipoConsulta;
@@ -19,7 +20,7 @@ while (true)
         Console.WriteLine("HUMMMM, parece que você não digitou um número. Vamos tentar de novo. A gente aceita esse formato 1_000_000");
         Console.WriteLine("-----------------------------------------------------------------------------------------------------------");
         Console.WriteLine("Quantidade CONSULTAS?");
-        digitado = Console.ReadLine().Replace("_", "");
+        digitado = Console.ReadLine()!.Replace("_", "");
     }
     Console.WriteLine("-----------------------------------------------------------------------------------------------------------");
     Console.WriteLine("Tipo de Consulta");
@@ -37,22 +38,19 @@ while (true)
         digitadoTipo = Console.ReadLine().Replace("_", "");
     }
 
-    Console.WriteLine("Gerando consultas...");
-
-    var sufixo = tipoConsulta + "_" + linhas * Seeds.Count(tipoConsulta);
-
     var basePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Consultas");
     if (!Directory.Exists(basePath))
         Directory.CreateDirectory(basePath);
     
-    var file = new FileInfo(Path.Combine(basePath, $"{sufixo}.sql"));
+    Console.WriteLine("Gerando consultas...");
     var stop = new Stopwatch();
     stop.Start();
-    await using var streamWriter = new StreamWriter(file.FullName);
-
-    await Seeds
-        .GenerateAsync(tipoConsulta, linhas, streamWriter)
-        .ConfigureAwait(false);
+    
+    var sufixo = tipoConsulta + "_" + linhas * SeedsFactory.Count(tipoConsulta);
+    var file = new FileInfo(Path.Combine(basePath, $"{sufixo}.sql"));
+    
+    var streamWriter = new StreamWriter(file.FullName);
+    await ConsultasService.GerarAsync(tipoConsulta, linhas, streamWriter);
 
     await streamWriter.FlushAsync();
     Console.WriteLine();
@@ -60,6 +58,5 @@ while (true)
     Console.WriteLine($"ARQUIVO: {file.FullName}");
     
     Process.Start("explorer.exe", file.FullName);
-
 }
 

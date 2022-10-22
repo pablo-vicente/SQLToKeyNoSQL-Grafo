@@ -2,7 +2,7 @@
 
 namespace GeradorSQL.Seeds;
 
-public static class Seeds
+public static class SeedsFactory
 {
     public static async Task GenerateAsync(Consulta consulta, long linhas, StreamWriter streamWriter)
     {
