@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using GeradorSQL.Enums;
-using GeradorSQL.Seeds;
 using GeradorSQL.Services;
 using GeradorSQL.Utils;
 
@@ -29,21 +28,16 @@ while (true)
         digitadoTipo = Console.ReadLine()!.Replace("_", "");
     }
 
-    var basePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Consultas");
-    if (!Directory.Exists(basePath))
-        Directory.CreateDirectory(basePath);
+    
     
     Console.WriteLine("Gerando consultas...");
     var stop = new Stopwatch();
     stop.Start();
     
-    var sufixo = tipoConsulta + "_" + linhas * SeedsFactory.Count(tipoConsulta);
-    var file = new FileInfo(Path.Combine(basePath, $"{sufixo}.sql"));
     
-    var streamWriter = new StreamWriter(file.FullName);
-    await ConsultasService.GerarAsync(tipoConsulta, linhas, streamWriter);
+    var file = await ConsultasService.GerarAsync(tipoConsulta, linhas);
 
-    await streamWriter.FlushAsync();
+    
     Console.WriteLine();
     Console.WriteLine(stop.Elapsed.ToString());
     Console.WriteLine($"ARQUIVO: {file.FullName}");
