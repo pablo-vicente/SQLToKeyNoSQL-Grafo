@@ -2,32 +2,23 @@
 using GeradorSQL.Enums;
 using GeradorSQL.Seeds;
 using GeradorSQL.Services;
+using GeradorSQL.Utils;
 
 while (true)
 {
     Console.WriteLine("-----------------------------------------------------------------------------------------------------------");
     Console.WriteLine("GERADOR SQL BANCO DB_MATCONSTRU");
     Console.WriteLine("-----------------------------------------------------------------------------------------------------------");
-    Console.WriteLine("Quantidade CONSULTAS?");
-    var digitado = Console.ReadLine()!.Replace("_", "");
 
-    int linhas;
-    Consulta tipoConsulta;
-
-    while (!int.TryParse(digitado, out linhas))
-    {
-        Console.WriteLine("-----------------------------------------------------------------------------------------------------------");
-        Console.WriteLine("HUMMMM, parece que você não digitou um número. Vamos tentar de novo. A gente aceita esse formato 1_000_000");
-        Console.WriteLine("-----------------------------------------------------------------------------------------------------------");
-        Console.WriteLine("Quantidade CONSULTAS?");
-        digitado = Console.ReadLine()!.Replace("_", "");
-    }
+    var linhas = ConsoleUtils.LerQuantidadeConsultas("CONSULTAS");
+    
     Console.WriteLine("-----------------------------------------------------------------------------------------------------------");
     Console.WriteLine("Tipo de Consulta");
     foreach (var consulta in Enum.GetValues<Consulta>())
         Console.WriteLine($"[{(int)consulta}] {consulta.GetDisplayName()}");
     Console.WriteLine("-----------------------------------------------------------------------------------------------------------");
 
+    Consulta tipoConsulta;
     var digitadoTipo = Console.ReadLine()?.Replace("_", "");
     while (!Enum.TryParse(digitadoTipo, out tipoConsulta))
     {
@@ -35,7 +26,7 @@ while (true)
         Console.WriteLine("HUMMMM, parece que você não digitou um número. Vamos tentar de novo. A gente aceita esse formato 1_000_000");
         Console.WriteLine("-----------------------------------------------------------------------------------------------------------");
         Console.WriteLine("Quantidade CONSULTAS?");
-        digitadoTipo = Console.ReadLine().Replace("_", "");
+        digitadoTipo = Console.ReadLine()!.Replace("_", "");
     }
 
     var basePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Consultas");
