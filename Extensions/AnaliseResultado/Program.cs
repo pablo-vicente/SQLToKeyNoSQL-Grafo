@@ -53,7 +53,8 @@ var select = (new FileInfo(Path.Combine(baseDirect, "bd_matConstru_DML_SELECT.sq
 
 var httpCliente = new HttpClient
 {
-    BaseAddress = new Uri("http://localhost:8080/")
+    BaseAddress = new Uri("http://localhost:8080/"),
+    Timeout = TimeSpan.FromHours(1)
 };
 
 await ResultadosService.LimparBaseAsync(httpCliente, drop.arquivo);

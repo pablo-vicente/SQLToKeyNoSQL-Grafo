@@ -79,9 +79,9 @@ public static class ResultadosService
         {
             await RodarScriptAsync(httpCliente1, fileInfo);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Console.WriteLine(ex);
+            // ignored
         }
     }
 
