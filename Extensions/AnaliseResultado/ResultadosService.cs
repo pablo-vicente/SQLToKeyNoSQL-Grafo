@@ -38,14 +38,13 @@ public static class ResultadosService
         
         return JsonSerializer.Deserialize<Report>(readAsStringAsync, options).TimerResponse;
     }
-    
-    private static async Task SalvarNoRelatorioAsync(
-        TextWriter relatorio, 
-        TimeResponse response, 
-        string comando, 
-        string cenario, 
-        int execucao)
+
+    public static async Task<StreamWriter> CriarRelatorio(FileInfo relatorioName)
     {
+        if(!relatorioName.Directory!.Exists)
+            relatorioName.Directory.Create();
+        
+        var relatorio = new StreamWriter(relatorioName.FullName);
         await relatorio
             .WriteLineAsync("COMANDO;" +
                             "CENARIO;" +
@@ -53,7 +52,17 @@ public static class ResultadosService
                             $"{nameof(TimeResponse.TempoCamada)};" +
                             $"{nameof(TimeResponse.TempoConector)};" +
                             $"{nameof(TimeResponse.TempoNeo4j)}");
-        
+
+        return relatorio;
+    }
+
+    private static async Task SalvarNoRelatorioAsync(
+        TextWriter relatorio, 
+        TimeResponse response, 
+        string comando, 
+        string cenario, 
+        int execucao)
+    {
         await relatorio
             .WriteLineAsync(
                 $"{comando};" +

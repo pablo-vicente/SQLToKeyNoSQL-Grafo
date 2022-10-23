@@ -43,8 +43,7 @@ var interacoes = ConsoleUtils.LerQuantidadeConsultas("INTERAÇÕES");
 
 var baseProject = AppDomain.CurrentDomain.BaseDirectory;
 var baseDirect = Path.Combine(baseProject, "SCRIPTS");
-var relatorioName = Path.Combine(baseProject, $"RESULTADOS-{DateTime.Now:yyyy-MM-DD HH-mm-ss}.csv");
-var relatorio = new StreamWriter(relatorioName);
+
 
 (FileInfo arquivo, string  nome) drop = (new FileInfo(Path.Combine(baseDirect, "bd_matConstru_DDL_DROP.sql")), "DROP");
 var create = (new FileInfo(Path.Combine(baseDirect, "bd_matConstru_DDL_CREATE.sql")), "CREATE");
@@ -60,9 +59,9 @@ var httpCliente = new HttpClient
 
 await ResultadosService.LimparBaseAsync(httpCliente, drop.arquivo);
 
-var cenario =
-    $"{linhas.ToString("G", ResultadosService.Cultura)}" +
-    $"({(linhas * SeedsFactory.Count(Consulta.Insert)).ToString("G", ResultadosService.Cultura)})";
+var cenario = $"{linhas:G}({linhas * SeedsFactory.Count(Consulta.Insert):G})";
+var relatorioName = new FileInfo(Path.Combine(baseProject, "RELATORIOS", $"CENARIO_{cenario}_{DateTime.Now:yyyy-MM-dd HH-mm-ss}.csv"));
+var relatorio = await ResultadosService.CriarRelatorio(relatorioName);
 
 Console.WriteLine("-----------------------------------------------------------------------------------------------------------");
 Console.WriteLine("GERANDO CONSULTAS NECESSÁRIAS");
@@ -74,6 +73,7 @@ var update = (await ConsultasService.GerarAsync(Consulta.Update, linhas), "UPDAT
 
 for (var execucao = 1; execucao <= interacoes; execucao++)
 {
+    Console.Write("\r{0:P2}   ", $"EXECUÇÃO: {execucao:G}|{interacoes:G}");
     await ResultadosService.RodarScripSalvartAsync(httpCliente, create, relatorio, cenario, execucao);
     await ResultadosService.RodarScripSalvartAsync(httpCliente, insertN, relatorio, cenario, execucao);
     await ResultadosService.RodarScripSalvartAsync(httpCliente, select, relatorio, cenario, execucao);
@@ -85,4 +85,4 @@ for (var execucao = 1; execucao <= interacoes; execucao++)
 }
 
 await relatorio.FlushAsync();
-Process.Start("explorer.exe", relatorioName);
+Process.Start("explorer.exe", relatorioName.FullName);

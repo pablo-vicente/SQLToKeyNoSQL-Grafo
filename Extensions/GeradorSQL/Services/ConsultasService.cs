@@ -14,7 +14,7 @@ public static class ConsultasService
         var sufixo = tipoConsulta + "_" + linhas * SeedsFactory.Count(tipoConsulta);
         var file = new FileInfo(Path.Combine(basePath, $"{sufixo}.sql"));
     
-        var streamWriter = new StreamWriter(file.FullName);
+        await using var streamWriter = new StreamWriter(file.FullName);
         
         await SeedsFactory
             .GenerateAsync(tipoConsulta, linhas, streamWriter)
