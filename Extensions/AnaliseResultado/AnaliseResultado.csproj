@@ -9,11 +9,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Folder Include="SCRIPTS" />
-    </ItemGroup>
-
-    <ItemGroup>
       <None Update="SCRIPTS\**">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="SCRIPTS\bd_matConstru_DML_UPDATE.sql">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
     </ItemGroup>

@@ -44,13 +44,12 @@ var interacoes = ConsoleUtils.LerQuantidadeConsultas("INTERAÇÕES");
 var baseProject = AppDomain.CurrentDomain.BaseDirectory;
 var baseDirect = Path.Combine(baseProject, "SCRIPTS");
 
-
 (FileInfo arquivo, string  nome) drop = (new FileInfo(Path.Combine(baseDirect, "bd_matConstru_DDL_DROP.sql")), "DROP");
 var create = (new FileInfo(Path.Combine(baseDirect, "bd_matConstru_DDL_CREATE.sql")), "CREATE");
 var alter = (new FileInfo(Path.Combine(baseDirect, "bd_matConstru_DDL_ALTER.sql")), "ALTER");
 var delete = (new FileInfo(Path.Combine(baseDirect, "bd_matConstru_DML_DELETE.sql")), "DELETE");
+var update = (new FileInfo(Path.Combine(baseDirect, "bd_matConstru_DML_UPDATE.sql")), "UPDATE");
 var select = (new FileInfo(Path.Combine(baseDirect, "bd_matConstru_DML_SELECT.sql")), "SELECT");
-
 
 var httpCliente = new HttpClient
 {
@@ -69,7 +68,6 @@ Console.WriteLine("-------------------------------------------------------------
 
 var insert = (await ConsultasService.GerarAsync(Consulta.Insert, linhas), "INSERT");
 var insertN = (await ConsultasService.GerarAsync(Consulta.InsertN, linhas), "INSERTN");
-var update = (await ConsultasService.GerarAsync(Consulta.Update, linhas), "UPDATE");
 
 for (var execucao = 1; execucao <= interacoes; execucao++)
 {
