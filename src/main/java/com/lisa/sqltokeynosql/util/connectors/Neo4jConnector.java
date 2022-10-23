@@ -205,16 +205,36 @@ public class Neo4jConnector extends Connector
 
             queryInsert
                     .append("CREATE (").append(node).append(":").append(table.getName()).append(" $").append(propsName).append(")").append("\n")
-                    .append(queryRelationships).append("\n");
-//                    .append("WITH ").append(node).append("\n")
-//                    .append("MATCH (").append(node).append(") -[chave_estrangeira]-> (apontado)").append("\n")
-//                    .append("RETURN (chave_estrangeira)").append("\n");
+                    .append(queryRelationships).append("\n")
+                    .append("WITH ").append(node).append("\n")
+                    .append("MATCH (").append(node).append(") -[chave_estrangeira]-> (apontado)").append("\n")
+                    .append("RETURN (chave_estrangeira)").append("\n");
 
             queriesInserts.add(queryInsert);
 
         }
 
-        InserirDados(PUT, stopwatchPutConnetor, queriesInserts, queriesVerifyFks, params);
+        var query = String.join("\nUNION\n\n", queriesInserts);
+        var stopwatchInsert = TimeReportService.CreateAndStartStopwatch();
+        var result = Session.run(query, params);
+        TimeReportService.putTimeNeo4j(PUT, stopwatchInsert);
+
+        var relationsShips = result.list().size();
+        var summaryCounters = result.consume().counters();
+
+        var queriesVerificacaoDistinct = (int) queriesVerifyFks
+                .stream()
+                .distinct()
+                .count();
+
+        if(relationsShips != queriesVerificacaoDistinct || summaryCounters.nodesCreated() != dados.size())
+        {
+            var queryDelete = QueryDelete(table.getName(), String.valueOf(dados.keySet()));
+            Session.run(queryDelete).consume();
+            throw new UnsupportedOperationException("Não foi possível criar relacionamentos. Chaves estrangeiras do relacionamento não estao inseridas no banco!" + "\n" + query);
+        }
+
+        TimeReportService.putTimeConnector(PUT,stopwatchPutConnetor);
     }
 
     private void InserirDados(
