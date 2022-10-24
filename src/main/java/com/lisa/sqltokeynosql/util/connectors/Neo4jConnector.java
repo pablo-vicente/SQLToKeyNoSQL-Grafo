@@ -205,10 +205,16 @@ public class Neo4jConnector extends Connector
 
             queryInsert
                     .append("CREATE (").append(node).append(":").append(table.getName()).append(" $").append(propsName).append(")").append("\n")
-                    .append(queryRelationships).append("\n")
-                    .append("WITH ").append(node).append("\n")
-                    .append("MATCH (").append(node).append(") -[chave_estrangeira]-> (apontado)").append("\n")
-                    .append("RETURN (chave_estrangeira)").append("\n");
+                    .append(queryRelationships).append("\n");
+
+            if(table.getFks().size() != 0)
+            {
+                queryInsert
+                        .append("WITH ").append(node).append("\n")
+                        .append("MATCH (").append(node).append(") -[chave_estrangeira]-> (apontado)").append("\n")
+                        .append("RETURN (chave_estrangeira)").append("\n");
+            }
+
 
             queriesInserts.add(queryInsert);
 
