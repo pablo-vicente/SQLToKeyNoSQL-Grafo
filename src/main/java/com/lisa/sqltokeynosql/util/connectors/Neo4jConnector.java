@@ -14,6 +14,16 @@ import org.springframework.util.StopWatch;
 import java.util.*;
 import java.util.stream.Collectors;
 
+class VerifyRelationShip
+{
+    public final ArrayList<StringBuilder> querysRelationships;
+    public final ArrayList<StringBuilder> queriesVerifyFks;
+
+    public VerifyRelationShip(ArrayList<StringBuilder> querysRelationships, ArrayList<StringBuilder> queriesVerifyFks) {
+        this.querysRelationships = querysRelationships;
+        this.queriesVerifyFks = queriesVerifyFks;
+    }
+}
 
 public class Neo4jConnector extends Connector
 {
@@ -63,10 +73,12 @@ public class Neo4jConnector extends Connector
         var tableName = table.getName();
         var constraintName = getContraintNodeKeyName(tableName);
 
-        var query = "CREATE CONSTRAINT " + constraintName +"\n"+
-                "IF NOT EXISTS FOR (n:" + tableName + ")\n"+
-                "REQUIRE (n." + _nodeKey + ") IS UNIQUE";
-//                "REQUIRE (n." + _nodeKey + ") IS NODE KEY";
+        var sb = new StringBuilder();
+        sb.append("CREATE CONSTRAINT ").append(constraintName).append("\n")
+                .append("IF NOT EXISTS FOR (n:").append(tableName).append(")\n")
+                .append("REQUIRE (n.").append(_nodeKey).append(") IS UNIQUE");
+
+        var query = sb.toString();
 
         var stopwatchCreate = TimeReportService.CreateAndStartStopwatch();
         Result result = Session.run(query);
@@ -79,7 +91,7 @@ public class Neo4jConnector extends Connector
 
     private String getContraintNodeKeyName(String table)
     {
-        return table + "_"+ "NODE_KEY";
+        return new StringBuilder().append(table).append("_").append("NODE_KEY").toString();
     }
 
     @Override
@@ -179,29 +191,26 @@ public class Neo4jConnector extends Connector
         var stopwatchPutConnetor = TimeReportService.CreateAndStartStopwatch();
 
         var queriesInserts = new ArrayList<StringBuilder>();
-        var queriesVerifyFks = new ArrayList<String>();
+        var queriesVerifyFks = new ArrayList<StringBuilder>();
 
         Map<String,Object> params = new HashMap<>();
         for (var tuple : dados.entrySet())
         {
-            StringBuilder queryInsert = new StringBuilder();
+            var queryInsert = new StringBuilder();
 
             var key = tuple.getKey();
-            var node = table.getName() + key;
+            var node = new StringBuilder().append(table.getName()).append(key);
             var values = tuple.getValue();
 
-            var relationships = verifyRelationships(table, values, node)
-                    .entrySet()
-                    .iterator()
-                    .next();
+            var relationships = verifyRelationships(table, values, node.toString());
+            var querysRelationships = relationships.querysRelationships;
+            queriesVerifyFks.addAll(relationships.queriesVerifyFks);
 
-            var querysRelationships = relationships.getKey();
-            queriesVerifyFks.addAll(relationships.getValue());
             var queryRelationships = String.join("\n", querysRelationships);
 
-            var propsName = "props" + key;
+            var propsName = new StringBuilder().append("props").append(key);
             Map<String, Object> props = getStringObjectMap(key, cols, values);
-            params.put(propsName, props);
+            params.put(propsName.toString(), props);
 
             queryInsert
                     .append("CREATE (").append(node).append(":").append(table.getName()).append(" $").append(propsName).append(")").append("\n")
@@ -220,7 +229,10 @@ public class Neo4jConnector extends Connector
 
         }
 
-        var query = String.join("\nUNION\n\n", queriesInserts);
+        var query = table.getFks().size() != 0
+                ? String.join("\nUNION\n\n", queriesInserts)
+                : String.join("\n", queriesInserts);
+
         var stopwatchInsert = TimeReportService.CreateAndStartStopwatch();
         var result = Session.run(query, params);
         TimeReportService.putTimeNeo4j(PUT, stopwatchInsert);
@@ -247,7 +259,7 @@ public class Neo4jConnector extends Connector
             String PUT,
             StopWatch stopwatchPutConnetor,
             List<StringBuilder> queriesInserts,
-            List<String> queriesVerifyFks,
+            List<StringBuilder> queriesVerifyFks,
             Map<String, Object> params)
     {
         var queriesVerificacaoDistinct = queriesVerifyFks
@@ -279,12 +291,12 @@ public class Neo4jConnector extends Connector
         TimeReportService.putTimeConnector(PUT,stopwatchPutConnetor);
     }
 
-    private HashMap<ArrayList<String>, ArrayList<String>> verifyRelationships(Table table, List<String> values, String node)
+    private VerifyRelationShip verifyRelationships(Table table, List<String> values, String node)
     {
-        var queryRelationShip = new ArrayList<String>();
+        var queryRelationShip = new ArrayList<StringBuilder>();
 
         var fks = table.getFks();
-        var queryVerifyFks = new ArrayList<String>();
+        var queryVerifyFks = new ArrayList<StringBuilder>();
         for (ForeignKey fk : fks)
         {
             var attribute = fk.getAtt();
@@ -297,23 +309,29 @@ public class Neo4jConnector extends Connector
             var referenceTable = fk.getrTable();
             var referenceAttribute = fk.getrAtt();
 
-            var fkShortName = referenceTable + "_" + referenceAttribute + "_" + attribute;
+            var fkShortName = new StringBuilder()
+                    .append(referenceTable)
+                    .append("_")
+                    .append(referenceAttribute)
+                    .append("_")
+                    .append(attribute);
 
-            queryRelationShip.add("WITH (" + node + ")\n" +
-                    "MATCH (" + fkShortName + ":" + referenceTable + ")\n" +
-                    "WHERE " + fkShortName + "." + referenceAttribute + " = " + valueFkAttribute + "\n" +
-                    "CREATE (" + node + ")-[:" + attribute + "]->(" + fkShortName + ")\n");
+            var sbqueryRelationShip = new StringBuilder();
+            sbqueryRelationShip
+                    .append("WITH (").append(node).append(")\n")
+                    .append("MATCH (").append(fkShortName).append(":").append(referenceTable).append(")\n")
+                    .append("WHERE ").append(fkShortName).append(".").append(referenceAttribute).append(" = ").append(valueFkAttribute).append("\n")
+                    .append("CREATE (").append(node).append(")-[:").append(attribute).append("]->(").append(fkShortName).append(")\n");
+            queryRelationShip.add(sbqueryRelationShip);
 
-            queryVerifyFks.add(
-                    "MATCH (n:" + referenceTable + ")\n" +
-                    "WHERE n." + referenceAttribute + " = " + valueFkAttribute + "\n" +
-                    "RETURN (n)\n");
+            var sbqueryVerifyFks = new StringBuilder();
+            sbqueryVerifyFks.append("MATCH (n:").append(referenceTable).append(")\n")
+                    .append("WHERE n.").append(referenceAttribute).append(" = ").append(valueFkAttribute).append("\n")
+                    .append("RETURN (n)\n");
+            queryVerifyFks.add(sbqueryVerifyFks);
         }
 
-        var result = new HashMap<ArrayList<String>, ArrayList<String>>();
-        result.put(queryRelationShip,  queryVerifyFks);
-
-        return result;
+        return new VerifyRelationShip(queryRelationShip, queryVerifyFks);
     }
 
     private Map<String, Object> getStringObjectMap(String key, List<String> cols, List<String> values)
@@ -508,7 +526,7 @@ public class Neo4jConnector extends Connector
         var stopwatchUPDATEConnetor = TimeReportService.CreateAndStartStopwatch();
 
         var queriesUpdates = new ArrayList<StringBuilder>();
-        var queriesVerifyFks = new ArrayList<String>();
+        var queriesVerifyFks = new ArrayList<StringBuilder>();
 
         Map<String,Object> params = new HashMap<>();
         var cols = table.getAttributes();
@@ -520,13 +538,10 @@ public class Neo4jConnector extends Connector
             var node = table.getName() + key;
             var values = tuple.getValue();
 
-            var relationships = verifyRelationships(table, values, node)
-                    .entrySet()
-                    .iterator()
-                    .next();
+            var relationships = verifyRelationships(table, values, node);
+            var querysRelationships = relationships.querysRelationships;
+            queriesVerifyFks.addAll(relationships.queriesVerifyFks);
 
-            var querysRelationships = relationships.getKey();
-            queriesVerifyFks.addAll(relationships.getValue());
             var queryRelationships = String.join("\n", querysRelationships);
 
             var propsName = "props" + key;
