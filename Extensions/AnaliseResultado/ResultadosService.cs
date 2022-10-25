@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics;
+using System.Globalization;
 using System.Net.Http.Headers;
 using System.Text.Json;
 
@@ -15,8 +16,23 @@ public static class ResultadosService
         string cenario,
         int execucao)
     {
-        var timerResponse = await RodarScriptAsync(httpClient, instrucao.Arquivo);
-        await SalvarNoRelatorioAsync(relatorio, timerResponse, instrucao.Comando, cenario, execucao);
+        try
+        {
+            var nome = instrucao.Comando.PadRight(8, '.');
+            Console.Write($"COMANDO: {nome}...");
+            var stop = new Stopwatch();
+            stop.Start();
+        
+            var timerResponse = await RodarScriptAsync(httpClient, instrucao.Arquivo);
+            Console.WriteLine("\r{0:P2}   ", $"COMANDO: {nome}...{stop.Elapsed}");
+        
+            await SalvarNoRelatorioAsync(relatorio, timerResponse, instrucao.Comando, cenario, execucao);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
     }
 
     private static async Task<TimeResponse> RodarScriptAsync(

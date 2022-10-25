@@ -57,6 +57,8 @@ var httpCliente = new HttpClient
     Timeout = TimeSpan.FromHours(1)
 };
 
+Console.WriteLine("-----------------------------------------------------------------------------------------------------------");
+Console.WriteLine("LIMPANDO A BASE DE DADOS");
 await ResultadosService.LimparBaseAsync(httpCliente, drop.arquivo);
 
 var cenario = $"{linhas:G}({linhas * SeedsFactory.Count(Consulta.Insert):G})";
@@ -65,20 +67,22 @@ var relatorio = await ResultadosService.CriarRelatorio(relatorioName);
 
 Console.WriteLine("-----------------------------------------------------------------------------------------------------------");
 Console.WriteLine("GERANDO CONSULTAS NECESSÁRIAS");
-Console.WriteLine("-----------------------------------------------------------------------------------------------------------");
 
 var insert = (await ConsultasService.GerarAsync(Consulta.Insert, linhas), "INSERT");
 var insertN = (await ConsultasService.GerarAsync(Consulta.InsertN, linhas), "INSERTN");
 
+
 for (var execucao = 1; execucao <= interacoes; execucao++)
 {
-    Console.Write("\r{0:P2}   ", $"EXECUÇÃO: {execucao:G}|{interacoes:G}");
+    Console.WriteLine("-----------------------------------------------------------------------------------------------------------");
+    // Console.Write("\r{0:P2}   ", $"EXECUÇÃO: {execucao:G}|{interacoes:G}");
+    Console.WriteLine($"EXECUÇÃO: {execucao:G}/{interacoes:G}");
     await ResultadosService.RodarScripSalvartAsync(httpCliente, create, relatorio, cenario, execucao);
-    await ResultadosService.RodarScripSalvartAsync(httpCliente, insertN, relatorio, cenario, execucao);
+    await ResultadosService.RodarScripSalvartAsync(httpCliente, insert, relatorio, cenario, execucao);
     await ResultadosService.RodarScripSalvartAsync(httpCliente, select, relatorio, cenario, execucao);
     await ResultadosService.RodarScripSalvartAsync(httpCliente, update, relatorio, cenario, execucao);
     await ResultadosService.RodarScripSalvartAsync(httpCliente, delete, relatorio, cenario, execucao);
-    await ResultadosService.RodarScripSalvartAsync(httpCliente, insert, relatorio, cenario, execucao);
+    await ResultadosService.RodarScripSalvartAsync(httpCliente, insertN, relatorio, cenario, execucao);
     await ResultadosService.RodarScripSalvartAsync(httpCliente, alter, relatorio, cenario, execucao);
     await ResultadosService.RodarScripSalvartAsync(httpCliente, drop, relatorio, cenario, execucao);
 }
