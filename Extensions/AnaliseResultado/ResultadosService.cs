@@ -43,9 +43,10 @@ public static class ResultadosService
         fileStreamContent.Headers.ContentType = new MediaTypeHeaderValue("text/plain");
         multipartFormContent.Add(fileStreamContent, name: "file", fileName: arquivo.Name);
         var response = await httpClient.PostAsync("/query-file-sql-script", multipartFormContent);
-        
-        response.EnsureSuccessStatusCode();
+
         var readAsStringAsync = await response.Content.ReadAsStringAsync();
+        if (!response.IsSuccessStatusCode)
+            throw new InvalidOperationException(readAsStringAsync);
     
         var options = new JsonSerializerOptions
         {
