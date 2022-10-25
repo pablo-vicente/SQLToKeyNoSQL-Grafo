@@ -101,35 +101,51 @@ public class Neo4jConnector extends Connector
         String ALTER = "ALTER";
         var stopwatchAlterConnetor = TimeReportService.CreateAndStartStopwatch();
 
-        var queries = new ArrayList<String>();
-        var queriesRelationships= new ArrayList<String>();
+        var queries = new StringBuilder();
+        var queriesRelationships= new ArrayList<StringBuilder>();
         var shortName = "n";
-        queriesRelationships.add("MATCH(" + shortName + ":" + table.getName() + ")");
+        queriesRelationships.add(new StringBuilder()
+                .append("MATCH(")
+                .append(shortName)
+                .append(":")
+                .append(table.getName())
+                .append(")"));
 
         for (AlterDto dado : dados)
         {
             var shortNameRelacao = shortName + dado.ColunaExistente;
             if(dado.ChaveEstrangeira)
-                queriesRelationships.add("OPTIONAL MATCH(" + shortName + ":" + table.getName() + ") -[" + dado.ColunaExistente + ":" + dado.ColunaExistente + "]-> (" + shortNameRelacao + ")");
+                queriesRelationships.add(new StringBuilder()
+                        .append("OPTIONAL MATCH(")
+                        .append(shortName)
+                        .append(":")
+                        .append(table.getName())
+                        .append(") -[")
+                        .append(dado.ColunaExistente)
+                        .append(":")
+                        .append(dado.ColunaExistente)
+                        .append("]-> (")
+                        .append(shortNameRelacao)
+                        .append(")"));
 
             switch (dado.AlterOperation)
             {
                 case DROP:
-                    queries.add("REMOVE " + shortName + "." + dado.ColunaExistente);
+                    queries.append("REMOVE ").append(shortName).append(".").append(dado.ColunaExistente).append("\n");
 
                     if(dado.ChaveEstrangeira)
-                        queries.add("DELETE " + dado.ColunaExistente);
+                        queries.append("DELETE ").append(dado.ColunaExistente).append("\n");
 
                     break;
 
                 case RENAME:
 
-                    queries.add("SET " + shortName + "." + dado.ColunaNova + " = " + shortName + "." + dado.ColunaExistente);
-                    queries.add("REMOVE " + shortName + "." + dado.ColunaExistente);
+                    queries.append("SET ").append(shortName).append(".").append(dado.ColunaNova).append(" = ").append(shortName).append(".").append(dado.ColunaExistente).append("\n");
+                    queries.append("REMOVE ").append(shortName).append(".").append(dado.ColunaExistente).append("\n");
                     if(dado.ChaveEstrangeira)
                     {
-                        queries.add("CREATE (" + shortName +  ")-[:" + dado.ColunaNova +"]->(" + shortNameRelacao + ")");
-                        queries.add("DELETE " + dado.ColunaExistente);
+                        queries.append("CREATE (").append(shortName).append(")-[:").append(dado.ColunaNova).append("]->(").append(shortNameRelacao).append(")").append("\n");
+                        queries.append("DELETE ").append(dado.ColunaExistente).append("\n");
                     }
 
                     break;
@@ -141,7 +157,7 @@ public class Neo4jConnector extends Connector
 
         var query = String.join("\n", queriesRelationships) +
                 "\n"
-                + String.join("\n", queries);
+                + queries;
 
         var stopwatchAlter = TimeReportService.CreateAndStartStopwatch();
         var result = Session.run(query);
@@ -202,7 +218,7 @@ public class Neo4jConnector extends Connector
             var node = new StringBuilder().append(table.getName()).append(key);
             var values = tuple.getValue();
 
-            var relationships = verifyRelationships(table, values, node.toString());
+            var relationships = verifyRelationships(table, values, node);
             var querysRelationships = relationships.querysRelationships;
             queriesVerifyFks.addAll(relationships.queriesVerifyFks);
 
@@ -291,7 +307,7 @@ public class Neo4jConnector extends Connector
         TimeReportService.putTimeConnector(PUT,stopwatchPutConnetor);
     }
 
-    private VerifyRelationShip verifyRelationships(Table table, List<String> values, String node)
+    private VerifyRelationShip verifyRelationships(Table table, List<String> values, StringBuilder node)
     {
         var queryRelationShip = new ArrayList<StringBuilder>();
 
@@ -535,7 +551,7 @@ public class Neo4jConnector extends Connector
             StringBuilder queryUpdate = new StringBuilder();
 
             var key = tuple.getKey();
-            var node = table.getName() + key;
+            var node = new StringBuilder().append(table.getName()).append(key);
             var values = tuple.getValue();
 
             var relationships = verifyRelationships(table, values, node);
@@ -544,9 +560,9 @@ public class Neo4jConnector extends Connector
 
             var queryRelationships = String.join("\n", querysRelationships);
 
-            var propsName = "props" + key;
+            var propsName = new StringBuilder("props").append(key);
             Map<String, Object> props = getStringObjectMap(key, cols, values);
-            params.put(propsName, props);
+            params.put(propsName.toString(), props);
 
             queryUpdate
                     .append("MATCH (").append(node).append(":").append(table.getName()).append(")").append("\n")
