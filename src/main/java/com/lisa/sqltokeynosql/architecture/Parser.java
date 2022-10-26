@@ -27,6 +27,7 @@ import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.select.SetOperationList;
 import net.sf.jsqlparser.statement.update.Update;
+import net.sf.jsqlparser.statement.update.UpdateSet;
 import net.sf.jsqlparser.statement.values.ValuesStatement;
 import net.sf.jsqlparser.util.TablesNamesFinder;
 import org.springframework.stereotype.Service;
@@ -208,14 +209,23 @@ public class Parser {
         final String tableName = statement.getTable().getName();
 
         ArrayList<String> cols = new ArrayList<>();
-        for (final Column col : statement.getColumns()) {
-            cols.add(col.getColumnName());
+        ArrayList<String> values = new ArrayList<>();
+        for (UpdateSet updateSet : statement.getUpdateSets())
+        {
+            var col = updateSet
+                    .getColumns()
+                    .get(0)
+                    .getColumnName();
+            cols.add(Parser.removeInvalidCaracteres(col));
+
+            var value = updateSet
+                    .getExpressions()
+                    .get(0)
+                    .toString();
+
+            values.add(Parser.removeInvalidCaracteres(value));
+
         }
-        final ArrayList<String> values = statement
-                .getExpressions()
-                .stream()
-                .map(x -> Parser.removeInvalidCaracteres(x.toString()))
-                .collect(toCollection(ArrayList::new));
 
         Stack<Object> filters = extractFilters(statement.getWhere());
         executionEngine.updateData(tableName, cols, values, filters);
