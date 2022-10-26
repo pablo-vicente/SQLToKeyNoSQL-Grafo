@@ -43,7 +43,7 @@ public abstract class Connector {
                 .collect(toCollection(ArrayList::new));
     }
 
-    public void update(Table table, HashMap<String, ArrayList<String>> dataSet)
+    public void update(Table table, HashMap<String, ArrayList<String>> dataSet, List<String> colunas, List<String> valores)
     {
         List<String> cols = table.getAttributes();
         for (Map.Entry<String, ArrayList<String>> stringArrayListEntry : dataSet.entrySet())

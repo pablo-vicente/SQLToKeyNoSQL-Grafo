@@ -176,14 +176,14 @@ public class ExecutionEngine {
         connector.drop(tableDb);
     }
 
-    private void updateTable(String tableName, ArrayList acls, ArrayList avl, Stack<Object> filters, Table table)
+    private void updateTable(String tableName, ArrayList<String> acls, ArrayList<String> avl, Stack<Object> filters, Table table)
     {
-        for (Object acl : acls)
+        for (String acl : acls)
         {
             var pks = table
                     .getPks()
                     .stream()
-                    .anyMatch(x -> x.equalsIgnoreCase((String) acl));
+                    .anyMatch(x -> x.equalsIgnoreCase(acl));
 
             if(pks)
                 throw new UnsupportedOperationException("Não é suportado a mudança de Chave Primaria");
@@ -204,7 +204,7 @@ public class ExecutionEngine {
             {
                 var coluna = acls.get(i);
                 int indexColuna = cols.indexOf(coluna);
-                values.set(indexColuna, (String) avl.get(i));
+                values.set(indexColuna, avl.get(i));
             }
 
             dados.put(key, values);
@@ -213,7 +213,7 @@ public class ExecutionEngine {
         table
                 .getTargetDB()
                 .getConnection()
-                .update(table, dados);
+                .update(table, dados, acls, avl);
     }
 
     DataSet getDataSetBl(final List<String> tableNames, final List<String> cols, final Stack<Object> filters) {
