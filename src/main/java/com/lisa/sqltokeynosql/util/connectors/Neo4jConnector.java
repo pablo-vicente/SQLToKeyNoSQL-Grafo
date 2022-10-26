@@ -218,9 +218,6 @@ public class Neo4jConnector extends Connector
             var values = tuple.getValue();
 
             var relationships = verifyRelationships(table, cols, values, node.toString());
-            var querysRelationships = relationships.querysRelationships;
-
-            var queryRelationships = String.join("\n", querysRelationships);
 
             var propsName = new StringBuilder().append("props").append(key);
             Map<String, Object> props = getStringObjectMap(key, cols, values);
@@ -228,12 +225,13 @@ public class Neo4jConnector extends Connector
             params.put(propsName.toString(), props);
 
             queryInsert
-                    .append("CREATE (").append(node).append(":").append(table.getName()).append(" $").append(propsName).append(")").append("\n")
-                    .append(queryRelationships).append("\n");
+                    .append("CREATE (").append(node).append(":").append(table.getName()).append(" $").append(propsName).append(")").append("\n");
 
             if(table.getFks().size() != 0)
             {
+                var queryRelationships = String.join("\n", relationships.querysRelationships);
                 queryInsert
+                        .append(queryRelationships).append("\n")
                         .append("WITH ").append(node).append("\n")
                         .append("MATCH (").append(node).append(") -[chave_estrangeira]-> (apontado)").append("\n")
                         .append("RETURN (chave_estrangeira)").append("\n");
@@ -246,10 +244,7 @@ public class Neo4jConnector extends Connector
 
             var relationsShips = result.list().size();
 
-            var queriesVerificacaoDistinct = (int) relationships.queriesVerifyFks
-                    .stream()
-                    .distinct()
-                    .count();
+            var queriesVerificacaoDistinct = relationships.queriesVerifyFks.size();
 
             if(relationsShips != queriesVerificacaoDistinct)
             {
