@@ -7,36 +7,192 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Bootstrap demo</title>
+  <title>SqlToNoSQL - Graph</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet"
     integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3"
     crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"
-    integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3"
-    crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.min.js"
-    integrity="sha384-IDwe1+LCz02ROU9k972gdyvl+AESN10+x7tBKgc9I5HFtuNz0wWnPclzo6p9vxnk"
-    crossorigin="anonymous"></script>
-  <link rel="icon" type="image/png" href="images/logo_tcc_removebg.png">
+
+  <link href="styles.css" rel="stylesheet">
+
+  <link rel="icon" type="image/png" href="images/logo.png">
   <title>SqlToNoSQL - Graph</title>
 </head>
 
 <body>
-  <div class="container">
-    <header class="d-flex flex-wrap justify-content-center py-3 mb-4 border-bottom">
-      <div href="#" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-dark text-decoration-none">
-        <img src="images/logo_tcc_removebg.png" class="bi me-2" width="40" height="32">
-        <span class="fs-4">SqlToNoSQL - Graph</span>
+  <div class="p-4">
+    <header class="d-flex flex-wrap justify-content-center py-3 border-bottom">
+      <div href="#" class="d-flex align-items-centertext-dark text-decoration-none">
+        <img src="images/logo.png" class="bi me-2" height="80">
+        <span class="fs-1 font-monospace" style="color: var(--blue);"> SqlToNoSQL - Graph</span>
       </div>
     </header>
   </div>
 
+  <div class="accordion px-4" id="accordionPanelsStayOpenExample">
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="panelsStayOpen-headingOne">
+        <button id="btn-collapse" class="accordion-button titulo" type="button" data-bs-toggle="collapse"
+          data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="true" aria-controls="panelsStayOpen-collapseOne">
+          Credenciais de Acesso
+        </button>
+      </h2>
+      <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse show"
+        aria-labelledby="panelsStayOpen-headingOne">
+        <div class="accordion-body">
+
+          <div class="card mb-3">
+            <div class="row col p-4">
+              <div class="" style="max-width: 19.4rem;">
+                <img src="images/dbIMG.png" class="img-thumbnail rounded-start icone-bd">
+              </div>
+              <div class="col">
+                <div class="row">
+                  <h5 class="card-title">NoSQL</h5>
+
+                  <div class="col">
+                    <div class="input-group mb-3">
+                      <label class="input-group-text" for="inputGroupSelect01">Conector</label>
+                      <select class="form-select" id="inputGroupSelect01">
+                        <option selected>Selecione o conector...</option>
+                        <option value="1">Neo4j</option>
+                        <option value="2">Two</option>
+                        <option value="3">Three</option>
+                      </select>
+                    </div>
+
+                    <div class="input-group mb-3">
+                      <span class="input-group-text" id="inputGroup-sizing-default">Nome</span>
+                      <input type="text" class="form-control" aria-label="Sizing example input"
+                        aria-describedby="inputGroup-sizing-default">
+                    </div>
+
+                    <div class="input-group mb-3">
+                      <span class="input-group-text" id="inputGroup-sizing-default">Usuário</span>
+                      <input type="text" class="form-control" aria-label="Sizing example input"
+                        aria-describedby="inputGroup-sizing-default">
+                    </div>
+
+                    <div class="input-group mb-3">
+                      <span class="input-group-text" id="inputGroup-sizing-default">Senha</span>
+                      <input type="password" class="form-control" aria-label="Sizing example input"
+                        aria-describedby="inputGroup-sizing-default">
+                    </div>
+
+                    <div class="input-group mb-3">
+                      <span class="input-group-text" id="inputGroup-sizing-default">URL</span>
+                      <input type="url" class="form-control" aria-label="Sizing example input"
+                        aria-describedby="inputGroup-sizing-default">
+                    </div>
+                  </div>
+
+                  <div class="col">
+
+                    <div class="input-group mb-3">
+                      <label class="input-group-text" for="inputGroupSelect01">Nome</label>
+                      <select class="form-select" id="inputGroupSelect01">
+                        <option selected>Selecione...</option>
+                        <option value="1">Neo4j</option>
+                        <option value="2">Two</option>
+                        <option value="3">Three</option>
+                      </select>
+                    </div>
+
+                    <div class="input-group mb-3">
+                      <span class="input-group-text" id="inputGroup-sizing-default">Novo</span>
+                      <input type="text" class="form-control" aria-label="Sizing example input"
+                        aria-describedby="inputGroup-sizing-default">
+                    </div>
+                  </div>
+
+                  <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button class="btn btn-warning btn-salvar" type="button">Salvar</button>
+                  </div>
+
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <div class="p-4">
+    <div class="card">
+      <div class="card-header titulo">
+        CONSULTAS
+      </div>
+      <div class="card-body">
+
+        <div class="input-group mb-3">
+          <input class="form-control" type="file" id="formFile">
+          <button class="btn btn-warning btn-salvar" type="button">Executar</button>
+        </div>
+
+        <div class="form-floating">
+          <textarea class="form-control" placeholder="Escreva uma expressão SQL" id="floatingTextarea2"
+            style="height: 100px"></textarea>
+          <label for="floatingTextarea2">SQL</label>
+        </div>
+
+        <div class="input-group mt-3">
+          <span class="input-group-text">Tempo de Execução</span>
+          <input type="text" class="form-control" disabled>
+          <span class="btn-clock input-group-text">
+            <span>
+              <img src="images/clock.png" height="32" />
+            </span>
+          </button>
+        </div>
+
+
+
+        <hr />
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">First</th>
+              <th scope="col">Last</th>
+              <th scope="col">Handle</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">1</th>
+              <td>Mark</td>
+              <td>Otto</td>
+              <td>@mdo</td>
+            </tr>
+            <tr>
+              <th scope="row">2</th>
+              <td>Jacob</td>
+              <td>Thornton</td>
+              <td>@fat</td>
+            </tr>
+            <tr>
+              <th scope="row">3</th>
+              <td colspan="2">Larry the Bird</td>
+              <td>@twitter</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
 </body>
 
-<footer>
-
+<footer class="footer mt-auto py-3 t-footer">
+  <div class="container">
+    <span>
+      Sistema de mapeamento de BDR para NoSql orientado a grafo - Pablo Vicente & Lucas Oliveira - UFSC - 2022 ©
+    </span>
 </footer>
 
 </html>

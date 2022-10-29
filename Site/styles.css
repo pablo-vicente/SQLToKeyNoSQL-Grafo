@@ -1,0 +1,31 @@
+:root 
+{
+    --blue: rgb(0, 120, 215);
+    --gold: rgb(210, 149, 0);
+    --gray: rgb(83, 89, 101);
+    --black: rgb(3, 3, 3);
+    --violet: #836FFF
+}
+
+.test{
+    color: var(--gold);
+}
+
+.btn-salvar{
+    color: #FFFFFF;
+    background-color: var(--gold);
+}
+
+#btn-collapse, .titulo{
+    /* background-image: linear-gradient(to right, , purple)); */
+    background: linear-gradient(to left, var(--gold), var(--blue) );
+    /* background: var(--blue);  */
+    color: #FFF; 
+    font-size: 1.2rem;
+}
+
+.t-footer{
+    background-color: var(--gray);
+    color: #FFF;
+    text-align: center;
+}
