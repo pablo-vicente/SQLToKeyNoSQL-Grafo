@@ -91,9 +91,10 @@ for (var execucao = 1; execucao <= interacoes; execucao++)
     await ResultadosService.RodarScripSalvartAsync(httpCliente, insertN, relatorio, cenario, execucao);
     await ResultadosService.RodarScripSalvartAsync(httpCliente, alter, relatorio, cenario, execucao);
     await ResultadosService.RodarScripSalvartAsync(httpCliente, drop, relatorio, cenario, execucao);
+    
+    await relatorio.FlushAsync();
 }
 
-await relatorio.FlushAsync();
 Process.Start("explorer.exe", relatorioName.FullName);
 
 async Task ConfigurarConexaoAsync(HttpClient httpClient)
