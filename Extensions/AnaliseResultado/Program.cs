@@ -1,5 +1,8 @@
 ﻿using System.Diagnostics;
+using System.Text;
+using System.Text.Json;
 using AnaliseResultado;
+using AnaliseResultado.Dtos;
 using GeradorSQL.Enums;
 using GeradorSQL.Seeds;
 using GeradorSQL.Services;
@@ -44,7 +47,7 @@ var interacoes = ConsoleUtils.LerQuantidadeConsultas("INTERAÇÕES");
 var baseProject = AppDomain.CurrentDomain.BaseDirectory;
 var baseDirect = Path.Combine(baseProject, "SCRIPTS");
 
-(FileInfo arquivo, string  nome) drop = (new FileInfo(Path.Combine(baseDirect, "bd_matConstru_DDL_DROP.sql")), "DROP");
+(FileInfo arquivo, string nome) drop = (new FileInfo(Path.Combine(baseDirect, "bd_matConstru_DDL_DROP.sql")), "DROP");
 var create = (new FileInfo(Path.Combine(baseDirect, "bd_matConstru_DDL_CREATE.sql")), "CREATE");
 var alter = (new FileInfo(Path.Combine(baseDirect, "bd_matConstru_DDL_ALTER.sql")), "ALTER");
 var delete = (new FileInfo(Path.Combine(baseDirect, "bd_matConstru_DML_DELETE.sql")), "DELETE");
@@ -57,6 +60,9 @@ var httpCliente = new HttpClient
     Timeout = TimeSpan.FromHours(1)
 };
 
+Console.WriteLine("-----------------------------------------------------------------------------------------------------------");
+Console.WriteLine("CONECTANDO A BASE DE DADOS");
+await ConfigurarConexaoAsync(httpCliente);
 Console.WriteLine("-----------------------------------------------------------------------------------------------------------");
 Console.WriteLine("LIMPANDO A BASE DE DADOS");
 await ResultadosService.LimparBaseAsync(httpCliente, drop.arquivo);
@@ -89,3 +95,68 @@ for (var execucao = 1; execucao <= interacoes; execucao++)
 
 await relatorio.FlushAsync();
 Process.Start("explorer.exe", relatorioName.FullName);
+
+async Task ConfigurarConexaoAsync(HttpClient httpClient)
+{
+    await CreateConnectionSgbdAsync(httpClient);
+    await CreateEDefineDatabaseAsync(httpClient);
+}
+
+async Task CreateConnectionSgbdAsync(HttpClient httpClient)
+{
+    var options = new JsonSerializerOptions
+    {
+        PropertyNameCaseInsensitive = true
+    };
+    
+    var response = await httpClient.GetAsync("/no-sql-targets");
+    var content = await HandleErroAsync(response);
+    var targets = JsonSerializer.Deserialize<IList<NoSqlTarget>>(content, options);
+
+    var neo4j = new
+    {
+        connector = "NEO4J",
+        name = "neo4j",
+        password = "pAsSw0rD",
+        url = "bolt://localhost:7687",
+        user = "neo4j"
+    };
+
+    if (targets is not null
+        && targets.Any()
+        && targets.Any(x => x.Connector == neo4j.connector))
+    {
+        Console.WriteLine("Conexão SGBD Já existe");
+        return;
+    }
+
+    var body = JsonSerializer.Serialize(neo4j);
+    using var stringContent = new StringContent(body, Encoding.UTF8, "application/json");
+    var requestCreateTarget = await httpClient.PostAsync("/no-sql-target", stringContent);
+    await HandleErroAsync(requestCreateTarget);
+    Console.WriteLine("Conexão SGBD Executada com Sucesso");
+
+}
+
+async Task CreateEDefineDatabaseAsync(HttpClient httpClient)
+{
+    var body = JsonSerializer.Serialize(new
+    {
+        name = "bd_matConstru"
+    });
+
+    using var stringContent = new StringContent(body, Encoding.UTF8, "application/json");
+    var response = await httpClient.PostAsync("/current-database", stringContent);
+    await HandleErroAsync(response);
+    Console.WriteLine("Banco de dados Definido com sucesso");
+}
+
+async Task<string> HandleErroAsync(HttpResponseMessage response)
+{
+    var content = await response.Content.ReadAsStringAsync();
+
+    if (!response.IsSuccessStatusCode)
+        throw new InvalidOperationException(content);
+
+    return content;
+}
