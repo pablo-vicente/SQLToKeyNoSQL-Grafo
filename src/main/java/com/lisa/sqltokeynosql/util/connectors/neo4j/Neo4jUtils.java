@@ -61,8 +61,7 @@ public class Neo4jUtils
 
             var sbCreate = new StringBuilder();
             sbCreate
-                    .append("(").append(node).append(")-[")
-                    .append(attribute).append(":").append(attribute)
+                    .append("(").append(node).append(")-[:").append(attribute)
                     .append("]->(").append(fkShortName).append(")");// (funcionario1)-[funcao_id:funcao_id]->(funcao_id_funcao_funcao_id)
             sbsCreate.add(sbCreate);
         }
