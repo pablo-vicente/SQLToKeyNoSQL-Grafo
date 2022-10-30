@@ -2,6 +2,7 @@ package com.lisa.sqltokeynosql.util;
 
 import com.lisa.sqltokeynosql.architecture.Connector;
 import com.lisa.sqltokeynosql.util.connectors.*;
+import com.lisa.sqltokeynosql.util.connectors.neo4j.Neo4jConnector;
 
 /**
  * @author geomar
