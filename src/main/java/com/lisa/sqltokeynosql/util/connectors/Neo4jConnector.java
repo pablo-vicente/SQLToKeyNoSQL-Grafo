@@ -27,6 +27,23 @@ class VerifyRelationShip
     }
 }
 
+class RelationshipDto
+{
+    public final List<StringBuilder> match;
+    public final List<StringBuilder> create;
+    public final List<String> columnsFks;
+
+    public RelationshipDto(
+            List<StringBuilder> match,
+            List<StringBuilder> create,
+            List<String> columnsFks)
+    {
+        this.match = match;
+        this.create = create;
+        this.columnsFks = columnsFks;
+    }
+}
+
 public class Neo4jConnector extends Connector
 {
     private final Driver driver;
@@ -209,6 +226,8 @@ public class Neo4jConnector extends Connector
         String PUT = "PUT";
         var stopwatchPutConnetor = TimeReportService.CreateAndStartStopwatch();
 
+        String separador01 = "\n   ";
+        String separador02 = ",\n   ";
         for (var tuple : dados.entrySet())
         {
             var queryInsert = new StringBuilder();
@@ -217,7 +236,13 @@ public class Neo4jConnector extends Connector
             var node = new StringBuilder().append(table.getName()).append(key);
             var values = tuple.getValue();
 
-            var relationships = verifyRelationships(table, cols, values, node.toString());
+            var relationships = queryRelationships(table, cols, values, node.toString());
+
+            if(relationships.match.size() != 0)
+            {
+                var matchs = String.join(separador02, relationships.match);
+                queryInsert.append("MATCH").append(separador01).append(matchs).append("\n");
+            }
 
             var propsName = new StringBuilder().append("props").append(key);
             Map<String, Object> props = getStringObjectMap(key, cols, values);
@@ -225,33 +250,26 @@ public class Neo4jConnector extends Connector
             params.put(propsName.toString(), props);
 
             queryInsert
-                    .append("CREATE (").append(node).append(":").append(table.getName()).append(" $").append(propsName).append(")").append("\n");
+                    .append("CREATE").append(separador01)
+                    .append("(").append(node).append(":").append(table.getName()).append(" $").append(propsName).append(")");
 
-            if(table.getFks().size() != 0)
+            if(relationships.create.size() != 0)
             {
-                var queryRelationships = String.join("\n", relationships.querysRelationships);
-                queryInsert
-                        .append(queryRelationships).append("\n")
-                        .append("WITH ").append(node).append("\n")
-                        .append("MATCH (").append(node).append(") -[chave_estrangeira]-> (apontado)").append("\n")
-                        .append("RETURN (chave_estrangeira)").append("\n");
-            }
+                queryInsert.append(separador02);
 
+                var creates = String.join(separador02, relationships.create);
+                queryInsert.append(creates).append("\n");
+            }
 
             var stopwatchInsert = TimeReportService.CreateAndStartStopwatch();
             var result = Session.run(queryInsert.toString(), params);
             TimeReportService.putTimeNeo4j(PUT, stopwatchInsert);
 
-            var relationsShips = result.list().size();
+            var relationsShips = result.consume().counters();
 
-            var queriesVerificacaoDistinct = relationships.queriesVerifyFks.size();
-
-            if(relationsShips != queriesVerificacaoDistinct)
-            {
-                var queryDelete = QueryDelete(table.getName(), String.valueOf(dados.keySet()));
-                Session.run(queryDelete).consume();
+            if(relationsShips.relationshipsCreated() != relationships.columnsFks.size()
+                    && relationsShips.nodesCreated() != 1)
                 throw new UnsupportedOperationException("Não foi possível criar relacionamentos. Chaves estrangeiras do relacionamento não estao inseridas no banco!" + "\n" + queryInsert);
-            }
         }
 
         TimeReportService.putTimeConnector(PUT,stopwatchPutConnetor);
@@ -259,74 +277,55 @@ public class Neo4jConnector extends Connector
     }
 
 
-    public void putTudo(Table table, List<String> cols, Map<String, List<String>> dados)
+    private RelationshipDto queryRelationships(Table table, List<String> colunas, List<String> values, String node)
     {
-        String PUT = "PUT";
-        var stopwatchPutConnetor = TimeReportService.CreateAndStartStopwatch();
+        var sbsMatch = new ArrayList<StringBuilder>();
+        var sbsCreate = new ArrayList<StringBuilder>();
+        var columnsFks = new ArrayList<String>();
 
-        var queriesInserts = new ArrayList<StringBuilder>();
-        var queriesVerifyFks = new ArrayList<StringBuilder>();
-
-        Map<String,Object> params = new HashMap<>();
-        for (var tuple : dados.entrySet())
+        var fks = table.getFks();
+        for (ForeignKey fk : fks)
         {
-            var queryInsert = new StringBuilder();
+            var attribute = fk.getAtt();
+            int indexFkAttribute = colunas.indexOf(attribute);
 
-            var key = tuple.getKey();
-            var node = new StringBuilder().append(table.getName()).append(key);
-            var values = tuple.getValue();
+            if(indexFkAttribute == -1)
+                continue;
+            columnsFks.add(attribute);
+            var valueFkAttribute = values.get(indexFkAttribute);
 
-            var relationships = verifyRelationships(table, cols, values, node.toString());
-            var querysRelationships = relationships.querysRelationships;
-            queriesVerifyFks.addAll(relationships.queriesVerifyFks);
+            if(valueFkAttribute.equalsIgnoreCase("NULL"))
+                continue;
 
-            var queryRelationships = String.join("\n", querysRelationships);
+            var referenceTable = fk.getrTable();
+            var referenceAttribute = fk.getrAtt();
 
-            var propsName = new StringBuilder().append("props").append(key);
-            Map<String, Object> props = getStringObjectMap(key, cols, values);
-            params.put(propsName.toString(), props);
+            var fkShortName = new StringBuilder()
+                    .append(referenceTable)
+                    .append("_")
+                    .append(referenceAttribute)
+                    .append("_")
+                    .append(attribute)
+                    .append(valueFkAttribute);
 
-            queryInsert
-                    .append("CREATE (").append(node).append(":").append(table.getName()).append(" $").append(propsName).append(")").append("\n")
-                    .append(queryRelationships).append("\n");
+            var sbMach = new StringBuilder();
+            sbMach
+                    .append("(")
+                    .append(fkShortName) // (tabelaEstrangeira_atributoEstrangeira_atributo
+                    .append(":").append(referenceTable)
+                    .append("{").append(_nodeKey).append(":").append(valueFkAttribute).append("}") // {NODE_KEY:1}
+                    .append(")");
+            sbsMatch.add(sbMach);
 
-            if(table.getFks().size() != 0)
-            {
-                queryInsert
-                        .append("WITH ").append(node).append("\n")
-                        .append("MATCH (").append(node).append(") -[chave_estrangeira]-> (apontado)").append("\n")
-                        .append("RETURN (chave_estrangeira)").append("\n");
-            }
-
-
-            queriesInserts.add(queryInsert);
-
+            var sbCreate = new StringBuilder();
+            sbCreate
+                    .append("(").append(node).append(")-[")
+                    .append(attribute).append(":").append(attribute)
+                    .append("]->(").append(fkShortName).append(")");// (funcionario1)-[funcao_id:funcao_id]->(funcao_id_funcao_funcao_id)
+            sbsCreate.add(sbCreate);
         }
 
-        var query = table.getFks().size() != 0
-                ? String.join("\nUNION\n\n", queriesInserts)
-                : String.join("\n", queriesInserts);
-
-        var stopwatchInsert = TimeReportService.CreateAndStartStopwatch();
-        var result = Session.run(query, params);
-        TimeReportService.putTimeNeo4j(PUT, stopwatchInsert);
-
-        var relationsShips = result.list().size();
-        var summaryCounters = result.consume().counters();
-
-        var queriesVerificacaoDistinct = (int) queriesVerifyFks
-                .stream()
-                .distinct()
-                .count();
-
-        if(relationsShips != queriesVerificacaoDistinct || summaryCounters.nodesCreated() != dados.size())
-        {
-            var queryDelete = QueryDelete(table.getName(), String.valueOf(dados.keySet()));
-            Session.run(queryDelete).consume();
-            throw new UnsupportedOperationException("Não foi possível criar relacionamentos. Chaves estrangeiras do relacionamento não estao inseridas no banco!" + "\n" + query);
-        }
-
-        TimeReportService.putTimeConnector(PUT,stopwatchPutConnetor);
+        return new RelationshipDto(sbsMatch, sbsCreate, columnsFks);
     }
 
     private VerifyRelationShip verifyRelationships(Table table,  List<String> colunas, List<String> values, String node)
