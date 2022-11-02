@@ -9,10 +9,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>SqlToNoSQL - Graph</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet"
-    integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
+        integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3"
-    crossorigin="anonymous"></script>
+          integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3"
+          crossorigin="anonymous"></script>
   <link href="styles.css" rel="stylesheet">
 
   <link rel="icon" type="image/png" href="images/logo.png">
@@ -20,99 +20,98 @@
 </head>
 
 <body>
-  <div class="p-4">
-    <header class="d-flex flex-wrap justify-content-center py-3 border-bottom">
-      <div href="#" class="d-flex align-items-centertext-dark text-decoration-none">
-        <img src="images/logo.png" class="bi me-2" height="80">
-        <span class="fs-1 font-monospace" style="color: var(--blue);"> SqlToNoSQL - Graph</span>
-      </div>
-    </header>
-  </div>
+<div class="p-4">
+  <header class="d-flex flex-wrap justify-content-center py-3 border-bottom">
+    <div href="#" class="d-flex align-items-centertext-dark text-decoration-none">
+      <img src="images/logo.png" class="bi me-2" height="80">
+      <span class="fs-1 font-monospace" style="color: var(--blue);"> SqlToNoSQL - Graph</span>
+    </div>
+  </header>
+</div>
 
-  <div class="accordion px-4">
-    <div class="accordion-item">
-      <h2 class="accordion-header">
-        <button id="btn-collapse"
-                class="accordion-button titulo collapsed"
-                type="button"
-                style="padding: 12px"
-                data-bs-toggle="collapse"
-                data-bs-target="#crendeciais-acesso">
-          Credenciais de Acesso
-        </button>
-      </h2>
-      <div id="crendeciais-acesso" class="accordion-collapse collapse">
-        <div class="accordion-body">
-          <div class="card mb-3">
-            <div class="row col p-4">
-              <div class="" style="max-width: 19.4rem;">
-                <img src="images/dbIMG.png" class="img-thumbnail rounded-start icone-bd">
-              </div>
-              <div class="col">
-                <div class="row">
-                  <div class="col">
-                    <h5 class="card-title">NoSQL</h5>
-                    <form id="form-target-nosql">
-                      <div class="input-group mb-3">
-                        <label class="input-group-text" for="select-target-nosql">Conector</label>
-                        <select class="form-select" id="select-target-nosql">
-                          <option selected>Selecione o conector...</option>
-                          <option value="1">Neo4j</option>
-                          <option value="2">Two</option>
-                          <option value="3">Three</option>
-                        </select>
-                      </div>
+<div class="accordion px-4">
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button id="btn-collapse"
+              class="accordion-button titulo collapsed"
+              type="button"
+              style="padding: 12px"
+              data-bs-toggle="collapse"
+              data-bs-target="#crendeciais-acesso">
+        Credenciais de Acesso
+      </button>
+    </h2>
+    <div id="crendeciais-acesso" class="accordion-collapse collapse">
+      <div class="accordion-body">
+        <div class="card mb-3">
+          <div class="row col p-4">
+            <div class="" style="max-width: 19.4rem;">
+              <img src="images/dbIMG.png" class="img-thumbnail rounded-start icone-bd">
+            </div>
+            <div class="col">
+              <div class="row">
+                <div class="col">
+                  <h5 class="card-title">NoSQL</h5>
+                  <form id="form-target-nosql">
+                    <div class="input-group mb-3">
+                      <label class="input-group-text" for="select-target-nosql">Conector</label>
+                      <select class="form-select" id="select-target-nosql">
+                        <option selected>Selecione o conector...</option>
+                        <option value="1">Neo4j</option>
+                        <option value="2">Two</option>
+                        <option value="3">Three</option>
+                      </select>
+                    </div>
 
-                      <div class="input-group mb-3">
-                        <span class="input-group-text">Nome</span>
-                        <input id="target-nosql-nome" type="text" class="form-control">
-                      </div>
+                    <div class="input-group mb-3">
+                      <span class="input-group-text">Nome</span>
+                      <input id="target-nosql-nome" type="text" class="form-control">
+                    </div>
 
-                      <div class="input-group mb-3">
-                        <span class="input-group-text">Usuário</span>
-                        <input id="target-nosql-usuario" type="text" class="form-control">
-                      </div>
+                    <div class="input-group mb-3">
+                      <span class="input-group-text">Usuário</span>
+                      <input id="target-nosql-usuario" type="text" class="form-control">
+                    </div>
 
-                      <div class="input-group mb-3">
-                        <span class="input-group-text">Senha</span>
-                        <input id="target-nosql-senha" type="password" class="form-control" >
-                      </div>
+                    <div class="input-group mb-3">
+                      <span class="input-group-text">Senha</span>
+                      <input id="target-nosql-senha" type="password" class="form-control" >
+                    </div>
 
-                      <div class="input-group mb-3">
-                        <span class="input-group-text">URL</span>
-                        <input id=target-nosql-url"" type="url" class="form-control">
-                      </div>
+                    <div class="input-group mb-3">
+                      <span class="input-group-text">URL</span>
+                      <input id=target-nosql-url"" type="url" class="form-control">
+                    </div>
 
-                    </form>
-                  </div>
+                  </form>
+                </div>
 
-                  <div class="col">
-                    <h5 class="card-title">Banco de Dados</h5>
-                    <form id="form-nome-db">
-                      <div class="input-group mb-3">
-                        <label class="input-group-text" for="select-nome-db-existente">Nome</label>
-                        <select class="form-select" id="select-nome-db-existente">
-                          <option selected>Selecione...</option>
-                          <option value="1">Neo4j</option>
-                          <option value="2">Two</option>
-                          <option value="3">Three</option>
-                        </select>
-                      </div>
+                <div class="col">
+                  <h5 class="card-title">Banco de Dados</h5>
+                  <form id="form-nome-db">
+                    <div class="input-group mb-3">
+                      <label class="input-group-text" for="select-nome-db-existente">Nome</label>
+                      <select class="form-select" id="select-nome-db-existente">
+                        <option selected>Selecione...</option>
+                        <option value="1">Neo4j</option>
+                        <option value="2">Two</option>
+                        <option value="3">Three</option>
+                      </select>
+                    </div>
 
-                      <div class="input-group mb-3">
-                        <span class="input-group-text">Novo</span>
-                        <input id="nome-db-novo" type="text" class="form-control">
-                      </div>
-                    </form>
-
-                  </div>
-
-                  <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                    <button id="salvar-crendenciais" class="btn btn-warning btn-salvar" type="button">Salvar</button>
-                  </div>
-
+                    <div class="input-group mb-3">
+                      <span class="input-group-text">Novo</span>
+                      <input id="nome-db-novo" type="text" class="form-control">
+                    </div>
+                  </form>
 
                 </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                  <button id="salvar-crendenciais" class="btn btn-warning btn-salvar" type="button">Salvar</button>
+                </div>
+
+
               </div>
             </div>
           </div>
@@ -120,71 +119,72 @@
       </div>
     </div>
   </div>
-  </div>
+</div>
+</div>
 
-  <div class="p-4">
-    <div class="card">
-      <div class="card-header titulo">
-        Queries
+<div class="p-4">
+  <div class="card">
+    <div class="card-header titulo">
+      Queries
+    </div>
+    <div class="card-body">
+
+      <div class="input-group mb-3">
+        <input class="form-control" type="file" id="formFile">
+        <button class="btn btn-warning btn-salvar" type="button">Executar</button>
       </div>
-      <div class="card-body">
 
-        <div class="input-group mb-3">
-          <input class="form-control" type="file" id="formFile">
-          <button class="btn btn-warning btn-salvar" type="button">Executar</button>
-        </div>
-
-        <div class="form-floating">
+      <div class="form-floating">
           <textarea class="form-control" placeholder="Escreva uma expressão SQL" id="floatingTextarea2"
-            style="height: 100px"></textarea>
-          <label for="floatingTextarea2">SQL</label>
-        </div>
+                    style="height: 100px"></textarea>
+        <label for="floatingTextarea2">SQL</label>
+      </div>
 
-        <div class="input-group mt-3">
-          <span class="input-group-text">Tempo de Execução</span>
-          <input type="text" class="form-control" disabled>
-          <div class="btn-clock input-group-text">
+      <div class="input-group mt-3">
+        <span class="input-group-text">Tempo de Execução</span>
+        <input type="text" class="form-control" disabled>
+        <div class="btn-clock input-group-text">
             <span>
               <img src="images/clock.png" height="32" />
             </span>
-            </button>
-          </div>
+          </button>
         </div>
-
-        <hr />
-        <table class="table table-striped">
-          <thead>
-            <tr>
-              <th scope="col">#</th>
-              <th scope="col">First</th>
-              <th scope="col">Last</th>
-              <th scope="col">Handle</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th scope="row">1</th>
-              <td>Mark</td>
-              <td>Otto</td>
-              <td>@mdo</td>
-            </tr>
-            <tr>
-              <th scope="row">2</th>
-              <td>Jacob</td>
-              <td>Thornton</td>
-              <td>@fat</td>
-            </tr>
-            <tr>
-              <th scope="row">3</th>
-              <td colspan="2">Larry the Bird</td>
-              <td>@twitter</td>
-            </tr>
-          </tbody>
-        </table>
       </div>
 
+      <hr />
+      <table class="table table-striped">
+        <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">First</th>
+          <th scope="col">Last</th>
+          <th scope="col">Handle</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+          <th scope="row">1</th>
+          <td>Mark</td>
+          <td>Otto</td>
+          <td>@mdo</td>
+        </tr>
+        <tr>
+          <th scope="row">2</th>
+          <td>Jacob</td>
+          <td>Thornton</td>
+          <td>@fat</td>
+        </tr>
+        <tr>
+          <th scope="row">3</th>
+          <td colspan="2">Larry the Bird</td>
+          <td>@twitter</td>
+        </tr>
+        </tbody>
+      </table>
     </div>
+
   </div>
+</div>
 
 </body>
 
@@ -195,4 +195,5 @@
     </span>
 </footer>
 
+<script src="index.js"></script>
 </html>
