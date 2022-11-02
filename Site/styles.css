@@ -6,6 +6,9 @@
     --black: rgb(3, 3, 3);
     --violet: #836FFF
 }
+select{
+    cursor: pointer
+}
 
 .test{
     color: var(--gold);
