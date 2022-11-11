@@ -88,7 +88,7 @@ function events()
             {
                 document.getElementById('formFile').value = "";
                 if(!res.ok)
-                    await handleErro(res);
+                    return await handleErro(res);
 
                 const result = await res.json();
                 putTimer(result.TimerResponse.TempoCamada);
