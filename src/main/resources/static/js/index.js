@@ -105,7 +105,10 @@ async function runQuery()
     {
         document.getElementById('formFile').value = "";
         if(!res.ok)
+        {
+            document.getElementById('loading').style.display = 'none'
             return await handleErro(res);
+        }
 
         const result = await res.json();
         putTimer(result.TimerResponse.TempoCamada);
