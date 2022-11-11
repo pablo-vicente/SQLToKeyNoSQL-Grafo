@@ -59,6 +59,30 @@ function events()
                 document.getElementById('formFile').value = "";
                 if(!res.ok)
                     await handleErro(res)
+
+                debugger
+
+                const result = await res.json();
+                const time = result.TimerResponse.TempoCamada;
+                const timeSeconds = time.toLocaleString('pt-BR',
+                    {
+                        minimumFractionDigits: 4,
+                        maximumFractionDigits: 4
+                    })
+
+                const timeMinutes = (time / 60).toLocaleString('pt-BR',
+                    {
+                        minimumFractionDigits: 4,
+                        maximumFractionDigits: 4
+                    })
+
+                const timeHors = (time / 60 / 60).toLocaleString('pt-BR',
+                    {
+                        minimumFractionDigits: 4,
+                        maximumFractionDigits: 4
+                    })
+
+                document.getElementById('timer').value = `${timeSeconds}s | ${timeMinutes}m | ${timeHors}h`
             })
 
         });
