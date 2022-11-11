@@ -1,3 +1,4 @@
+var dataSets = []
 
 function modal() {
     var myModalEl = document.querySelector('#model-alert')
@@ -21,6 +22,29 @@ getDatabases();
 
 function events()
 {
+    function putTimer(time)
+    {
+        const timeSeconds = time.toLocaleString('pt-BR',
+            {
+                minimumFractionDigits: 4,
+                maximumFractionDigits: 4
+            })
+
+        const timeMinutes = (time / 60).toLocaleString('pt-BR',
+            {
+                minimumFractionDigits: 4,
+                maximumFractionDigits: 4
+            })
+
+        const timeHors = (time / 60 / 60).toLocaleString('pt-BR',
+            {
+                minimumFractionDigits: 4,
+                maximumFractionDigits: 4
+            })
+
+        document.getElementById('timer').value = `${timeSeconds}s | ${timeMinutes}m | ${timeHors}h`
+    }
+
     document
         .querySelector('#select-nome-db-existente')
         .addEventListener('change', async (e) => {
@@ -33,7 +57,8 @@ function events()
 
     document
         .querySelector('#btn-executar-query')
-        .addEventListener('click', async (e) => {
+        .addEventListener('click', async (e) =>
+        {
             e.preventDefault();
 
             let file = document.getElementById("formFile").files[0];
@@ -42,14 +67,19 @@ function events()
             if(file === undefined || file === null || file === '')
             {
                 const queryText = textArea.value;
-                const blobObject = new Blob([queryText], {type: 'text/plain'})     ;
-                file = new File([blobObject], 'query.sql', {type: 'text/plain'})
+                const blobObject = new Blob([queryText], {type: 'text/plain'});
+                file = new File([blobObject], 'query.sql', {type: 'text/plain'});
             }
             else
                 textArea.value = '';
 
             const formData = new FormData();
             formData.append('file', file);
+
+            document.getElementById('resultados').style.display = 'none';
+            document.getElementById('sem-dados').style.display = 'none';
+            document.getElementById('div-tabela-resultados').style.display = 'none';
+
 
             await fetch('/query-file-sql-script', {
                 method: 'POST',
@@ -58,34 +88,51 @@ function events()
             {
                 document.getElementById('formFile').value = "";
                 if(!res.ok)
-                    await handleErro(res)
-
-                debugger
+                    await handleErro(res);
 
                 const result = await res.json();
-                const time = result.TimerResponse.TempoCamada;
-                const timeSeconds = time.toLocaleString('pt-BR',
-                    {
-                        minimumFractionDigits: 4,
-                        maximumFractionDigits: 4
-                    })
+                putTimer(result.TimerResponse.TempoCamada);
+                dataSets = result.DataSets;
 
-                const timeMinutes = (time / 60).toLocaleString('pt-BR',
-                    {
-                        minimumFractionDigits: 4,
-                        maximumFractionDigits: 4
-                    })
+                const select = document.querySelector("#select-resultado-tabelas");
+                select.options.length = 0;
 
-                const timeHors = (time / 60 / 60).toLocaleString('pt-BR',
-                    {
-                        minimumFractionDigits: 4,
-                        maximumFractionDigits: 4
-                    })
+                for (let i = 0; i < result.DataSets.length; i++)
+                {
+                    const table = result.DataSets[0];
 
-                document.getElementById('timer').value = `${timeSeconds}s | ${timeMinutes}m | ${timeHors}h`
+                    const opt = document.createElement('option');
+                    opt.value = i;
+                    opt.text = table.tableName;
+                    select.appendChild(opt);
+                }
+                createTable(0);
             })
 
         });
+}
+
+function createTable(indexTabela)
+{
+    document.getElementById('resultados').style.display = 'block';
+    if(dataSets.length === 0)
+    {
+        document.getElementById('sem-dados').style.display = 'block';
+        return;
+    }
+
+    const data = dataSets[indexTabela];
+    document.getElementById('table-resultados').innerHTML = '';
+    document.getElementById('table-resultados').innerHTML = `<thead>
+                        <tr>
+                            ${data.columns.map(x => `<th scope="col">${x}</th>`).join("")}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.data.map(row => `<tr>${row.map(column => `<td>${column}</td>`).join("")}</tr>`).join("")}
+                    </tbody>`;
+
+    document.getElementById('div-tabela-resultados').style.display = 'block';
 }
 
 async function postCurrentDatabase(database)

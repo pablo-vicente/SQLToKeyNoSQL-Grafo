@@ -48,3 +48,10 @@ code {
     color: var(--gold);
     text-align: right;
 }
+#sem-dados{
+    text-align: center;
+}
+
+th, td{
+    text-align: center;
+}
