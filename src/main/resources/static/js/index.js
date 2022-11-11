@@ -37,6 +37,11 @@ function events()
         .addEventListener('click', async (e) =>
         {
             e.preventDefault();
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('select-tabelas').style.display = 'none';
+            document.getElementById('sem-dados').style.display = 'none';
+            document.getElementById('div-tabela').style.display = 'none';
+            document.getElementById('timer').value = '';
             await runQuery();
         });
 
@@ -45,9 +50,10 @@ function events()
         .addEventListener('change', async (e) =>
         {
             e.preventDefault();
-            debugger
             const select = document.getElementById("select-resultado-tabelas");
             const tableIndex = select.options[select.selectedIndex].value;
+            document.getElementById('div-tabela').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
             renderTable(tableIndex)
         });
 }
@@ -92,8 +98,6 @@ async function runQuery()
     const formData = new FormData();
     formData.append('file', file);
 
-    document.getElementById('resultados').style.display = 'none';
-
     await fetch('/query-file-sql-script', {
         method: 'POST',
         body: formData
@@ -126,10 +130,14 @@ async function runQuery()
 function renderTable(indexTabela)
 {
     document.getElementById('sem-dados').style.display = 'none';
-    document.getElementById('div-tabela-resultados').style.display = 'none';
+    document.getElementById('div-tabela').style.display = 'none';
+    document.getElementById('loading').style.display = 'block';
     if(dataSets.length === 0)
     {
         document.getElementById('sem-dados').style.display = 'block';
+        document.getElementById('select-tabelas').style.display = 'none';
+        document.getElementById('div-tabela').style.display = 'none';
+        document.getElementById('loading').style.display = 'none';
         return;
     }
 
@@ -143,9 +151,14 @@ function renderTable(indexTabela)
                     <tbody>
                         ${data.data.map(row => `<tr>${row.map(column => `<td>${column}</td>`).join("")}</tr>`).join("")}
                     </tbody>`;
+    setTimeout(() =>
+    {
+        document.getElementById('sem-dados').style.display = 'none';
+        document.getElementById('div-tabela').style.display = 'block';
+        document.getElementById('select-tabelas').style.display = '';
+        document.getElementById('loading').style.display = 'none'
+    }, 5);
 
-    document.getElementById('div-tabela-resultados').style.display = 'block';
-    document.getElementById('resultados').style.display = 'block';
 }
 
 async function postCurrentDatabase(database)
