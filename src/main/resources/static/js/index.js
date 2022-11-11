@@ -22,6 +22,38 @@ getDatabases();
 
 function events()
 {
+    document
+        .querySelector('#select-nome-db-existente')
+        .addEventListener('change', async (e) => {
+            e.preventDefault();
+            const select = document.getElementById("select-nome-db-existente");
+            const database = select.options[select.selectedIndex].value;
+
+            await postCurrentDatabase(database);
+        });
+
+    document
+        .querySelector('#btn-executar-query')
+        .addEventListener('click', async (e) =>
+        {
+            e.preventDefault();
+            await runQuery();
+        });
+
+    document
+        .querySelector('#select-resultado-tabelas')
+        .addEventListener('change', async (e) =>
+        {
+            e.preventDefault();
+            debugger
+            const select = document.getElementById("select-resultado-tabelas");
+            const tableIndex = select.options[select.selectedIndex].value;
+            renderTable(tableIndex)
+        });
+}
+
+async function runQuery()
+{
     function putTimer(time)
     {
         const timeSeconds = time.toLocaleString('pt-BR',
@@ -45,76 +77,56 @@ function events()
         document.getElementById('timer').value = `${timeSeconds}s | ${timeMinutes}m | ${timeHors}h`
     }
 
-    document
-        .querySelector('#select-nome-db-existente')
-        .addEventListener('change', async (e) => {
-            e.preventDefault();
-            const select = document.getElementById("select-nome-db-existente");
-            const database = select.options[select.selectedIndex].value;
+    let file = document.getElementById("formFile").files[0];
+    const textArea = document.getElementById('sql-query-text');
 
-            await postCurrentDatabase(database);
-        });
+    if(file === undefined || file === null || file === '')
+    {
+        const queryText = textArea.value;
+        const blobObject = new Blob([queryText], {type: 'text/plain'});
+        file = new File([blobObject], 'query.sql', {type: 'text/plain'});
+    }
+    else
+        textArea.value = '';
 
-    document
-        .querySelector('#btn-executar-query')
-        .addEventListener('click', async (e) =>
+    const formData = new FormData();
+    formData.append('file', file);
+
+    document.getElementById('resultados').style.display = 'none';
+
+    await fetch('/query-file-sql-script', {
+        method: 'POST',
+        body: formData
+    }).then(async res =>
+    {
+        document.getElementById('formFile').value = "";
+        if(!res.ok)
+            return await handleErro(res);
+
+        const result = await res.json();
+        putTimer(result.TimerResponse.TempoCamada);
+        dataSets = result.DataSets;
+
+        const select = document.querySelector("#select-resultado-tabelas");
+        select.options.length = 0;
+
+        for (let i = 0; i < result.DataSets.length; i++)
         {
-            e.preventDefault();
+            const table = result.DataSets[0];
 
-            let file = document.getElementById("formFile").files[0];
-            const textArea = document.getElementById('sql-query-text');
-
-            if(file === undefined || file === null || file === '')
-            {
-                const queryText = textArea.value;
-                const blobObject = new Blob([queryText], {type: 'text/plain'});
-                file = new File([blobObject], 'query.sql', {type: 'text/plain'});
-            }
-            else
-                textArea.value = '';
-
-            const formData = new FormData();
-            formData.append('file', file);
-
-            document.getElementById('resultados').style.display = 'none';
-            document.getElementById('sem-dados').style.display = 'none';
-            document.getElementById('div-tabela-resultados').style.display = 'none';
-
-
-            await fetch('/query-file-sql-script', {
-                method: 'POST',
-                body: formData
-            }).then(async res =>
-            {
-                document.getElementById('formFile').value = "";
-                if(!res.ok)
-                    return await handleErro(res);
-
-                const result = await res.json();
-                putTimer(result.TimerResponse.TempoCamada);
-                dataSets = result.DataSets;
-
-                const select = document.querySelector("#select-resultado-tabelas");
-                select.options.length = 0;
-
-                for (let i = 0; i < result.DataSets.length; i++)
-                {
-                    const table = result.DataSets[0];
-
-                    const opt = document.createElement('option');
-                    opt.value = i;
-                    opt.text = table.tableName;
-                    select.appendChild(opt);
-                }
-                createTable(0);
-            })
-
-        });
+            const opt = document.createElement('option');
+            opt.value = i;
+            opt.text = table.tableName;
+            select.appendChild(opt);
+        }
+        renderTable(0);
+    });
 }
 
-function createTable(indexTabela)
+function renderTable(indexTabela)
 {
-    document.getElementById('resultados').style.display = 'block';
+    document.getElementById('sem-dados').style.display = 'none';
+    document.getElementById('div-tabela-resultados').style.display = 'none';
     if(dataSets.length === 0)
     {
         document.getElementById('sem-dados').style.display = 'block';
@@ -133,6 +145,7 @@ function createTable(indexTabela)
                     </tbody>`;
 
     document.getElementById('div-tabela-resultados').style.display = 'block';
+    document.getElementById('resultados').style.display = 'block';
 }
 
 async function postCurrentDatabase(database)
