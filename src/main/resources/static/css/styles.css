@@ -10,6 +10,9 @@ select{
     cursor: pointer
 }
 
+#modal-header{
+    background-color: var(--bs-warning);
+}
 .test{
     color: var(--gold);
 }
@@ -31,4 +34,12 @@ select{
     background-color: var(--gray);
     color: #FFF;
     text-align: center;
+}
+
+code {
+    font-family: Consolas,"courier new";
+    color: green;
+    background-color: black;
+    padding: 2px;
+    font-size: 105%;
 }
