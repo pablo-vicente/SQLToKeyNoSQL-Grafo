@@ -58,9 +58,6 @@
                       <label class="input-group-text" for="select-target-nosql">Conector</label>
                       <select class="form-select" id="select-target-nosql">
                         <option selected>Selecione o conector...</option>
-                        <option value="1">Neo4j</option>
-                        <option value="2">Two</option>
-                        <option value="3">Three</option>
                       </select>
                     </div>
 
@@ -90,15 +87,15 @@
                 <div class="col">
                   <h5 class="card-title">Banco de Dados</h5>
                   <form id="form-nome-db">
-                    <div class="input-group mb-3">
-                      <label class="input-group-text" for="select-nome-db-existente">Nome</label>
-                      <select class="form-select" id="select-nome-db-existente">
-                        <option selected>Selecione...</option>
-                        <option value="1">Neo4j</option>
-                        <option value="2">Two</option>
-                        <option value="3">Three</option>
-                      </select>
-                    </div>
+<!--                    <div class="input-group mb-3">-->
+<!--                      <label class="input-group-text" for="select-nome-db-existente">Nome</label>-->
+<!--                      <select class="form-select" id="select-nome-db-existente">-->
+<!--                        <option selected>Selecione...</option>-->
+<!--                        <option value="1">Neo4j</option>-->
+<!--                        <option value="2">Two</option>-->
+<!--                        <option value="3">Three</option>-->
+<!--                      </select>-->
+<!--                    </div>-->
 
                     <div class="input-group mb-3">
                       <span class="input-group-text">Novo</span>
@@ -131,14 +128,24 @@
     <div class="card-body">
 
       <div class="input-group mb-3">
+        <label class="input-group-text" for="select-nome-db-existente">Banco de Dados</label>
+        <select class="form-select" id="select-nome-db-existente">
+          <option selected>Selecione...</option>
+          <option value="1">Neo4j</option>
+          <option value="2">Two</option>
+          <option value="3">Three</option>
+        </select>
+      </div>
+
+      <div class="input-group mb-3">
         <input class="form-control" type="file" id="formFile">
-        <button class="btn btn-warning btn-salvar" type="button">Executar</button>
+        <button id="btn-executar-query" class="btn btn-warning btn-salvar" type="button">Executar</button>
       </div>
 
       <div class="form-floating">
-          <textarea class="form-control" placeholder="Escreva uma expressão SQL" id="floatingTextarea2"
+          <textarea class="form-control" placeholder="Escreva uma expressão SQL" id="sql-query-text"
                     style="height: 100px"></textarea>
-        <label for="floatingTextarea2">SQL</label>
+        <label for="sql-query-text">Escreva uma expressão SQL</label>
       </div>
 
       <div class="input-group mt-3">
@@ -196,6 +203,27 @@
     </span>
   </div>
 </footer>
+
+<div id="model-alert" class="modal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div id="modal-header" class="modal-header">
+        <h5 class="modal-title">ERRO</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <code id="code">
+
+        </code>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+<!--        <button type="button" class="btn btn-primary">Save changes</button>-->
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <script type="text/javascript" th:src="@{/js/index.js}"></script>
 </html>
