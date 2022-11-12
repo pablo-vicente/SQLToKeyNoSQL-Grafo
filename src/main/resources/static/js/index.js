@@ -118,7 +118,7 @@ async function runQuery()
 
             const opt = document.createElement('option');
             opt.value = i;
-            opt.text = table.tableName;
+            opt.text = table.tableName.toUpperCase();
             select.appendChild(opt);
         }
         renderTable(0);
@@ -140,7 +140,7 @@ function renderTable(indexTabela)
     }
 
     const data = dataSets[indexTabela];
-    const columns = data.columns.map(function (e){ return {title :e} });
+    const columns = data.columns.map(function (column) {return {title: column.toUpperCase()}});
     const lines = data.data;
 
     tabelaResultados = $('#table-resultados').DataTable({
