@@ -17,7 +17,6 @@ import java.util.List;
 public class Table {
     
     private final String name;
-    private final NoSQL targetDB ;
     private List<String> pks;
     private List<ForeignKey> fks;
     private List<String> attributes;
@@ -25,10 +24,6 @@ public class Table {
 
     public String getName() {
         return name;
-    }
-
-    public NoSQL getTargetDB() {
-        return targetDB;
     }
 
     public List<String> getPks() {
@@ -63,18 +58,16 @@ public class Table {
         this.keys = keys;
     }
 
-    public Table(String name, NoSQL targetDB, List<String> pks, List<ForeignKey> fks, List<String> attributes) {
+    public Table(String name, List<String> pks, List<ForeignKey> fks, List<String> attributes) {
         this.name = name;
-        this.targetDB = targetDB;
         this.pks = pks;
         this.fks = fks;
         this.attributes = attributes;
         this.keys = new ArrayList<>();
     }
 
-    public Table(String name, NoSQL targetDB, List<String> pks, List<ForeignKey> fks, List<String> attributes, List<String> keys) {
+    public Table(String name, List<String> pks, List<ForeignKey> fks, List<String> attributes, List<String> keys) {
         this.name = name;
-        this.targetDB = targetDB;
         this.pks = pks;
         this.fks = fks;
         this.attributes = attributes;
