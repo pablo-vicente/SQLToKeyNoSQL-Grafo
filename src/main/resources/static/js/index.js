@@ -390,7 +390,8 @@ async function getConnectores()
                 const opt = document.createElement('option');
                 opt.value = connector;
                 opt.text = connector
-                opt.selected = false;
+                opt.selected = connector === 'NEO4J';
+                opt.disabled = connector !== 'NEO4J' && connector !== "MONGO";
                 select.appendChild(opt)
             });
 
