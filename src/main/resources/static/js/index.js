@@ -144,6 +144,9 @@ function renderTable(indexTabela)
     const lines = data.data;
 
     tabelaResultados = $('#table-resultados').DataTable({
+        language: {
+            url: 'pt-BR.json'
+        },
         fixedColumns: true,
         deferRender:    true,
         scrollY:        '60vh',
