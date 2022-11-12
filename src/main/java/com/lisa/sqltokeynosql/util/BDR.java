@@ -18,14 +18,13 @@ import java.util.Optional;
 public class BDR implements Serializable {
     private String name;
     private List<Table> tables;
+    private final NoSQL targetDB ;
 
-    public BDR() {
-        tables = new ArrayList<>();
-    }
-
-    public BDR(String name, List<Table> tables) {
+    public BDR(String name, NoSQL targetDB, List<Table> tables)
+    {
         this.name = name;
         this.tables = tables;
+        this.targetDB = targetDB;
     }
 
     public String getName() {
@@ -49,5 +48,10 @@ public class BDR implements Serializable {
     @Override
     public String toString() {
         return name;
+    }
+
+    public NoSQL getTargetDB()
+    {
+        return targetDB;
     }
 }

@@ -38,10 +38,6 @@ public final class Dictionary implements Serializable {
 
     public void addTarget(NoSQL noSQL) {
         targets.add(noSQL);
-//        BDR bdr = new BDR(noSQL.getAlias(), new ArrayList<>());
-//        rdbms.add(bdr);
-//        if (currentDb == null)
-//            currentDb = bdr;
     }
 
     public Optional<BDR> getBDR(String dbName) {
@@ -55,20 +51,19 @@ public final class Dictionary implements Serializable {
         return Optional.empty();
     }
 
-    public NoSQL getTarget(String alias)
+    public NoSQL getTarget(String conector)
     {
-        if(targets == null || targets.size() == 0)
+        if(targets == null || targets.size() == 0 || conector == null)
             throw new UnsupportedOperationException("Não foi cadastrado nenhum NoSQL target.");
 
-        if (alias == null)
-            return targets.get(0);
-
-        for (NoSQL noSQL : targets) {
-            if (noSQL.getAlias().equals(alias)) {
+        var conectorNoSql = com.lisa.sqltokeynosql.api.enums.Connector.valueOf(conector.toUpperCase());
+        for (NoSQL noSQL : targets)
+        {
+            if (noSQL.getConnector() == conectorNoSql) {
                 return noSQL;
             }
         }
-        return null;
+        throw new UnsupportedOperationException("Não foi cadastrado nenhum NoSQL target para " + conector);
     }
 
     public BDR getCurrentDb() {

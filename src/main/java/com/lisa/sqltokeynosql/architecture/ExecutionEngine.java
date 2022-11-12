@@ -38,24 +38,35 @@ public class ExecutionEngine {
                         .orElseGet(Dictionary::new);
     }
 
-    private void createDBR(final String name)
+    public void createDBR(final String name, String connector)
     {
-        dictionary.getRdbms().add(new BDR(name, new ArrayList<>()));
+        if (databaseExist(name))
+            throw new UnsupportedOperationException("Banco de dados já cadastrado!");
+
+        var noSQL = dictionary.getTarget(connector);
+
+        dictionary.getRdbms().add(new BDR(name, noSQL, new ArrayList<>()));
+        dictionary.setCurrentDb(name);
+        SaveDicitionary();
     }
 
     public void changeCurrentDB(final String name1)
     {
-        var name = name1.replace(".", "_");
-        var dabaseExists = dictionary
+        if (!databaseExist(name1))
+            throw new UnsupportedOperationException("Banco de dados Inexistente!");
+        dictionary.setCurrentDb(name1);
+        SaveDicitionary();
+    }
+
+    public boolean databaseExist(String name)
+    {
+        if(name.trim().equals(""))
+            throw new UnsupportedOperationException("Nome do Banco de dados não pode estar em branco.");
+
+        return dictionary
                 .getRdbms()
                 .stream()
                 .anyMatch(br -> br.getName().equalsIgnoreCase(name));
-        if (!dabaseExists) {
-            System.out.println("New RDB " + name + " created!");
-            this.createDBR(name);
-        }
-        dictionary.setCurrentDb(name);
-        SaveDicitionary();
     }
 
     public void createTable(final Table table)
@@ -74,7 +85,7 @@ public class ExecutionEngine {
             throw new UnsupportedOperationException("A Tabela " + table.getName() + " já foi criada");
 
         tables.add(table);
-        var target = table.getTargetDB();
+        var target = currenteDb.getTargetDB();
         var connection = target.getConnection();
         connection.create(table);
     }
@@ -113,7 +124,7 @@ public class ExecutionEngine {
             dados.put(key, value);
         }
 
-        NoSQL targetDb = table.getTargetDB();
+        NoSQL targetDb = dictionary.getCurrentDb().getTargetDB();
         Connector connection = targetDb.getConnection();
         connection.put(table, columns, dados);
 
@@ -142,7 +153,8 @@ public class ExecutionEngine {
 
             keys.add(key);
         }
-        table1
+        dictionary
+                .getCurrentDb()
                 .getTargetDB()
                 .getConnection()
                 .delete(table, String.valueOf(keys));
@@ -165,7 +177,8 @@ public class ExecutionEngine {
             throw new UnsupportedOperationException("Table " + tableName + " Not exists!!!");
 
         var tableDb = table.get();
-        var connector = tableDb
+        var connector = dictionary
+                .getCurrentDb()
             .getTargetDB()
             .getConnection();
 
@@ -210,7 +223,8 @@ public class ExecutionEngine {
             dados.put(key, values);
         }
 
-        table
+        dictionary
+                .getCurrentDb()
                 .getTargetDB()
                 .getConnection()
                 .update(table, dados, acls, avl);
@@ -244,7 +258,7 @@ public class ExecutionEngine {
     }
 
     private ArrayList getNWrapper(final Table table, final LinkedList columns, final Stack<Object> filters, final int n) {
-        ArrayList result = table.getTargetDB().getConnection().getN(n, table.getName(), (ArrayList<String>) table.getKeys(), filters, columns);
+        ArrayList result = dictionary.getCurrentDb().getTargetDB().getConnection().getN(n, table.getName(), (ArrayList<String>) table.getKeys(), filters, columns);
         return result;
     }
 
@@ -360,12 +374,27 @@ public class ExecutionEngine {
         return table.getSchemaName() + "." + table.getName();
     }
 
-    public NoSQL getTarget(String schemaName) {
-        return dictionary.getTarget(schemaName);
-    }
+    public void addTarget(NoSQL noSQL)
+    {
+        NoSQL atual = null;
+        for (NoSQL target : dictionary.getTargets())
+        {
+            if(target.getConnector() != noSQL.getConnector())
+                continue;
+            atual = target;
+            break;
+        }
 
-    public void addTarget(NoSQL noSQL) {
-        dictionary.addTarget(noSQL);
+        if(atual == null)
+            dictionary.addTarget(noSQL);
+        else
+        {
+            atual.setUser(noSQL.getUser());
+            atual.setAlias(noSQL.getAlias());
+            atual.setPassword(noSQL.getPassword());
+            atual.setUrl(noSQL.getUrl());
+        }
+
         SaveDicitionary();
     }
 
@@ -478,7 +507,7 @@ public class ExecutionEngine {
             dados.add(dado);
         }
 
-        var target = table.getTargetDB();
+        var target = dictionary.getCurrentDb().getTargetDB();
         var connection = target.getConnection();
         connection.alter(table, dados);
 

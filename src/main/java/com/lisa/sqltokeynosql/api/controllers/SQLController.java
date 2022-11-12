@@ -2,6 +2,7 @@ package com.lisa.sqltokeynosql.api.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.lisa.sqltokeynosql.api.dto.CreateDataBaseRequestDTO;
 import com.lisa.sqltokeynosql.api.dto.CurrentDataBaseRequestDTO;
 import com.lisa.sqltokeynosql.api.dto.NoSqlTargetDTO;
 import com.lisa.sqltokeynosql.api.dto.SQLDTO;
@@ -88,13 +89,29 @@ public class SQLController {
     }
 
     @PostMapping(value = "/current-database", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
-    @ApiOperation(value = "Create a databse if is not exist and set as current database.")
+    @ApiOperation(value = "Set as current database.")
     public ResponseEntity<String> choseCurrentDataBase(@RequestBody CurrentDataBaseRequestDTO currentDataBase) throws JsonProcessingException
     {
         try
         {
             parser.changeCurrentDB(currentDataBase.getName());
             return ResponseEntity.ok(mapper.writeValueAsString(currentDataBase.getName()));
+        }
+        catch (Exception ex)
+        {
+            return handleException(ex);
+        }
+
+    }
+
+    @PostMapping(value = "/database", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
+    @ApiOperation(value = "Create a database and set as current database.")
+    public ResponseEntity<String> createDataBase(@RequestBody CreateDataBaseRequestDTO request) throws JsonProcessingException
+    {
+        try
+        {
+            parser.createCurrentDB(request.getName(), request.getConnector());
+            return ResponseEntity.ok(mapper.writeValueAsString(request));
         }
         catch (Exception ex)
         {

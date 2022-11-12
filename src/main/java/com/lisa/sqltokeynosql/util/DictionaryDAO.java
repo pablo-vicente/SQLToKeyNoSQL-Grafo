@@ -38,11 +38,12 @@ public class DictionaryDAO {
         for (BDR bd : dic.getRdbms()) {
             aux = new Document();
             aux.append("name", bd.getName());
+            aux.append("target", bd.getTargetDB().getConnector().toString().toUpperCase());
             tables = new Document();
             for (Table t : bd.getTables()) {
                 auxTable = new Document();
                 auxTable.append("name", t.getName());
-                auxTable.append("target", t.getTargetDB().getAlias());
+//
                 if (t.getFks() != null || !t.getFks().isEmpty()) {
                     Document fk, fks = new Document();
                     for (ForeignKey f : t.getFks()) {
@@ -111,13 +112,18 @@ public class DictionaryDAO {
             Document tableD;
             while (iteratorRBD.hasNext()) {
                 aux = (Document) iteratorRBD.next();
-                bd = new BDR();
-                bd.setName(aux.getString("name"));
+
+                var bdName = aux.getString("name");
+                var connector = aux.getString("target");
+                var noSQlTarget =_new.getTarget(connector);
+                var bdTables = new ArrayList<Table>();
+
+                bd = new BDR(bdName, noSQlTarget, bdTables);
                 if (aux.get("tables") != null && !((Document) aux.get("tables")).values().isEmpty()) {
                     Iterator tableIterator = ((Document) aux.get("tables")).values().iterator();
                     while (tableIterator.hasNext()) {
                         tableD = (Document) tableIterator.next();
-                        Table t = new Table(tableD.getString("name"), _new.getTarget(tableD.getString("target")), null, null, null);
+                        Table t = new Table(tableD.getString("name"), null, null, null);
                         t.setAttributes(new LinkedList<>(Arrays.asList(tableD.getString("att").replace(" ", "").split(","))));
                         if (tableD.getString("key").isEmpty()) {
                             t.setKeys(new ArrayList<>());
@@ -141,7 +147,7 @@ public class DictionaryDAO {
                         } else {
                             t.setFks(new ArrayList<>());
                         }
-                        bd.getTables().add(t);
+                        bdTables.add(t);
                     }
                 }
                 _new.getRdbms().add(bd);
