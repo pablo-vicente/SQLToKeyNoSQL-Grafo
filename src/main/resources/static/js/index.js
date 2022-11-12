@@ -56,16 +56,23 @@ function events()
 
     document
         .querySelector('#form-target-nosql')
-        .addEventListener('submit', async (e) =>
-        {
-            debugger
-            e.preventDefault();
-            // TODO ARRODIAR O BOTAO
-            await createUpdateNoSqlTarget();
-            await createDatabase();
-            await getDatabases();
+        .addEventListener('submit',
+            async (e) => {
+                debugger
+                e.preventDefault();
 
-        });
+                insertLoadingButton('salvar-target');
+                const target = await createUpdateNoSqlTarget();
+                const database = await createDatabase();
+                const currente = await getDatabases();
+
+                Promise
+                    .all([target, database, currente])
+                    .then(() =>
+                    {
+                        removeLoadingButton('salvar-target');
+                    })
+            });
 
     document
         .querySelector('#select-target-nosql')
@@ -84,12 +91,17 @@ function events()
 
 async function createDatabase()
 {
+    const database = document.querySelector('#nome-db-novo').value;
+
+    if(database === undefined || database === null || database === "")
+        return;
+
     return await fetch("/database",
         {
             method: 'POST',
             body: JSON.stringify(
                 {
-                    "name": document.querySelector('#nome-db-novo').value,
+                    "name": database,
                     "connector": document.querySelector('#select-target-nosql').value
                 }),
             headers: new Headers(
@@ -402,4 +414,20 @@ function showModal(message) {
     const myModalEl = document.querySelector('#model-alert');
     const modal = bootstrap.Modal.getOrCreateInstance(myModalEl);
     modal.show();
+}
+
+function insertLoadingButton(id)
+{
+    const button = document.getElementById(id);
+    button.disabled = true;
+    const value = button.innerText;
+    button.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>&nbsp;${value}`;
+}
+
+function removeLoadingButton(id)
+{
+    const button = document.getElementById(id);
+    button.disabled = false;
+    document.querySelector('#' + id + ' span').remove();
+    button.innerText = button.innerText.trim();
 }
