@@ -122,6 +122,7 @@ public class Parser {
         stopwatch.stop();
         TimeReportService.TotalSegundos = stopwatch.getTotalTimeSeconds();
         var timerResponse = TimeReportService.GeneratCsvRepost();
+        dataSets.sort(Comparator.comparing(DataSet::getTableName));
         return new ExecutionResponse(dataSets, timerResponse);
     }
 
