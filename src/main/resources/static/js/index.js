@@ -56,11 +56,14 @@ function events()
 
     document
         .querySelector('#salvar-target')
-        .addEventListener('click', async (e) =>
+        .addEventListener('submit', async (e) =>
         {
             e.preventDefault();
             // TODO ARRODIAR O BOTAO
             await createUpdateNoSqlTarget();
+            await createDatabase();
+            await getDatabases();
+
         });
 
     document
@@ -76,6 +79,30 @@ function events()
             else
                 setCredencialTargetNoSql(noSqlTarget.user, noSqlTarget.password, noSqlTarget.url)
         });
+}
+
+async function createDatabase()
+{
+    return await fetch("/database",
+        {
+            method: 'POST',
+            body: JSON.stringify(
+                {
+                    "name": document.querySelector('#nome-db-novo').value,
+                    "connector": document.querySelector('#select-target-nosql').value
+                }),
+            headers: new Headers(
+                {
+                    'Content-Type': 'application/json'
+                })
+        })
+        .then(async res =>
+        {
+            if(!res.ok)
+                showModal(await res.json());
+
+            document.querySelector('#nome-db-novo').value = '';
+        })
 }
 
 async function createUpdateNoSqlTarget()
@@ -100,9 +127,7 @@ async function createUpdateNoSqlTarget()
         .then(async res =>
         {
             if(!res.ok)
-                return showModal(res.json());
-            else
-                showModal('Conexão SGBD Executada com Sucesso')
+                return showModal(await res.json());
         })
 }
 
@@ -112,7 +137,7 @@ async function getNosqlTargets()
         .then(async res =>
         {
             if(!res.ok)
-                return showModal(res.json());
+                return showModal(await res.json());
 
             return await res.json();
         })
@@ -167,7 +192,7 @@ async function runQuery()
         if(!res.ok)
         {
             document.getElementById('loading').style.display = 'none'
-            return showModal(res.json());
+            return showModal(await res.json());
         }
 
         const result = await res.json();
@@ -274,7 +299,7 @@ async function postCurrentDatabase(database)
         .then(async res =>
         {
             if(!res.ok)
-                showModal(res.json());
+                showModal(await res.json());
         })
 }
 
@@ -287,7 +312,7 @@ async function getDatabases()
         .then(async res =>
         {
             if (!res.ok)
-                return showModal(res.json());
+                return showModal(await res.json());
 
             const databases = await res.json();
             const select = document.querySelector("#select-nome-db-existente");
@@ -314,7 +339,7 @@ async function getCurrenteDatabase()
         .then(async res =>
         {
             if (!res.ok)
-                return showModal(res.json());
+                return showModal(await res.json());
 
             const currentDatabase = await res.json();
 
@@ -334,7 +359,7 @@ async function getConnectores()
         .then(async res =>
         {
             if (!res.ok)
-                return showModal(res.json());
+                return showModal(await res.json());
 
             const connectors = await res.json();
             const select = document.querySelector("#select-target-nosql");
