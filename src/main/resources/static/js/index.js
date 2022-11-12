@@ -1,4 +1,5 @@
-var dataSets = []
+var dataSets = [];
+var tabelaResultados;
 
 events();
 getConnectores();
@@ -139,21 +140,35 @@ function renderTable(indexTabela)
     }
 
     const data = dataSets[indexTabela];
-    document.getElementById('table-resultados').innerHTML = '';
-    document.getElementById('table-resultados').innerHTML = `<thead>
-                        <tr>
-                            ${data.columns.map(x => `<th scope="col">${x}</th>`).join("")}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${data.data.map(row => `<tr>${row.map(column => `<td>${column}</td>`).join("")}</tr>`).join("")}
-                    </tbody>`;
+    const columns = data.columns.map(function (e){ return {title :e} });
+    const lines = data.data;
+
+    tabelaResultados = $('#table-resultados').DataTable({
+        fixedColumns: true,
+        deferRender:    true,
+        scrollY:        '60vh',
+        scrollCollapse: true,
+        scroller:       true,
+        scrollX:        true,
+        stateSave:      true,
+        select:         true,
+        data: lines,
+        columns: columns,
+        columnDefs: [{
+            targets: '_all',
+            className: 'dt-head-center dt-body-center'
+        }]
+    });
+
+    new $.fn.dataTable.FixedColumns(tabelaResultados);
+
     setTimeout(() =>
     {
         document.getElementById('sem-dados').style.display = 'none';
         document.getElementById('div-tabela').style.display = '';
         document.getElementById('select-tabelas').style.display = '';
-        document.getElementById('loading').style.display = 'none'
+        document.getElementById('loading').style.display = 'none';
+        tabelaResultados.draw();
     }, 5);
 
 }

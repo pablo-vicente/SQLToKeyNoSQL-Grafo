@@ -52,7 +52,6 @@ code {
     text-align: center;
 }
 
-th, td{
-    text-align: center;
-    vertical-align: middle;
+table.table-bordered.dataTable td:first-child, table.table-bordered.dataTable td:first-child {
+     border-left-width: 0;
 }
