@@ -59,11 +59,11 @@ public class SQLController {
     {
         try
         {
-            NoSQL noSQL = new NoSQL(noSqlTargetDTO.getName(),
-                    noSqlTargetDTO.getUser(),
-                    noSqlTargetDTO.getPassword(),
-                    noSqlTargetDTO.getUrl(),
-                    noSqlTargetDTO.getConnector());
+            NoSQL noSQL = new NoSQL(noSqlTargetDTO.getName().trim(),
+                    noSqlTargetDTO.getUser().trim(),
+                    noSqlTargetDTO.getPassword().trim(),
+                    noSqlTargetDTO.getUrl().trim(),
+                    noSqlTargetDTO.getConnector().trim());
             parser.addNoSqlTarget(noSQL);
             return ResponseEntity.ok(mapper.writeValueAsString(noSQL));
         }
@@ -94,7 +94,7 @@ public class SQLController {
     {
         try
         {
-            parser.changeCurrentDB(currentDataBase.getName());
+            parser.changeCurrentDB(currentDataBase.getName().trim());
             return ResponseEntity.ok(mapper.writeValueAsString(currentDataBase.getName()));
         }
         catch (Exception ex)
@@ -110,7 +110,7 @@ public class SQLController {
     {
         try
         {
-            parser.createCurrentDB(request.getName(), request.getConnector());
+            parser.createCurrentDB(request.getName().trim(), request.getConnector().trim());
             return ResponseEntity.ok(mapper.writeValueAsString(request));
         }
         catch (Exception ex)
