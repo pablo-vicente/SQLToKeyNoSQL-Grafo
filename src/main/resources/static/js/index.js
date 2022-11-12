@@ -1,5 +1,6 @@
 var dataSets = [];
 var tabelaResultados;
+var noSqlTargets = [];
 
 events();
 getConnectores();
@@ -10,6 +11,7 @@ getDatabases();
 // GET  /current-database OK
 // POST /current-database OK
 // GET  /databases OK
+// POST  /database TODO
 // POST /no-sql-target
 // GET  /no-sql-targets
 // POST /query OK
@@ -51,6 +53,69 @@ function events()
             document.getElementById('loading').style.display = '';
             renderTable(tableIndex)
         });
+
+    document
+        .querySelector('#salvar-target')
+        .addEventListener('click', async (e) =>
+        {
+            e.preventDefault();
+            // TODO ARRODIAR O BOTAO
+            await createUpdateNoSqlTarget();
+        });
+
+    document
+        .querySelector('#select-target-nosql')
+        .addEventListener('change', async (e) =>
+        {
+            e.preventDefault();
+            const connector = document.querySelector('#select-target-nosql').value;
+            const noSqlTarget = noSqlTargets.find(x=> x.connector === connector);
+
+            if(noSqlTarget === null || noSqlTarget === undefined)
+                setCredencialTargetNoSql('', '', '')
+            else
+                setCredencialTargetNoSql(noSqlTarget.user, noSqlTarget.password, noSqlTarget.url)
+        });
+}
+
+async function createUpdateNoSqlTarget()
+{
+    const obj = {
+        "connector": document.querySelector("#select-target-nosql").value,
+        "name": document.querySelector("#select-target-nosql").value,
+        "user": document.querySelector("#target-nosql-usuario").value,
+        "password": document.querySelector("#target-nosql-senha").value,
+        "url": document.querySelector("#target-nosql-url").value,
+    };
+
+    await fetch("/no-sql-target",
+        {
+            method: 'POST',
+            body: JSON.stringify(obj),
+            headers: new Headers(
+                {
+                    'Content-Type': 'application/json'
+                })
+        })
+        .then(async res =>
+        {
+            if(!res.ok)
+                return showModal(res.json());
+            else
+                showModal('Conexão SGBD Executada com Sucesso')
+        })
+}
+
+async function getNosqlTargets()
+{
+    return await fetch("/no-sql-targets")
+        .then(async res =>
+        {
+            if(!res.ok)
+                return showModal(res.json());
+
+            return await res.json();
+        })
 }
 
 async function runQuery()
@@ -102,7 +167,7 @@ async function runQuery()
         if(!res.ok)
         {
             document.getElementById('loading').style.display = 'none'
-            return await handleErro(res);
+            return showModal(res.json());
         }
 
         const result = await res.json();
@@ -209,7 +274,7 @@ async function postCurrentDatabase(database)
         .then(async res =>
         {
             if(!res.ok)
-                await handleErro(res)
+                showModal(res.json());
         })
 }
 
@@ -222,7 +287,7 @@ async function getDatabases()
         .then(async res =>
         {
             if (!res.ok)
-                return await handleErro(res)
+                return showModal(res.json());
 
             const databases = await res.json();
             const select = document.querySelector("#select-nome-db-existente");
@@ -249,10 +314,12 @@ async function getCurrenteDatabase()
         .then(async res =>
         {
             if (!res.ok)
-                return await handleErro(res)
+                return showModal(res.json());
 
             const currentDatabase = await res.json();
 
+            if(currentDatabase === null || currentDatabase === undefined)
+                return ;
             const select = document.querySelector("#select-nome-db-existente");
             select.value = currentDatabase.name
         })
@@ -267,7 +334,7 @@ async function getConnectores()
         .then(async res =>
         {
             if (!res.ok)
-                return await handleErro(res)
+                return showModal(res.json());
 
             const connectors = await res.json();
             const select = document.querySelector("#select-target-nosql");
@@ -282,13 +349,30 @@ async function getConnectores()
                 select.appendChild(opt)
             });
 
+            noSqlTargets = await getNosqlTargets();
+
+            if(noSqlTargets.length === 0)
+            {
+                setCredencialTargetNoSql('', '', '')
+                return;
+            }
+
+            const noSqlTarget = noSqlTargets[0];
+            select.value = noSqlTarget.connector;
+            setCredencialTargetNoSql(noSqlTarget.user, noSqlTarget.password, noSqlTarget.url)
         })
 }
 
-async function handleErro(res) {
-    let response = await res.json();
-    console.log(response)
-    document.getElementById('code').innerText = response;
+function setCredencialTargetNoSql(user, password, url)
+{
+    document.querySelector("#target-nosql-usuario").value = user;
+    document.querySelector("#target-nosql-senha").value = password;
+    document.querySelector("#target-nosql-url").value = url;
+}
+
+function showModal(message) {
+    console.log(message)
+    document.getElementById('code').innerText = message;
     const myModalEl = document.querySelector('#model-alert');
     const modal = bootstrap.Modal.getOrCreateInstance(myModalEl);
     modal.show();

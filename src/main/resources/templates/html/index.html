@@ -60,12 +60,11 @@
         <div class="card mb-3">
           <div class="row col p-4">
             <div class="" style="max-width: 19.4rem;">
-              <img th:src="@{/images/dbIMG.png}" class="img-thumbnail rounded-start icone-bd">
+              <img th:src="@{/images/dbIMG.png}" class="img-thumbnail rounded-start icone-bd" alt="Imgem banco de dados">
             </div>
             <div class="col">
               <div class="row">
                 <div class="col">
-                  <h5 class="card-title">NoSQL</h5>
                   <form id="form-target-nosql">
                     <div class="input-group mb-3">
                       <label class="input-group-text" for="select-target-nosql">Conector</label>
@@ -75,23 +74,23 @@
                     </div>
 
                     <div class="input-group mb-3">
-                      <span class="input-group-text">Nome</span>
-                      <input id="target-nosql-nome" type="text" class="form-control">
+                      <label class="input-group-text" for="target-nosql-usuario">Usuário</label>
+                      <input id="target-nosql-usuario" name="target-nosql-usuario" type="text" class="form-control">
                     </div>
 
                     <div class="input-group mb-3">
-                      <span class="input-group-text">Usuário</span>
-                      <input id="target-nosql-usuario" type="text" class="form-control">
+                      <label class="input-group-text" for="target-nosql-senha">Senha</label>
+                      <input id="target-nosql-senha" name="target-nosql-senha" type="password" class="form-control" >
                     </div>
 
                     <div class="input-group mb-3">
-                      <span class="input-group-text">Senha</span>
-                      <input id="target-nosql-senha" type="password" class="form-control" >
+                      <label class="input-group-text" for="target-nosql-url">URL</label>
+                      <input id="target-nosql-url" name="target-nosql-url" type="url" class="form-control">
                     </div>
 
                     <div class="input-group mb-3">
-                      <span class="input-group-text">URL</span>
-                      <input id="target-nosql-url" type="url" class="form-control">
+                      <label class="input-group-text" th:for="nome-db-novo">Banco de Dados</label>
+                      <input id="nome-db-novo" name="nome-db-novo" type="text" class="form-control">
                     </div>
 
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
@@ -101,24 +100,6 @@
                   </form>
                 </div>
 
-                <div class="col">
-                  <h5 class="card-title position-relative">Banco de Dados</h5>
-                  <form id="form-nome-db">
-
-
-                    <div class="input-group mb-3">
-                      <span class="input-group-text">Novo</span>
-                      <input id="nome-db-novo" type="text" class="form-control">
-                    </div>
-
-
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                      <button id="salvar-novo-banco-dados" class="btn btn-warning btn-salvar" type="button">Salvar</button>
-                    </div>
-                  </form>
-
-                </div>
-
               </div>
             </div>
           </div>
@@ -126,7 +107,6 @@
       </div>
     </div>
   </div>
-</div>
 </div>
 
 <div class="p-4">
@@ -158,13 +138,12 @@
       </div>
 
       <div class="input-group mt-3">
-        <span class="input-group-text">Tempo de Execução</span>
+        <label for="timer" class="input-group-text">Tempo de Execução</label>
         <input id="timer" type="text" class="form-control" disabled>
         <div class="btn-clock input-group-text">
             <span>
-              <img th:src="@{/images/clock.png}" height="32" />
+              <img th:src="@{/images/clock.png}" height="32" alt="Imagem de um Relógio"/>
             </span>
-          </button>
         </div>
       </div>
 
@@ -173,7 +152,7 @@
         <hr />
 
         <div id="select-tabelas" class="input-group mb-3" style="display: none">
-          <label class="input-group-text" for="select-nome-db-existente">Tabela</label>
+          <label class="input-group-text" for="select-resultado-tabelas">Tabela</label>
           <select class="form-select" id="select-resultado-tabelas">
             <option selected></option>
           </select>
