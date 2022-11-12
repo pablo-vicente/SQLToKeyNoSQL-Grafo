@@ -68,33 +68,33 @@
                   <form id="form-target-nosql">
                     <div class="input-group mb-3">
                       <label class="input-group-text" for="select-target-nosql">Conector</label>
-                      <select class="form-select" id="select-target-nosql">
+                      <select class="form-select" id="select-target-nosql" required>
                         <option selected>Selecione o conector...</option>
                       </select>
                     </div>
 
                     <div class="input-group mb-3">
                       <label class="input-group-text" for="target-nosql-usuario">Usuário</label>
-                      <input id="target-nosql-usuario" name="target-nosql-usuario" type="text" class="form-control">
+                      <input id="target-nosql-usuario" name="target-nosql-usuario" type="text" class="form-control" required>
                     </div>
 
                     <div class="input-group mb-3">
                       <label class="input-group-text" for="target-nosql-senha">Senha</label>
-                      <input id="target-nosql-senha" name="target-nosql-senha" type="password" class="form-control" >
+                      <input id="target-nosql-senha" name="target-nosql-senha" type="password" class="form-control" autocomplete required>
                     </div>
 
                     <div class="input-group mb-3">
                       <label class="input-group-text" for="target-nosql-url">URL</label>
-                      <input id="target-nosql-url" name="target-nosql-url" type="url" class="form-control">
+                      <input id="target-nosql-url" name="target-nosql-url" type="url" class="form-control" required>
                     </div>
 
                     <div class="input-group mb-3">
                       <label class="input-group-text" th:for="nome-db-novo">Banco de Dados</label>
-                      <input id="nome-db-novo" name="nome-db-novo" type="text" class="form-control">
+                      <input id="nome-db-novo" name="nome-db-novo" type="text" class="form-control" minlength="5" required>
                     </div>
 
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                      <button id="salvar-target" class="btn btn-warning btn-salvar" type="button">Salvar</button>
+                      <button type="submit" id="salvar-target" class="btn btn-warning btn-salvar">Salvar</button>
                     </div>
 
                   </form>
@@ -118,7 +118,7 @@
 
       <div class="input-group mb-3">
         <label class="input-group-text" for="select-nome-db-existente">Banco de Dados</label>
-        <select class="form-select" id="select-nome-db-existente">
+        <select class="form-select" id="select-nome-db-existente" required>
           <option selected>Selecione...</option>
           <option value="1">Neo4j</option>
           <option value="2">Two</option>
