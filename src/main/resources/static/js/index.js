@@ -143,11 +143,27 @@ function renderTable(indexTabela)
     const columns = data.columns.map(function (column) {return {title: column.toUpperCase()}});
     const lines = data.data;
 
-    tabelaResultados = $('#table-resultados').DataTable({
+    if (tabelaResultados !== null && tabelaResultados !== undefined)
+    {
+        tabelaResultados.clear();
+        tabelaResultados.destroy();
+    }
+
+    const tableId = 'table-resultados-' + indexTabela;
+
+    document.querySelector('#div-tabela')
+        .innerHTML =    `<table 
+                            id="${tableId}" 
+                            class="table table-striped table-bordered nowrap" 
+                            style="width: 100%">
+                        </table>`;
+
+
+    tabelaResultados = $('#' + tableId).DataTable({
         language: {
             url: 'pt-BR.json'
         },
-        fixedColumns: true,
+        destroy: true,
         deferRender:    true,
         scrollY:        '60vh',
         scrollCollapse: true,
