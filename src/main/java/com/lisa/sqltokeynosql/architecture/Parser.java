@@ -60,7 +60,7 @@ public class Parser {
         stack.push(1);
     }
 
-    public ExecutionResponse run(final InputStream is) throws JSQLParserException, IOException
+    public ExecutionResponse run(final InputStream is) throws IOException
     {
 
         var stopwatch = new org.springframework.util.StopWatch();
@@ -110,7 +110,7 @@ public class Parser {
             query.append(parte2);
         }
 
-        if(query.toString().trim() != "")
+        if(!query.toString().trim().equals(""))
         {
             var dataSet = run(query.toString().trim());
             query.setLength(0);
@@ -126,18 +126,27 @@ public class Parser {
         return new ExecutionResponse(dataSets, timerResponse);
     }
 
-    private DataSet run(final String sql) throws JSQLParserException
+    private DataSet run(final String sql)
     {
         if(sql.trim().isEmpty())
             return null;
 
         var query = sql .trim().toLowerCase();
-        var statement = CCJSqlParserUtil.parse(query,
-                ccjSqlParser -> ccjSqlParser.withTimeOut(Integer.MAX_VALUE));
+        Statement statement;
+        try{
+            statement = CCJSqlParserUtil.parse(query,
+                    ccjSqlParser -> ccjSqlParser.withTimeOut(Integer.MAX_VALUE));
+
+        }catch (Exception ex){
+            throw new UnsupportedOperationException("Expressão SQL Inválida", ex);
+        }
         return run(statement);
     }
 
-    private DataSet run(final Statement statement) {
+    private DataSet run(final Statement statement)
+    {
+        if(executionEngine.getCurrentDb() == null)
+            throw new UnsupportedOperationException("Não foi definido um banco de dados!");
         if (statement instanceof Select)
             return select((Select) statement);
         else if (statement instanceof CreateTable)
@@ -290,12 +299,11 @@ public class Parser {
 
 
     private void createTable(CreateTable statement) {
-        CreateTable ct = statement;
-        List<ColumnDefinition> cl = ct.getColumnDefinitions();
-        LinkedList<String> cols = new LinkedList();
+        List<ColumnDefinition> cl = statement.getColumnDefinitions();
+        LinkedList<String> cols = new LinkedList<>();
         ArrayList<String> pk = new ArrayList();
         ArrayList<ForeignKey> fk = new ArrayList();
-        net.sf.jsqlparser.schema.Table schemaT = ct.getTable();
+        net.sf.jsqlparser.schema.Table schemaT = statement.getTable();
         for (ColumnDefinition c : cl) {
             cols.add(c.getColumnName());
             if (c.getColumnSpecs() != null) {
@@ -310,8 +318,8 @@ public class Parser {
 
             }
         }
-        if (ct.getIndexes() != null) {
-            for (Index index : ct.getIndexes()) {
+        if (statement.getIndexes() != null) {
+            for (Index index : statement.getIndexes()) {
                 if (index.getType().equalsIgnoreCase("PRIMARY KEY")) {
                     for (String c : index.getColumnsNames()) {
                         pk.add(c);
@@ -324,19 +332,16 @@ public class Parser {
                 }
             }
         }
-        Table dt;
-        if (schemaT.getSchemaName() != null) {
-            dt = new Table(schemaT.getName(), executionEngine.getTarget(schemaT.getSchemaName()), pk, fk, cols);
-        } else {
-            String tableNome = schemaT.getName();
-            NoSQL targety = executionEngine.getTarget(null);
-            dt = new Table(tableNome, targety, pk, fk, cols);
-        }
+        Table dt = new Table(schemaT.getName(), pk, fk, cols);
         executionEngine.createTable(dt);
     }
 
     public void changeCurrentDB(String db) {
         executionEngine.changeCurrentDB(db);
+    }
+
+    public void createCurrentDB(String db, String connector) {
+        executionEngine.createDBR(db, connector);
     }
 
     public void addNoSqlTarget(NoSQL noSQL) {
