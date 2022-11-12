@@ -1,11 +1,5 @@
 var dataSets = []
 
-function modal() {
-    var myModalEl = document.querySelector('#model-alert')
-    var modal = bootstrap.Modal.getOrCreateInstance(myModalEl) // Returns a Bootstrap modal instance
-    modal.show();
-}
-
 events();
 getConnectores();
 getDatabases();
@@ -37,7 +31,7 @@ function events()
         .addEventListener('click', async (e) =>
         {
             e.preventDefault();
-            document.getElementById('loading').style.display = 'block';
+            document.getElementById('loading').style.display = '';
             document.getElementById('select-tabelas').style.display = 'none';
             document.getElementById('sem-dados').style.display = 'none';
             document.getElementById('div-tabela').style.display = 'none';
@@ -53,7 +47,7 @@ function events()
             const select = document.getElementById("select-resultado-tabelas");
             const tableIndex = select.options[select.selectedIndex].value;
             document.getElementById('div-tabela').style.display = 'none';
-            document.getElementById('loading').style.display = 'block';
+            document.getElementById('loading').style.display = '';
             renderTable(tableIndex)
         });
 }
@@ -134,10 +128,10 @@ function renderTable(indexTabela)
 {
     document.getElementById('sem-dados').style.display = 'none';
     document.getElementById('div-tabela').style.display = 'none';
-    document.getElementById('loading').style.display = 'block';
+    document.getElementById('loading').style.display = '';
     if(dataSets.length === 0)
     {
-        document.getElementById('sem-dados').style.display = 'block';
+        document.getElementById('sem-dados').style.display = '';
         document.getElementById('select-tabelas').style.display = 'none';
         document.getElementById('div-tabela').style.display = 'none';
         document.getElementById('loading').style.display = 'none';
@@ -157,7 +151,7 @@ function renderTable(indexTabela)
     setTimeout(() =>
     {
         document.getElementById('sem-dados').style.display = 'none';
-        document.getElementById('div-tabela').style.display = 'block';
+        document.getElementById('div-tabela').style.display = '';
         document.getElementById('select-tabelas').style.display = '';
         document.getElementById('loading').style.display = 'none'
     }, 5);
