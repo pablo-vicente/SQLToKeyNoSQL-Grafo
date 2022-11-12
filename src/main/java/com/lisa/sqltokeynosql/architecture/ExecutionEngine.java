@@ -225,6 +225,7 @@ public class ExecutionEngine {
                 .map(table -> {
                     DataSet dataSet = new DataSet();
                     dataSet.setColumns(getColumnsForResultingDataSet(cols, table));
+                    dataSet.setTableName(table.getName());
                     long now = new Date().getTime();
 
                     var columnsForResultingDataSet = (LinkedList<String>) getColumnsForResultingDataSet(cols, table);

@@ -119,7 +119,7 @@ async function runQuery()
 
         for (let i = 0; i < result.DataSets.length; i++)
         {
-            const table = result.DataSets[0];
+            const table = result.DataSets[i];
 
             const opt = document.createElement('option');
             opt.value = i;
