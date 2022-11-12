@@ -17,7 +17,7 @@ import java.util.Optional;
  */
 public class BDR implements Serializable {
     private String name;
-    private List<Table> tables;
+    private final List<Table> tables;
     private final NoSQL targetDB ;
 
     public BDR(String name, NoSQL targetDB, List<Table> tables)
