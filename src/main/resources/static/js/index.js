@@ -6,17 +6,6 @@ events();
 getConnectores();
 getDatabases();
 
-
-// GET  /connectors OK
-// GET  /current-database OK
-// POST /current-database OK
-// GET  /databases OK
-// POST  /database TODO
-// POST /no-sql-target
-// GET  /no-sql-targets
-// POST /query OK
-// POST /query-file-sql-script OK
-
 function events()
 {
     document
@@ -39,7 +28,26 @@ function events()
             document.getElementById('sem-dados').style.display = 'none';
             document.getElementById('div-tabela').style.display = 'none';
             document.getElementById('timer').value = '';
-            await runQuery();
+
+            insertLoadingButton('btn-executar-query');
+            const result = await runQuery();
+            dataSets = result.DataSets;
+
+            const select = document.querySelector("#select-resultado-tabelas");
+            select.options.length = 0;
+
+            for (let i = 0; i < result.DataSets.length; i++)
+            {
+                const table = result.DataSets[i];
+
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.text = table.tableName.toUpperCase();
+                select.appendChild(opt);
+            }
+            renderTable(0);
+            removeLoadingButton('btn-executar-query');
+            putTimer(result.TimerResponse.TempoCamada);
         });
 
     document
@@ -58,7 +66,6 @@ function events()
         .querySelector('#form-target-nosql')
         .addEventListener('submit',
             async (e) => {
-                debugger
                 e.preventDefault();
 
                 insertLoadingButton('salvar-target');
@@ -156,31 +163,31 @@ async function getNosqlTargets()
         })
 }
 
+function putTimer(time)
+{
+    const timeSeconds = time.toLocaleString('pt-BR',
+        {
+            minimumFractionDigits: 4,
+            maximumFractionDigits: 4
+        })
+
+    const timeMinutes = (time / 60).toLocaleString('pt-BR',
+        {
+            minimumFractionDigits: 4,
+            maximumFractionDigits: 4
+        })
+
+    const timeHors = (time / 60 / 60).toLocaleString('pt-BR',
+        {
+            minimumFractionDigits: 4,
+            maximumFractionDigits: 4
+        })
+
+    document.getElementById('timer').value = `${timeSeconds}s | ${timeMinutes}m | ${timeHors}h`
+}
+
 async function runQuery()
 {
-    function putTimer(time)
-    {
-        const timeSeconds = time.toLocaleString('pt-BR',
-            {
-                minimumFractionDigits: 4,
-                maximumFractionDigits: 4
-            })
-
-        const timeMinutes = (time / 60).toLocaleString('pt-BR',
-            {
-                minimumFractionDigits: 4,
-                maximumFractionDigits: 4
-            })
-
-        const timeHors = (time / 60 / 60).toLocaleString('pt-BR',
-            {
-                minimumFractionDigits: 4,
-                maximumFractionDigits: 4
-            })
-
-        document.getElementById('timer').value = `${timeSeconds}s | ${timeMinutes}m | ${timeHors}h`
-    }
-
     let file = document.getElementById("formFile").files[0];
     const textArea = document.getElementById('sql-query-text');
 
@@ -196,7 +203,7 @@ async function runQuery()
     const formData = new FormData();
     formData.append('file', file);
 
-    await fetch('/query-file-sql-script', {
+    return await fetch('/query-file-sql-script', {
         method: 'POST',
         body: formData
     }).then(async res =>
@@ -208,23 +215,7 @@ async function runQuery()
             return showModal(await res.json());
         }
 
-        const result = await res.json();
-        putTimer(result.TimerResponse.TempoCamada);
-        dataSets = result.DataSets;
-
-        const select = document.querySelector("#select-resultado-tabelas");
-        select.options.length = 0;
-
-        for (let i = 0; i < result.DataSets.length; i++)
-        {
-            const table = result.DataSets[i];
-
-            const opt = document.createElement('option');
-            opt.value = i;
-            opt.text = table.tableName.toUpperCase();
-            select.appendChild(opt);
-        }
-        renderTable(0);
+        return await res.json();
     });
 }
 
