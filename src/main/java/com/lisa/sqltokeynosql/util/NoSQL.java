@@ -12,8 +12,8 @@ public class NoSQL {
     private String user;
     private String password;
     private String url;
-    private Connector connection;
-    private com.lisa.sqltokeynosql.api.enums.Connector connector;
+    private final Connector connection;
+    private final com.lisa.sqltokeynosql.api.enums.Connector connector;
 
     public NoSQL(String alias, String user, String password, String url, String conection)
     {
@@ -72,10 +72,6 @@ public class NoSQL {
         return connection;
     }
 
-    public void setConnection(Connector connection) {
-        this.connection = connection;
-    }
-
     @Override
     public String toString() {
         return alias;
@@ -83,5 +79,25 @@ public class NoSQL {
 
     public com.lisa.sqltokeynosql.api.enums.Connector getConnector() {
         return connector;
+    }
+
+    public void setAlias(String alias)
+    {
+        this.alias = alias;
+    }
+
+    public void setUser(String user)
+    {
+        this.user = user;
+    }
+
+    public void setPassword(String password)
+    {
+        this.password = password;
+    }
+
+    public void setUrl(String url)
+    {
+        this.url = url;
     }
 }
