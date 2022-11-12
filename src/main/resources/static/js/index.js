@@ -55,9 +55,10 @@ function events()
         });
 
     document
-        .querySelector('#salvar-target')
+        .querySelector('#form-target-nosql')
         .addEventListener('submit', async (e) =>
         {
+            debugger
             e.preventDefault();
             // TODO ARRODIAR O BOTAO
             await createUpdateNoSqlTarget();
