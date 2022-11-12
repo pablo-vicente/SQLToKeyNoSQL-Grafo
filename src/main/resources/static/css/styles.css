@@ -55,3 +55,6 @@ code {
 table.table-bordered.dataTable td:first-child, table.table-bordered.dataTable td:first-child {
      border-left-width: 0;
 }
+#editar-target{
+    background-color: var(--blue);
+}

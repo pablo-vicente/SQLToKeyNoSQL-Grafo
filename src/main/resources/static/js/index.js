@@ -64,22 +64,22 @@ function events()
 
     document
         .querySelector('#form-target-nosql')
-        .addEventListener('submit',
-            async (e) => {
-                e.preventDefault();
+        .addEventListener('submit', async (e) =>
+        {
+            e.preventDefault();
 
-                insertLoadingButton('salvar-target');
-                const target = await createUpdateNoSqlTarget();
-                const database = await createDatabase();
-                const currente = await getDatabases();
+            insertLoadingButton('salvar-target');
+            const target = await createUpdateNoSqlTarget();
+            const database = await createDatabase();
+            const currente = await getDatabases();
 
-                Promise
-                    .all([target, database, currente])
-                    .then(() =>
-                    {
-                        removeLoadingButton('salvar-target');
-                    })
-            });
+            Promise
+                .all([target, database, currente])
+                .then(() =>
+                {
+                    removeLoadingButton('salvar-target');
+                })
+        });
 
     document
         .querySelector('#select-target-nosql')
@@ -93,6 +93,15 @@ function events()
                 setCredencialTargetNoSql('', '', '')
             else
                 setCredencialTargetNoSql(noSqlTarget.user, noSqlTarget.password, noSqlTarget.url)
+        });
+
+    document
+        .querySelector('#editar-target')
+        .addEventListener('click', async (e) =>
+        {
+            e.preventDefault();
+            enableDisableTargetInputs(false);
+            e.target.style.display = 'none';
         });
 }
 
@@ -127,15 +136,22 @@ async function createDatabase()
 
 async function createUpdateNoSqlTarget()
 {
+    const user = document.querySelector("#target-nosql-usuario");
+    const password = document.querySelector("#target-nosql-senha");
+    const url = document.querySelector("#target-nosql-url");
+
+    if (user.disabled && password.disabled && url.disabled)
+        return;
+
     const obj = {
         "connector": document.querySelector("#select-target-nosql").value,
         "name": document.querySelector("#select-target-nosql").value,
-        "user": document.querySelector("#target-nosql-usuario").value,
-        "password": document.querySelector("#target-nosql-senha").value,
-        "url": document.querySelector("#target-nosql-url").value,
+        "user": user.value,
+        "password": password.value,
+        "url": url.value,
     };
 
-    await fetch("/no-sql-target",
+    return await fetch("/no-sql-target",
         {
             method: 'POST',
             body: JSON.stringify(obj),
@@ -392,11 +408,28 @@ async function getConnectores()
         })
 }
 
+function enableDisableTargetInputs(disabled)
+{
+    document.getElementById('target-nosql-usuario').disabled = disabled;
+    document.getElementById('target-nosql-senha').disabled = disabled;
+    document.getElementById('target-nosql-url').disabled = disabled;
+}
+
 function setCredencialTargetNoSql(user, password, url)
 {
     document.querySelector("#target-nosql-usuario").value = user;
     document.querySelector("#target-nosql-senha").value = password;
     document.querySelector("#target-nosql-url").value = url;
+    if(user === '' && password === '' && url === '')
+    {
+        enableDisableTargetInputs(false)
+        document.getElementById('editar-target').style.display = 'none';
+    }
+    else
+    {
+        enableDisableTargetInputs(true)
+        document.getElementById('editar-target').style.display = '';
+    }
 }
 
 function showModal(message) {
