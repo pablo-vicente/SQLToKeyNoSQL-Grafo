@@ -2,7 +2,6 @@ package com.lisa.sqltokeynosql.api.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.io.Files;
 import com.lisa.sqltokeynosql.api.dto.CurrentDataBaseRequestDTO;
 import com.lisa.sqltokeynosql.api.dto.NoSqlTargetDTO;
 import com.lisa.sqltokeynosql.api.dto.SQLDTO;
@@ -16,10 +15,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
