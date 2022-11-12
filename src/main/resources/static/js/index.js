@@ -30,24 +30,9 @@ function events()
             document.getElementById('timer').value = '';
 
             insertLoadingButton('btn-executar-query');
-            const result = await runQuery();
-            dataSets = result.DataSets;
-
-            const select = document.querySelector("#select-resultado-tabelas");
-            select.options.length = 0;
-
-            for (let i = 0; i < result.DataSets.length; i++)
-            {
-                const table = result.DataSets[i];
-
-                const opt = document.createElement('option');
-                opt.value = i;
-                opt.text = table.tableName.toUpperCase();
-                select.appendChild(opt);
-            }
-            renderTable(0);
+            await runQuery();
+            document.getElementById('loading').style.display = 'none'
             removeLoadingButton('btn-executar-query');
-            putTimer(result.TimerResponse.TempoCamada);
         });
 
     document
@@ -204,12 +189,27 @@ function putTimer(time)
 
 async function runQuery()
 {
+    debugger
+
+    if(document.querySelector('#select-nome-db-existente').options.length === 0 )
+    {
+        showModal("Não foi definido um banco de dados!");
+        return;
+    }
+
     let file = document.getElementById("formFile").files[0];
     const textArea = document.getElementById('sql-query-text');
 
     if(file === undefined || file === null || file === '')
     {
         const queryText = textArea.value;
+
+        if(queryText.trim() === '')
+        {
+            showModal("Inclua um arquivo ou escreva uma expressão SQL");
+            return;
+        }
+
         const blobObject = new Blob([queryText], {type: 'text/plain'});
         file = new File([blobObject], 'query.sql', {type: 'text/plain'});
     }
@@ -226,12 +226,25 @@ async function runQuery()
     {
         document.getElementById('formFile').value = "";
         if(!res.ok)
-        {
-            document.getElementById('loading').style.display = 'none'
             return showModal(await res.json());
-        }
 
-        return await res.json();
+        const result = await res.json();
+        dataSets = result.DataSets;
+
+        const select = document.querySelector("#select-resultado-tabelas");
+        select.options.length = 0;
+
+        for (let i = 0; i < result.DataSets.length; i++)
+        {
+            const table = result.DataSets[i];
+
+            const opt = document.createElement('option');
+            opt.value = i;
+            opt.text = table.tableName.toUpperCase();
+            select.appendChild(opt);
+        }
+        renderTable(0);
+        putTimer(result.TimerResponse.TempoCamada);
     });
 }
 
