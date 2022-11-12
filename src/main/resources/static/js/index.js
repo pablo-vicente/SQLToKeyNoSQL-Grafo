@@ -323,7 +323,7 @@ async function getDatabases()
             {
                 const opt = document.createElement('option');
                 opt.value = database.name;
-                opt.text = database.name
+                opt.text = `${database.name} (${database.targetDB.connector})`;
                 opt.selected = false;
                 select.appendChild(opt)
             });
