@@ -10,16 +10,16 @@ async function createConnectionSgbdAsync()
             {
                 await handleErro(res)
                 return
-            };
+            }
 
             const targets = await res.json();
 
             const neo4j = {
                 "connector": "NEO4J",
+                "user": "neo4j",
                 "name": "neo4j",
                 "password": "pAsSw0rD",
-                "url": "bolt://localhost:7687",
-                "user": "neo4j"
+                "url": "bolt://localhost:7687"
             };
             let createConnection = true;
             if(targets !== [] && targets !== null && targets !== undefined && targets.length !== 0)
@@ -31,7 +31,7 @@ async function createConnectionSgbdAsync()
                 return
             }
 
-            const request = new Request("/no-sql-target",
+            await fetch("/no-sql-target",
                 {
                     method: 'POST',
                     body: JSON.stringify(neo4j),
@@ -39,16 +39,11 @@ async function createConnectionSgbdAsync()
                         {
                             'Content-Type': 'application/json'
                         })
-                });
-
-            await fetch(request)
+                })
                 .then(async res =>
                 {
                     if(!res.ok)
-                    {
                         await handleErro(res)
-                        return
-                    }
                     else
                         console.log("Conexão SGBD Executada com Sucesso");
                 })
@@ -62,19 +57,18 @@ async function handleErro(res)
 }
 async function createEDefineDatabaseAsync()
 {
-    const request = new Request("/current-database",
+    await fetch("/database",
         {
             method: 'POST',
             body: JSON.stringify({
+                "connector": "NEO4J",
                 "name": "bd_matConstru"
             }),
             headers: new Headers(
                 {
                     'Content-Type': 'application/json'
                 })
-        });
-
-    await fetch(request)
+        })
         .then(async res =>
         {
             if(!res.ok)
