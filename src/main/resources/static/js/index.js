@@ -376,11 +376,18 @@ async function getCurrenteDatabase()
                 return showModal(await res.json());
 
             const currentDatabase = await res.json();
-
-            if(currentDatabase === null || currentDatabase === undefined)
-                return ;
             const select = document.querySelector("#select-nome-db-existente");
-            select.value = currentDatabase.name
+
+            if(currentDatabase !== null && currentDatabase !== undefined && currentDatabase === '')
+            {
+                select.value = currentDatabase.name;
+                return;
+            }
+
+            if(select.options.length === 0)
+                return;
+
+            await postCurrentDatabase(select.value);
         })
 }
 
