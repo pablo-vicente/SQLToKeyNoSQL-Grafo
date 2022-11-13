@@ -40,12 +40,12 @@ public class NoSQL {
         return url;
     }
 
-    public Connector getConnection()
+    public Connector Connection()
     {
         switch (sgbdConnector)
         {
             case MONGO:
-                return new MongoConnector();
+                return new MongoConnector(user, password, url);
 
             case CASSANDRA2:
                 return new Cassandra2Connector();

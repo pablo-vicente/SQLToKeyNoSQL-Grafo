@@ -79,7 +79,9 @@ public class SQLController {
     {
         try
         {
-            return ResponseEntity.ok(mapper.writeValueAsString(parser.getNoSqlTargets()));
+            var targets = parser.getNoSqlTargets();
+            var parse = mapper.writeValueAsString(targets);
+            return ResponseEntity.ok(parse);
         }
         catch (Exception ex)
         {

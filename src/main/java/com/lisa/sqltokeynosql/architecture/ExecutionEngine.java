@@ -5,6 +5,8 @@
  */
 package com.lisa.sqltokeynosql.architecture;
 
+import com.lisa.sqltokeynosql.api.enums.SgbdConnector;
+import com.lisa.sqltokeynosql.util.connectors.MongoConnector;
 import com.lisa.sqltokeynosql.util.report.TimeConter;
 import com.lisa.sqltokeynosql.util.sql.ForeignKey;
 import net.sf.jsqlparser.expression.Expression;
@@ -33,9 +35,24 @@ public class ExecutionEngine {
     private final Dictionary dictionary;
     private static final ExecutorService threadPool = Executors.newCachedThreadPool();
 
-    public ExecutionEngine() {
+    public ExecutionEngine()
+    {
         dictionary = DictionaryDAO.loadDictionary()
                         .orElseGet(Dictionary::new);
+
+        if(dictionary.getTargets().stream().allMatch(x -> x.getConnector() != SgbdConnector.MONGO))
+        {
+            var sgbd = SgbdConnector.MONGO.toString();
+            var nsqlMongo = new NoSQL(sgbd,
+                    MongoConnector.UserDefault,
+                    MongoConnector.PasswordDefault,
+                    MongoConnector.UriDefault,
+                    sgbd);
+
+            dictionary.getTargets().add(nsqlMongo);
+            DictionaryDAO.storeDictionary(dictionary);
+        }
+
     }
 
     public void createDBR(final String name, String connector)
@@ -44,7 +61,7 @@ public class ExecutionEngine {
             throw new UnsupportedOperationException("Banco de dados já cadastrado!");
 
         var noSQL = dictionary.getTarget(connector);
-        noSQL.getConnection().connect(name);
+        noSQL.Connection().connect(name);
 
         dictionary.setCurrentDb(name);
         dictionary.getRdbms().add(new BDR(name, noSQL, new ArrayList<>()));
@@ -87,7 +104,7 @@ public class ExecutionEngine {
 
         tables.add(table);
         var target = currenteDb.getTargetDB();
-        var connection = target.getConnection();
+        var connection = target.Connection();
         connection.create(table);
     }
 
@@ -126,7 +143,7 @@ public class ExecutionEngine {
         }
 
         NoSQL targetDb = dictionary.getCurrentDb().getTargetDB();
-        Connector connection = targetDb.getConnection();
+        Connector connection = targetDb.Connection();
         connection.put(table, columns, dados);
 
         for (var stringListEntry : dados.entrySet())
@@ -157,7 +174,7 @@ public class ExecutionEngine {
         dictionary
                 .getCurrentDb()
                 .getTargetDB()
-                .getConnection()
+                .Connection()
                 .delete(table, String.valueOf(keys));
 
         for (var key : keys)
@@ -181,7 +198,7 @@ public class ExecutionEngine {
         var connector = dictionary
                 .getCurrentDb()
             .getTargetDB()
-            .getConnection();
+            .Connection();
 
         dictionary
                 .getCurrentDb()
@@ -227,7 +244,7 @@ public class ExecutionEngine {
         dictionary
                 .getCurrentDb()
                 .getTargetDB()
-                .getConnection()
+                .Connection()
                 .update(table, dados, acls, avl);
     }
 
@@ -259,7 +276,7 @@ public class ExecutionEngine {
     }
 
     private ArrayList getNWrapper(final Table table, final LinkedList columns, final Stack<Object> filters, final int n) {
-        ArrayList result = dictionary.getCurrentDb().getTargetDB().getConnection().getN(n, table.getName(), (ArrayList<String>) table.getKeys(), filters, columns);
+        ArrayList result = dictionary.getCurrentDb().getTargetDB().Connection().getN(n, table.getName(), (ArrayList<String>) table.getKeys(), filters, columns);
         return result;
     }
 
@@ -424,7 +441,7 @@ public class ExecutionEngine {
 
         currentDb
                 .getTargetDB()
-                .getConnection()
+                .Connection()
                 .connect(currentDb.getName());
     }
 
@@ -521,7 +538,7 @@ public class ExecutionEngine {
         }
 
         var target = dictionary.getCurrentDb().getTargetDB();
-        var connection = target.getConnection();
+        var connection = target.Connection();
         connection.alter(table, dados);
 
         table.setAttributes(novosAtributos);

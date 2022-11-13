@@ -12,26 +12,41 @@ import java.util.*;
 /**
  * @author geomar
  */
-public class MongoConnector extends Connector{
+public class MongoConnector extends Connector
+{
+
+    public static String UserDefault = "root";
+    public static String PasswordDefault = "root";
+    public static String UriDefault = "localhost:27017";
 
     private final MongoClient mongoClient;
     public DB mongoDatabase;
 
-    public static MongoClient GetDefaultInstace(){
-        return new MongoClient(new MongoClientURI("mongodb://root:root@localhost:27017"));
+    public MongoConnector()
+    {
+        var connection = GetConnectionString(UserDefault, PasswordDefault, UriDefault);
+        mongoClient = new MongoClient(new MongoClientURI(connection));
     }
 
-    public MongoConnector() {
-        mongoClient = GetDefaultInstace();
+    public MongoConnector(String user, String password, String hostAndPort)
+    {
+        var connection = GetConnectionString(user, password, hostAndPort);
+        mongoClient = new MongoClient(new MongoClientURI(connection));
     }
 
-    public MongoConnector(String user, String password, String hostAndPort) {
-        mongoClient = new MongoClient(new MongoClientURI("mongodb://" + user + ":" + password + "@" + hostAndPort));
+    private String GetConnectionString(String user, String password, String hostAndPort)
+    {
+        return "mongodb://" + user + ":" + password + "@" + hostAndPort;
     }
 
     @Override
     public void connect(String nameDB) {
         mongoDatabase = mongoClient.getDB(nameDB);
+    }
+
+    public MongoClient getMongoClient()
+    {
+        return mongoClient;
     }
 
     @Override
