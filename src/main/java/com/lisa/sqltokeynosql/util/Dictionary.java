@@ -72,6 +72,8 @@ public final class Dictionary implements Serializable {
 
     public void setCurrentDb(String currentDb)
     {
+        if(currentDb == null)
+            return;
         getBDR(currentDb).ifPresent(dbr -> this.currentDb = dbr);
         this.currentDb.getTargetDB().getConnection().connect(currentDb);
     }
