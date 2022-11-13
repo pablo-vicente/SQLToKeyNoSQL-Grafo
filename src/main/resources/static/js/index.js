@@ -190,8 +190,6 @@ function putTimer(time)
 
 async function runQuery()
 {
-    debugger
-
     if(document.querySelector('#select-nome-db-existente').options.length === 0 )
     {
         showModal("Não foi definido um banco de dados!");
