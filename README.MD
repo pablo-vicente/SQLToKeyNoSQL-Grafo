@@ -18,7 +18,7 @@ docker-compose up docker-compose.yml
 ## PASSOS
 
 # 1 Criar Conexão com SGBD através da rota ```POST/no-sql-target```
-- Através do ```GET/connectors``` é possível obter os SGBDs suportados
+> Através do ```GET/connectors``` é possível obter os SGBDs suportados
 > Dados de conexão Neo4j
 ```JSON
 {
@@ -50,7 +50,8 @@ docker-compose up docker-compose.yml
 }
 ```
 
-# 3 Rodar os Scripts através ```/query```
+# 3 Rodar os Scripts através ```/query``` 
+> É possível executar arquivos SQL através ```/query-file-sql-script```
 * Exemplo
 ```SQL
 create table funcao(
@@ -66,10 +67,10 @@ create table funcao(
   "value": "create table funcao(id_funcao int not null primary key auto_increment,desc_funcao varchar(50),salario double,carga_horaria varchar(30));"
 }
 ```
-## 3.1 Rodar os Arquivo SQL através ```/query-file-sql-script```
 
 # 4 Realizando o Transferência para Banco NoSQL
-## 4.1 Script DDL (Criação tabelas) - A camada não faz a leitura automatica das definições das tabelas de um banco.
+> A camada não faz a leitura automatica das definições das tabelas de um banco.
+## 4.1 Script DDL 
  - CREATE
  - ALTER
  - DROP
@@ -80,7 +81,7 @@ create table funcao(
 - DELETE
 
 # 5 Sintaxe Suportada
-O Parse SQL utilizado suporta um conjunto limitado de sintaxe, para mais detalhes [JSqlParser](https://github.com/JSQLParser/JSqlParser).
+> O Parse SQL utilizado suporta um conjunto limitado de sintaxe, para mais detalhes [JSqlParser](https://github.com/JSQLParser/JSqlParser).
 ### Exemplo utilizados no Experimento:
 ### CREATE
 ```SQL
