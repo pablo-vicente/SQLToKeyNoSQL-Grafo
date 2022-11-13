@@ -1,5 +1,7 @@
 package com.lisa.sqltokeynosql.util;
 
+
+import com.lisa.sqltokeynosql.api.enums.SgbdConnector;
 import com.lisa.sqltokeynosql.architecture.Connector;
 import com.lisa.sqltokeynosql.util.connectors.*;
 import com.lisa.sqltokeynosql.util.connectors.neo4j.Neo4jConnector;
@@ -12,8 +14,7 @@ public class NoSQL {
     private String user;
     private String password;
     private String url;
-    private final Connector connection;
-    private final com.lisa.sqltokeynosql.api.enums.Connector connector;
+    private final SgbdConnector sgbdConnector;
 
     public NoSQL(String alias, String user, String password, String url, String conection)
     {
@@ -21,13 +22,27 @@ public class NoSQL {
         this.user = user;
         this.password = password;
         this.url = url;
-        this.connector =  com.lisa.sqltokeynosql.api.enums.Connector.valueOf(conection.toUpperCase());
-        this.connection = GetConnector(this.connector);
+        this.sgbdConnector = SgbdConnector.valueOf(conection.toUpperCase());
+    }
+    public String getAlias() {
+        return alias;
     }
 
-    private Connector GetConnector(com.lisa.sqltokeynosql.api.enums.Connector connector)
+    public String getUser() {
+        return user;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public Connector getConnection()
     {
-        switch (connector)
+        switch (sgbdConnector)
         {
             case MONGO:
                 return new MongoConnector();
@@ -45,31 +60,11 @@ public class NoSQL {
                 return new SimpleDBConnector();
 
             case NEO4J:
-                return new Neo4jConnector();
+                return new Neo4jConnector(user, password, url);
 
             default:
                 throw new UnsupportedOperationException("Connector not declared!!!!");
         }
-    }
-
-    public String getAlias() {
-        return alias;
-    }
-
-    public String getUser() {
-        return user;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public String getUrl() {
-        return url;
-    }
-
-    public Connector getConnection() {
-        return connection;
     }
 
     @Override
@@ -77,8 +72,8 @@ public class NoSQL {
         return alias;
     }
 
-    public com.lisa.sqltokeynosql.api.enums.Connector getConnector() {
-        return connector;
+    public SgbdConnector getConnector() {
+        return sgbdConnector;
     }
 
     public void setAlias(String alias)

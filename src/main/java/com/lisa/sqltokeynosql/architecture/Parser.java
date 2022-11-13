@@ -7,7 +7,6 @@ package com.lisa.sqltokeynosql.architecture;
 
 import com.lisa.sqltokeynosql.util.*;
 import com.lisa.sqltokeynosql.util.report.TimeReportService;
-import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.RowConstructor;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
@@ -145,8 +144,8 @@ public class Parser {
 
     private DataSet run(final Statement statement)
     {
-        if(executionEngine.getCurrentDb() == null)
-            throw new UnsupportedOperationException("Não foi definido um banco de dados!");
+       executionEngine.tryConnectToCurrunteDatabase();
+
         if (statement instanceof Select)
             return select((Select) statement);
         else if (statement instanceof CreateTable)

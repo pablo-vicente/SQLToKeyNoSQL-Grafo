@@ -5,6 +5,7 @@
  */
 package com.lisa.sqltokeynosql.util;
 
+import com.lisa.sqltokeynosql.api.enums.SgbdConnector;
 import com.lisa.sqltokeynosql.util.sql.Table;
 
 import java.io.Serializable;
@@ -56,7 +57,7 @@ public final class Dictionary implements Serializable {
         if(targets == null || targets.size() == 0 || conector == null)
             throw new UnsupportedOperationException("Não foi cadastrado nenhum NoSQL target.");
 
-        var conectorNoSql = com.lisa.sqltokeynosql.api.enums.Connector.valueOf(conector.toUpperCase());
+        var conectorNoSql = SgbdConnector.valueOf(conector.toUpperCase());
         for (NoSQL noSQL : targets)
         {
             if (noSQL.getConnector() == conectorNoSql) {
@@ -75,7 +76,6 @@ public final class Dictionary implements Serializable {
         if(currentDb == null)
             return;
         getBDR(currentDb).ifPresent(dbr -> this.currentDb = dbr);
-        this.currentDb.getTargetDB().getConnection().connect(currentDb);
     }
 
     public Optional<Table> getTable(String tableName) {

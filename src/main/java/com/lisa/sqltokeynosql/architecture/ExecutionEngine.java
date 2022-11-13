@@ -44,9 +44,10 @@ public class ExecutionEngine {
             throw new UnsupportedOperationException("Banco de dados já cadastrado!");
 
         var noSQL = dictionary.getTarget(connector);
+        noSQL.getConnection().connect(name);
 
-        dictionary.getRdbms().add(new BDR(name, noSQL, new ArrayList<>()));
         dictionary.setCurrentDb(name);
+        dictionary.getRdbms().add(new BDR(name, noSQL, new ArrayList<>()));
         SaveDicitionary();
     }
 
@@ -413,6 +414,18 @@ public class ExecutionEngine {
     public void SaveDicitionary()
     {
         DictionaryDAO.storeDictionary(dictionary);
+    }
+
+    public void tryConnectToCurrunteDatabase()
+    {
+        var currentDb = this.getCurrentDb();
+        if(currentDb == null)
+            throw new UnsupportedOperationException("Não foi definido um banco de dados!");
+
+        currentDb
+                .getTargetDB()
+                .getConnection()
+                .connect(currentDb.getName());
     }
 
     public void AlterTable(String tablename, List<AlterExpression> alterExpressions)

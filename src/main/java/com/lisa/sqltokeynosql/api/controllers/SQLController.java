@@ -6,7 +6,7 @@ import com.lisa.sqltokeynosql.api.dto.CreateDataBaseRequestDTO;
 import com.lisa.sqltokeynosql.api.dto.CurrentDataBaseRequestDTO;
 import com.lisa.sqltokeynosql.api.dto.NoSqlTargetDTO;
 import com.lisa.sqltokeynosql.api.dto.SQLDTO;
-import com.lisa.sqltokeynosql.api.enums.Connector;
+import com.lisa.sqltokeynosql.api.enums.SgbdConnector;
 import com.lisa.sqltokeynosql.architecture.Parser;
 import com.lisa.sqltokeynosql.util.NoSQL;
 import io.swagger.annotations.ApiOperation;
@@ -44,7 +44,7 @@ public class SQLController {
     {
         try
         {
-            var connectors = new ArrayList<>(Arrays.asList(Connector.values()));
+            var connectors = new ArrayList<>(Arrays.asList(SgbdConnector.values()));
             return ResponseEntity.ok(mapper.writeValueAsString(connectors));
         }
         catch (Exception ex)

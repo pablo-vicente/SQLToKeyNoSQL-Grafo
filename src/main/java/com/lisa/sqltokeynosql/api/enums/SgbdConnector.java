@@ -1,6 +1,6 @@
 package com.lisa.sqltokeynosql.api.enums;
 
-public enum Connector {
+public enum SgbdConnector {
     MONGO (1),
     REDIS(2),
     CASSANDRA(3),
@@ -9,7 +9,7 @@ public enum Connector {
     NEO4J(6);
 
     private int id; // Could be other data type besides int
-     Connector(int id) {
+     SgbdConnector(int id) {
         this.id = id;
     }
 
@@ -17,8 +17,8 @@ public enum Connector {
         return this.id;
     }
 
-    public static Connector fromId(int id) {
-        for (Connector type : values()) {
+    public static SgbdConnector fromId(int id) {
+        for (SgbdConnector type : values()) {
             if (type.getId() == id) {
                 return type;
             }
