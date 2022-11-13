@@ -115,8 +115,8 @@ async function createDatabase()
         {
             if(!res.ok)
                 showModal(await res.json());
-
-            document.querySelector('#nome-db-novo').value = '';
+            else
+                document.querySelector('#nome-db-novo').value = '';
         })
 }
 
