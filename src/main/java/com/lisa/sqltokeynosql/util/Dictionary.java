@@ -70,11 +70,10 @@ public final class Dictionary implements Serializable {
         return currentDb;
     }
 
-    public void setCurrentDb(String currentDb) {
-        if(currentDb == null)
-            return;
+    public void setCurrentDb(String currentDb)
+    {
         getBDR(currentDb).ifPresent(dbr -> this.currentDb = dbr);
-        targets.forEach(noSQL -> noSQL.getConnection().connect(currentDb));
+        this.currentDb.getTargetDB().getConnection().connect(currentDb);
     }
 
     public Optional<Table> getTable(String tableName) {
