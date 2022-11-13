@@ -40,33 +40,6 @@ public class NoSQL {
         return url;
     }
 
-    public Connector Connection()
-    {
-        switch (sgbdConnector)
-        {
-            case MONGO:
-                return new MongoConnector(user, password, url);
-
-            case CASSANDRA2:
-                return new Cassandra2Connector();
-
-            case CASSANDRA:
-                return new CassandraConnector();
-
-            case REDIS:
-                return new RedisConnector();
-
-            case SIMPLE:
-                return new SimpleDBConnector();
-
-            case NEO4J:
-                return new Neo4jConnector(user, password, url);
-
-            default:
-                throw new UnsupportedOperationException("Connector not declared!!!!");
-        }
-    }
-
     @Override
     public String toString() {
         return alias;

@@ -5,8 +5,8 @@
  */
 package com.lisa.sqltokeynosql.architecture;
 
-import com.lisa.sqltokeynosql.api.enums.SgbdConnector;
-import com.lisa.sqltokeynosql.util.connectors.MongoConnector;
+import com.lisa.sqltokeynosql.util.connectors.*;
+import com.lisa.sqltokeynosql.util.connectors.neo4j.Neo4jConnector;
 import com.lisa.sqltokeynosql.util.report.TimeConter;
 import com.lisa.sqltokeynosql.util.sql.ForeignKey;
 import net.sf.jsqlparser.expression.Expression;
@@ -25,6 +25,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import static com.lisa.sqltokeynosql.api.enums.SgbdConnector.*;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -33,6 +34,7 @@ import static java.util.stream.Collectors.toList;
 public class ExecutionEngine {
 
     private final Dictionary dictionary;
+    private Connector connector;
     private static final ExecutorService threadPool = Executors.newCachedThreadPool();
 
     public ExecutionEngine()
@@ -40,9 +42,9 @@ public class ExecutionEngine {
         dictionary = DictionaryDAO.loadDictionary()
                         .orElseGet(Dictionary::new);
 
-        if(dictionary.getTargets().stream().allMatch(x -> x.getConnector() != SgbdConnector.MONGO))
+        if(dictionary.getTargets().stream().allMatch(x -> x.getConnector() != MONGO))
         {
-            var sgbd = SgbdConnector.MONGO.toString();
+            var sgbd = MONGO.toString();
             var nsqlMongo = new NoSQL(sgbd,
                     MongoConnector.UserDefault,
                     MongoConnector.PasswordDefault,
@@ -57,7 +59,6 @@ public class ExecutionEngine {
 
     public void createDBR(final String name, String connector)
     {
-        // ^[a-zA-Z]+[0-9a-zA-Z]{3,}$
         if(!name.matches("^[a-zA-Z]+[0-9a-zA-Z]{3,}$"))
             throw new UnsupportedOperationException("Nome do banco de dados inválido. O nome deve começar com uma Letra e conter apenas Letras e/ou números. (mínimo 3 caracteres)");
 
@@ -65,17 +66,23 @@ public class ExecutionEngine {
             throw new UnsupportedOperationException("Banco de dados já cadastrado!");
 
         var noSQL = dictionary.getTarget(connector);
-        noSQL.Connection().connect(name);
+        toConnectSgbd(noSQL);
+        this.connector.connect(name);
+
         var bdr = new BDR(name, noSQL, new ArrayList<>());
         dictionary.getRdbms().add(bdr);
         dictionary.setCurrentDb(name);
         SaveDicitionary();
     }
 
-    public void changeCurrentDB(final String name1)
+    public void changeCurrentDB(final String name1, String sgbdConnector)
     {
         if (!databaseExist(name1))
             throw new UnsupportedOperationException("Banco de dados Inexistente!");
+        var noSQL = dictionary.getTarget(sgbdConnector);
+        toConnectSgbd(noSQL);
+        this.connector.connect(name1);
+
         dictionary.setCurrentDb(name1);
         SaveDicitionary();
     }
@@ -106,10 +113,8 @@ public class ExecutionEngine {
         if (tableExist)
             throw new UnsupportedOperationException("A Tabela " + table.getName() + " já foi criada");
 
+        this.connector.create(table);
         tables.add(table);
-        var target = currenteDb.getTargetDB();
-        var connection = target.Connection();
-        connection.create(table);
     }
 
     private String getKey(Table tableDb, List<String> columns, List<String> values)
@@ -146,9 +151,7 @@ public class ExecutionEngine {
             dados.put(key, value);
         }
 
-        NoSQL targetDb = dictionary.getCurrentDb().getTargetDB();
-        Connector connection = targetDb.Connection();
-        connection.put(table, columns, dados);
+        this.connector.put(table, columns, dados);
 
         for (var stringListEntry : dados.entrySet())
             table.getKeys().add(stringListEntry.getKey());
@@ -175,11 +178,7 @@ public class ExecutionEngine {
 
             keys.add(key);
         }
-        dictionary
-                .getCurrentDb()
-                .getTargetDB()
-                .Connection()
-                .delete(table, String.valueOf(keys));
+        this.connector.delete(table, String.valueOf(keys));
 
         for (var key : keys)
             table1.getKeys().remove(key);
@@ -199,16 +198,13 @@ public class ExecutionEngine {
             throw new UnsupportedOperationException("Table " + tableName + " Not exists!!!");
 
         var tableDb = table.get();
-        var connector = dictionary
-                .getCurrentDb()
-            .getTargetDB()
-            .Connection();
 
         dictionary
                 .getCurrentDb()
                 .getTables()
                 .remove(table.get());
-        connector.drop(tableDb);
+
+        this.connector.drop(tableDb);
     }
 
     private void updateTable(String tableName, ArrayList<String> acls, ArrayList<String> avl, Stack<Object> filters, Table table)
@@ -245,11 +241,7 @@ public class ExecutionEngine {
             dados.put(key, values);
         }
 
-        dictionary
-                .getCurrentDb()
-                .getTargetDB()
-                .Connection()
-                .update(table, dados, acls, avl);
+        this.connector.update(table, dados, acls, avl);
     }
 
     DataSet getDataSetBl(final List<String> tableNames, final List<String> cols, final Stack<Object> filters) {
@@ -280,7 +272,7 @@ public class ExecutionEngine {
     }
 
     private ArrayList getNWrapper(final Table table, final LinkedList columns, final Stack<Object> filters, final int n) {
-        ArrayList result = dictionary.getCurrentDb().getTargetDB().Connection().getN(n, table.getName(), (ArrayList<String>) table.getKeys(), filters, columns);
+        ArrayList result = this.connector.getN(n, table.getName(), (ArrayList<String>) table.getKeys(), filters, columns);
         return result;
     }
 
@@ -443,10 +435,12 @@ public class ExecutionEngine {
         if(currentDb == null)
             throw new UnsupportedOperationException("Não foi definido um banco de dados!");
 
-        currentDb
-                .getTargetDB()
-                .Connection()
-                .connect(currentDb.getName());
+        if(this.connector == null)
+        {
+            toConnectSgbd(currentDb.getTargetDB());
+            this.connector.connect(currentDb.getName());
+        }
+
     }
 
     public void AlterTable(String tablename, List<AlterExpression> alterExpressions)
@@ -541,9 +535,7 @@ public class ExecutionEngine {
             dados.add(dado);
         }
 
-        var target = dictionary.getCurrentDb().getTargetDB();
-        var connection = target.Connection();
-        connection.alter(table, dados);
+        this.connector.alter(table, dados);
 
         table.setAttributes(novosAtributos);
         table.setFks(novasFks);
@@ -603,5 +595,41 @@ public class ExecutionEngine {
             innerData.setData(getNWrapper(innerTable, innerCols, null, 0));
         }
         return innerData;
+    }
+
+    public void toConnectSgbd(NoSQL noSQL)
+    {
+        String user = noSQL.getUser();
+        String password = noSQL.getPassword();
+        String url= noSQL.getUrl();
+        switch (noSQL.getConnector())
+        {
+            case MONGO:
+                connector = new MongoConnector(user, password, url);
+                break;
+
+            case CASSANDRA2:
+                connector = new Cassandra2Connector();
+                break;
+
+            case CASSANDRA:
+                connector = new CassandraConnector();
+                break;
+
+            case REDIS:
+                connector = new RedisConnector();
+                break;
+
+            case SIMPLE:
+                connector = new SimpleDBConnector();
+                break;
+
+            case NEO4J:
+                connector = new Neo4jConnector(user, password, url);
+                break;
+
+            default:
+                throw new UnsupportedOperationException("Connector not declared!!!!");
+        }
     }
 }

@@ -335,8 +335,8 @@ public class Parser {
         executionEngine.createTable(dt);
     }
 
-    public void changeCurrentDB(String db) {
-        executionEngine.changeCurrentDB(db);
+    public void changeCurrentDB(String db, String sgbdConnector) {
+        executionEngine.changeCurrentDB(db, sgbdConnector);
     }
 
     public void createCurrentDB(String db, String connector) {
