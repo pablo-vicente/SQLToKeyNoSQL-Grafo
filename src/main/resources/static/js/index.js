@@ -57,9 +57,10 @@ function events()
             const target = await createUpdateNoSqlTarget();
             const database = await createDatabase();
             const currente = await getDatabases();
+            const targets = await getNosqlTargets();
 
             Promise
-                .all([target, database, currente])
+                .all([target, database, currente, targets])
                 .then(() =>
                 {
                     removeLoadingButton('salvar-target');
