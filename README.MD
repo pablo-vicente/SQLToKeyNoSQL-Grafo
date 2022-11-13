@@ -11,13 +11,14 @@ docker-compose up docker-compose.yml
 - NEO4J(Enterprise): acessível através da [localhost:7474](http://localhost:7474)
     - User: ``neo4j``
     - PWS: ``pAsSw0rD``
-- API SQLTONOKEYNOSQL: é possível utilizar o [SWAGER-Documentação](http://localhost:8080/swagger) ou [POSTAM](https://www.postman.com/) para os testes da API
+- API SQLTONOKEYNOSQL: é possível utilizar o [SWAGGER](http://localhost:8080/swagger), [POSTAM](https://www.postman.com/) ou a [Interface Web](http://localhost:8080/).
 - O arquivo [bd_matConstru.sql](.\Scripts\bd_matConstru.sql) contém alguns exemplos de SQL 
 - O arquivo [Setup](.\Scripts\setup.js) contém exemplo de utilização da API com JS
 
 ## PASSOS
 
 # 1 Criar Conexão com SGBD através da rota ```POST/no-sql-target```
+- Através do ```GET/connectors``` é possível obter os SGBDs suportados
 > Dados de conexão Neo4j
 ```JSON
 {
@@ -30,15 +31,24 @@ docker-compose up docker-compose.yml
 ```
 > É possivel verificar criaçao através ```GET/no-sql-targets```
 
-# 2 Definir o banco de dados através ```POST/current-database```
-- Se o banco não existir será criado, se existir será apenas definido
+# 2 Criar e definir o banco de dados através ```POST/database```
 ```JSON
 {
-  "name": "bd_matConstru"
+  "name": "bd_matConstru",
+  "connector": "NEO4J"
 }
 ```
 > É possivel verificar criaçao através ```GET/databases```
-> È possível verificar se está definido através ```GET/current-database```
+ 
+> É possível verificar se está definido através ```GET/current-database```
+
+## 2.1 Alterar o banco de execução através ```POST/current-database```
+```JSON
+{
+  "name": "bd_matConstru",
+  "connector": "NEO4J"
+}
+```
 
 # 3 Rodar os Scripts através ```/query```
 * Exemplo
@@ -56,14 +66,14 @@ create table funcao(
   "value": "create table funcao(id_funcao int not null primary key auto_increment,desc_funcao varchar(50),salario double,carga_horaria varchar(30));"
 }
 ```
-### 3.1 Rodar os Arquivo SQL através ```/query-file-sql-script```
+## 3.1 Rodar os Arquivo SQL através ```/query-file-sql-script```
 
 # 4 Realizando o Transferência para Banco NoSQL
-### 4.1 Script DDL (Criação tabelas) - A camada não faz a leitura automatica das definições das tabelas de um banco.
+## 4.1 Script DDL (Criação tabelas) - A camada não faz a leitura automatica das definições das tabelas de um banco.
  - CREATE
  - ALTER
  - DROP
-### 4.1 Script DML
+## 4.1 Script DML
 - INSERT
 - UPDATE
 - SELECT
