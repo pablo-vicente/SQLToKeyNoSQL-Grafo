@@ -103,6 +103,21 @@
 
               </div>
             </div>
+
+            <div class="col-5 border">
+              <h5>DESCRIÇÃO</h5>
+              <pre>
+<b>OBS:</b> é necessário ter uma conexão com <i>MONGO</i> com usuário <i>root</i> e senha <i>root</i>.
+Está conexão pode ser utilziada como <i>target</i>.
+Criar Conexão com SGBD (exemplo <i>Neo4j</i>)
+  Connector: "NEO4J",
+  Usuário: "neo4j"
+  Senha: "pAsSw0rD",
+  URL: "bolt://localhost:7687",
+Criar o(s) banco(s) de dados, este será associado ao conector selecionado.
+              </pre>
+            </div>
+
           </div>
         </div>
       </div>
@@ -115,39 +130,57 @@
     <div class="card-header titulo">
       Queries
     </div>
-    <div class="card-body">
+    <div class="card-body row col">
 
-      <div class="input-group mb-3">
-        <label class="input-group-text" for="select-nome-db-existente">Banco de Dados</label>
-        <select class="form-select" id="select-nome-db-existente" required>
-          <option selected>Selecione...</option>
-          <option value="1">Neo4j</option>
-          <option value="2">Two</option>
-          <option value="3">Three</option>
-        </select>
-      </div>
+      <div class="col">
+        <div class="input-group mb-3">
+          <label class="input-group-text" for="select-nome-db-existente">Banco de Dados</label>
+          <select class="form-select" id="select-nome-db-existente" required>
+            <option selected>Selecione...</option>
+            <option value="1">Neo4j</option>
+            <option value="2">Two</option>
+            <option value="3">Three</option>
+          </select>
+        </div>
 
-      <div class="input-group mb-3">
-        <input class="form-control" type="file" id="formFile">
-        <button id="btn-executar-query" class="btn btn-warning btn-salvar" type="button">Executar</button>
-      </div>
+        <div class="input-group mb-3">
+          <input class="form-control" type="file" id="formFile">
+          <button id="btn-executar-query" class="btn btn-warning btn-salvar" type="button">Executar</button>
+        </div>
 
-      <div class="form-floating">
+        <div class="form-floating">
           <textarea class="form-control" placeholder="Escreva uma expressão SQL" id="sql-query-text"
                     style="height: 100px"></textarea>
-        <label for="sql-query-text">Escreva uma expressão SQL</label>
-      </div>
+          <label for="sql-query-text">Escreva uma expressão SQL</label>
+        </div>
 
-      <div class="input-group mt-3">
-        <label for="timer" class="input-group-text">Tempo de Execução</label>
-        <input id="timer" type="text" class="form-control" disabled>
-        <div class="btn-clock input-group-text">
+        <div class="input-group mt-3">
+          <label for="timer" class="input-group-text">Tempo de Execução</label>
+          <input id="timer" type="text" class="form-control" disabled>
+          <div class="btn-clock input-group-text">
             <span>
               <img th:src="@{/images/clock.png}" height="32" alt="Imagem de um Relógio"/>
             </span>
+          </div>
         </div>
       </div>
 
+      <div class="col-5 border">
+      <h5>
+        Realizando o Transferência para Banco NoSQL
+      </h5>
+        <pre>
+<b>OBS:</b> A camada não faz a leitura automatica das definições das tabelas de um banco relacional.
+1º Importar <i>script</i> de criação.
+2º Importar <i>script</i> de inserção.
+
+Comandos Suportados:
+<i>DDL: CREATE | ALTER | DROP
+DML: INSERT | UPDATE |SELECT | DELETE</i>
+O Parse SQL utilizado suporta um conjunto limitado de sintaxe, para mais detalhes <a href="https://github.com/JSQLParser/JSqlParser">JSqlParser</a>.
+        </pre>
+
+      </div>
 
       <div id="resultados">
         <hr />
