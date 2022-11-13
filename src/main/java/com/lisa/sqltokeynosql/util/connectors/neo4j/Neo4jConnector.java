@@ -13,16 +13,15 @@ import java.util.*;
 
 public class Neo4jConnector extends Connector
 {
-    private Driver driver;
+    private final Driver driver;
     private Session Session;
     private String _nomeBancoDados = "";
-    private final AuthToken authToken;
-    private final String uri;
+//    private final AuthToken authToken;
 
     public Neo4jConnector(String user, String password, String uri)
     {
-        this.uri = uri;
-        authToken = AuthTokens.basic(user, password);
+        var authToken = AuthTokens.basic(user, password);
+        driver = GraphDatabase.driver(uri, authToken);
     }
 
     /**
@@ -31,7 +30,7 @@ public class Neo4jConnector extends Connector
     @Override
     public void connect(String nameDB)
     {
-        driver = GraphDatabase.driver(uri, authToken);
+
         _nomeBancoDados = nameDB
                 .trim()
                 .toLowerCase()
