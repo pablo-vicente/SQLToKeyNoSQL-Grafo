@@ -378,7 +378,7 @@ async function getCurrenteDatabase()
             const currentDatabase = await res.json();
             const select = document.querySelector("#select-nome-db-existente");
 
-            if(currentDatabase !== null && currentDatabase !== undefined && currentDatabase === '')
+            if(currentDatabase !== null && currentDatabase !== undefined && currentDatabase !== '')
             {
                 select.value = currentDatabase.name;
                 return;
