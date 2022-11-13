@@ -150,6 +150,8 @@ async function createUpdateNoSqlTarget()
         {
             if(!res.ok)
                 return showModal(await res.json());
+            else
+                enableDisableTargetInputs(true);
         })
 }
 
@@ -426,6 +428,11 @@ function enableDisableTargetInputs(disabled)
     document.getElementById('target-nosql-usuario').disabled = disabled;
     document.getElementById('target-nosql-senha').disabled = disabled;
     document.getElementById('target-nosql-url').disabled = disabled;
+
+    if(disabled)
+        document.getElementById('editar-target').style.display = '';
+    else
+        document.getElementById('editar-target').style.display = 'none';
 }
 
 function setCredencialTargetNoSql(user, password, url)
@@ -433,16 +440,7 @@ function setCredencialTargetNoSql(user, password, url)
     document.querySelector("#target-nosql-usuario").value = user;
     document.querySelector("#target-nosql-senha").value = password;
     document.querySelector("#target-nosql-url").value = url;
-    if(user === '' && password === '' && url === '')
-    {
-        enableDisableTargetInputs(false)
-        document.getElementById('editar-target').style.display = 'none';
-    }
-    else
-    {
-        enableDisableTargetInputs(true)
-        document.getElementById('editar-target').style.display = '';
-    }
+    enableDisableTargetInputs(user !== '' && password !== '' && url !== '')
 }
 
 function showModal(message) {
