@@ -13,9 +13,11 @@ function events()
         .addEventListener('change', async (e) => {
             e.preventDefault();
             const select = document.getElementById("select-nome-db-existente");
-            const database = select.options[select.selectedIndex].value;
+            const option = select.options[select.selectedIndex];
+            const database = option.value;
+            const connector = option.dataset.connector;
 
-            await postCurrentDatabase(database);
+            await postCurrentDatabase(database, connector);
         });
 
     document
@@ -316,13 +318,14 @@ function renderTable(indexTabela)
 
 }
 
-async function postCurrentDatabase(database)
+async function postCurrentDatabase(database, connector)
 {
     await fetch("/current-database",
         {
             method: 'POST',
             body: JSON.stringify(
                 {
+                    "connector": connector,
                     "name": database
                 }),
             headers: new Headers(
@@ -357,6 +360,7 @@ async function getDatabases()
                 const opt = document.createElement('option');
                 opt.value = database.name;
                 opt.text = `${database.name} (${database.targetDB.connector})`;
+                opt.dataset.connector = database.targetDB.connector;
                 opt.selected = false;
                 select.appendChild(opt)
             });
@@ -387,7 +391,8 @@ async function getCurrenteDatabase()
             if(select.options.length === 0)
                 return;
 
-            await postCurrentDatabase(select.value);
+            const connector = select.options[select.selectedIndex].dataset.connector;
+            await postCurrentDatabase(select.value, connector);
         })
 }
 
