@@ -1,4 +1,7 @@
-# Rodando Programa
+![img.png](src/main/resources/static/images/logo.png)
+# SqlToNoSQL
+
+## Rodando Programa
 
 - Baixar [DOCKER](https://www.docker.com/)
 - Rodar Arquivo ```docker-compose.yml```, instâncias dos bancos de dados utlizados ([Mongo](https://www.mongodb.com/) e [Neo4j](https://neo4j.com/))
