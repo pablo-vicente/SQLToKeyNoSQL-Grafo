@@ -54,7 +54,7 @@ public class SQLController {
     }
 
     @PostMapping(value = "/no-sql-target", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
-    @ApiOperation(value = "Create the SGDB Target.")
+    @ApiOperation(value = "Create or edit a SGDB Target.")
     public ResponseEntity<String> createNoSqlTarget(@RequestBody NoSqlTargetDTO noSqlTargetDTO) throws IOException
     {
         try
