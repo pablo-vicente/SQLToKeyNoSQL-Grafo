@@ -66,9 +66,9 @@ public class ExecutionEngine {
 
         var noSQL = dictionary.getTarget(connector);
         noSQL.Connection().connect(name);
-
+        var bdr = new BDR(name, noSQL, new ArrayList<>());
+        dictionary.getRdbms().add(bdr);
         dictionary.setCurrentDb(name);
-        dictionary.getRdbms().add(new BDR(name, noSQL, new ArrayList<>()));
         SaveDicitionary();
     }
 
