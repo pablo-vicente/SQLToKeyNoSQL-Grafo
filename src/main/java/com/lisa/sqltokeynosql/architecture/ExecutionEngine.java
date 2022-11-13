@@ -57,6 +57,10 @@ public class ExecutionEngine {
 
     public void createDBR(final String name, String connector)
     {
+        // ^[a-zA-Z]+[0-9a-zA-Z]{3,}$
+        if(!name.matches("^[a-zA-Z]+[0-9a-zA-Z]{3,}$"))
+            throw new UnsupportedOperationException("Nome do banco de dados inválido. O nome deve começar com uma Letra e conter apenas Letras e/ou números. (mínimo 3 caracteres)");
+
         if (databaseExist(name))
             throw new UnsupportedOperationException("Banco de dados já cadastrado!");
 
