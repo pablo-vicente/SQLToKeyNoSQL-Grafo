@@ -1,5 +1,14 @@
 ![img.png](src/main/resources/static/images/logo.png)
 # SqlToNoSQL
+## NoSQL
+```text
+Neo4j => OK | Funcional
+Mongo => Parcial (Requer otimização)
+Cassandra => Parcial (Requer otimização) | Não testado
+Redis => Parcial (Requer otimização) | Não testado
+SimpleDB => Parcial (Requer otimização) | Não testado
+Voldemor => Parcial (Requer otimização) | Não testado
+```
 
 ## Rodando Programa
 
@@ -148,6 +157,10 @@ SELECT id FROM funcionario WHERE nome = "Nome";
 -- Não é permitido deletar registros que são Chaves estrangeiras de outros registros.
 DELETE FROM funcionario WHERE id >= "1";
 ```
+
+# Interface WEB
+![img.png](img.png)
+![img_1.png](img_1.png)
 
 
 
