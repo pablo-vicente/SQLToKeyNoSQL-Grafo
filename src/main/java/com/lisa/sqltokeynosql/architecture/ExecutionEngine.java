@@ -79,7 +79,13 @@ public class ExecutionEngine {
     {
         if (!databaseExist(name1))
             throw new UnsupportedOperationException("Banco de dados Inexistente!");
+
         var noSQL = dictionary.getTarget(sgbdConnector);
+        var sameTarget = dictionary.getBDR(name1).get().getTargetDB().getConnector() == noSQL.getConnector();
+
+        if(!sameTarget)
+            throw new UnsupportedOperationException("Banco de dados Inexistente!");
+
         toConnectSgbd(noSQL);
         this.connector.connect(name1);
 
