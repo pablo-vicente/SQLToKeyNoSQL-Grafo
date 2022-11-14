@@ -235,6 +235,10 @@ public class ExecutionEngine {
             {
                 var coluna = acls.get(i);
                 int indexColuna = cols.indexOf(coluna);
+
+                if(indexColuna == -1)
+                    throw new UnsupportedOperationException("Coluna " + coluna + " não existe");
+
                 values.set(indexColuna, avl.get(i));
             }
 
