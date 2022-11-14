@@ -25,15 +25,53 @@ function events()
         .addEventListener('click', async (e) =>
         {
             e.preventDefault();
-            document.getElementById('loading').style.display = '';
-            document.getElementById('select-tabelas').style.display = 'none';
-            document.getElementById('sem-dados').style.display = 'none';
-            document.getElementById('div-tabela').style.display = 'none';
-            document.getElementById('timer').value = '';
+
+            if(document.querySelector('#select-nome-db-existente').options.length === 0 )
+            {
+                showModal("Não foi definido um banco de dados!");
+                return;
+            }
+
+            const queryFile = readQueryFile();
+            if(queryFile === null || queryFile === undefined || queryFile === "")
+            {
+                showModal("Inclua um arquivo ou escreva uma expressão SQL");
+                return;
+            }
 
             insertLoadingButton('btn-executar-query');
-            await runQuery();
-            document.getElementById('loading').style.display = 'none'
+            document.getElementById('timer').value = '';
+            document.getElementById('resultados').style.display = 'none';
+            document.getElementById('separador').style.display = 'none';
+            document.getElementById('sem-dados').style.display = 'none';
+
+            const select = document.querySelector("#select-resultado-tabelas");
+            select.options.length = 0;
+
+            const result = await runQuery(queryFile);
+            if(result !== undefined)
+            {
+                document.getElementById('separador').style.display = '';
+                dataSets = result.DataSets;
+                if(dataSets.length === 0)
+                    document.getElementById('sem-dados').style.display = '';
+                else
+                {
+                    for (let i = 0; i < result.DataSets.length; i++)
+                    {
+                        const table = result.DataSets[i];
+
+                        const opt = document.createElement('option');
+                        opt.value = i;
+                        opt.text = table.tableName.toUpperCase();
+                        select.appendChild(opt);
+                    }
+                    renderTable(0);
+                    putTimer(result.TimerResponse.TempoCamada);
+                    document.getElementById('resultados').style.display = '';
+                }
+            }
+
             removeLoadingButton('btn-executar-query');
         });
 
@@ -44,8 +82,6 @@ function events()
             e.preventDefault();
             const select = document.getElementById("select-resultado-tabelas");
             const tableIndex = select.options[select.selectedIndex].value;
-            document.getElementById('div-tabela').style.display = 'none';
-            document.getElementById('loading').style.display = '';
             renderTable(tableIndex)
         });
 
@@ -91,6 +127,27 @@ function events()
             enableDisableTargetInputs(false);
             e.target.style.display = 'none';
         });
+}
+
+function readQueryFile()
+{
+    let file = document.getElementById("formFile").files[0];
+    const textArea = document.getElementById('sql-query-text');
+
+    if(file === undefined || file === null || file === '')
+    {
+        const queryText = textArea.value;
+
+        if(queryText.trim() === '')
+            return "";
+
+        const blobObject = new Blob([queryText], {type: 'text/plain'});
+        file = new File([blobObject], 'query.sql', {type: 'text/plain'});
+    }
+    else
+        textArea.value = '';
+
+    return file;
 }
 
 async function createDatabase()
@@ -192,33 +249,8 @@ function putTimer(time)
     document.getElementById('timer').value = `${timeSeconds}s | ${timeMinutes}m | ${timeHors}h`
 }
 
-async function runQuery()
+async function runQuery(file)
 {
-    if(document.querySelector('#select-nome-db-existente').options.length === 0 )
-    {
-        showModal("Não foi definido um banco de dados!");
-        return;
-    }
-
-    let file = document.getElementById("formFile").files[0];
-    const textArea = document.getElementById('sql-query-text');
-
-    if(file === undefined || file === null || file === '')
-    {
-        const queryText = textArea.value;
-
-        if(queryText.trim() === '')
-        {
-            showModal("Inclua um arquivo ou escreva uma expressão SQL");
-            return;
-        }
-
-        const blobObject = new Blob([queryText], {type: 'text/plain'});
-        file = new File([blobObject], 'query.sql', {type: 'text/plain'});
-    }
-    else
-        textArea.value = '';
-
     const formData = new FormData();
     formData.append('file', file);
 
@@ -231,39 +263,14 @@ async function runQuery()
         if(!res.ok)
             return showModal(await res.json());
 
-        const result = await res.json();
-        dataSets = result.DataSets;
-
-        const select = document.querySelector("#select-resultado-tabelas");
-        select.options.length = 0;
-
-        for (let i = 0; i < result.DataSets.length; i++)
-        {
-            const table = result.DataSets[i];
-
-            const opt = document.createElement('option');
-            opt.value = i;
-            opt.text = table.tableName.toUpperCase();
-            select.appendChild(opt);
-        }
-        renderTable(0);
-        putTimer(result.TimerResponse.TempoCamada);
+        return await res.json();
     });
 }
 
 function renderTable(indexTabela)
 {
-    document.getElementById('sem-dados').style.display = 'none';
-    document.getElementById('div-tabela').style.display = 'none';
     document.getElementById('loading').style.display = '';
-    if(dataSets.length === 0)
-    {
-        document.getElementById('sem-dados').style.display = '';
-        document.getElementById('select-tabelas').style.display = 'none';
-        document.getElementById('div-tabela').style.display = 'none';
-        document.getElementById('loading').style.display = 'none';
-        return;
-    }
+    document.getElementById('div-tabela').style.display = 'none';
 
     const data = dataSets[indexTabela];
     const columns = data.columns.map(function (column) {return {title: column.toUpperCase()}});
@@ -309,10 +316,8 @@ function renderTable(indexTabela)
 
     setTimeout(() =>
     {
-        document.getElementById('sem-dados').style.display = 'none';
-        document.getElementById('div-tabela').style.display = '';
-        document.getElementById('select-tabelas').style.display = '';
         document.getElementById('loading').style.display = 'none';
+        document.getElementById('div-tabela').style.display = '';
         tabelaResultados.draw();
     }, 5);
 
