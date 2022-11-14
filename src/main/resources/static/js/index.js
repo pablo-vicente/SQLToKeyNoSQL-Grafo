@@ -67,9 +67,9 @@ function events()
                         select.appendChild(opt);
                     }
                     renderTable(0);
-                    putTimer(result.TimerResponse.TempoCamada);
                     document.getElementById('resultados').style.display = '';
                 }
+                putTimer(result.TimerResponse.TempoCamada);
             }
 
             removeLoadingButton('btn-executar-query');
