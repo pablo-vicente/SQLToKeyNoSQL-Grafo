@@ -54,7 +54,7 @@ public class CassandraConnector extends Connector {
     }
 
     @Override
-    public void delete(String t, String...keys)
+    public void delete(String t, List<String> keys)
     {
         for (String key : keys)
         {

@@ -305,7 +305,7 @@ public class Neo4jConnector extends Connector
      * @param keys
      */
     @Override
-    public void delete(String table, String...keys)
+    public void delete(String table, List<String> keys)
     {
         String DELETE = "DELETE";
         var stopwatchDeleteConnetor = TimeReportService.CreateAndStartStopwatch();

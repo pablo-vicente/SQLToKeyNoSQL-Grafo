@@ -156,25 +156,23 @@ public class Neo4jUtils
                 "RETURN n";
     }
 
-    public static String queryDelete(String table, String...keys)
+    public static String queryDelete(String table, List<String> keys)
     {
         StringBuilder query = new StringBuilder();
-        for (String key : keys)
-        {
-            query
-                    .append("MATCH(n:")
-                    .append(table)
-                    .append(")\n")
-                    .append("OPTIONAL MATCH(n:")
-                    .append(table)
-                    .append(") -[chaves_estrangeiras]-> (ce)\n")
-                    .append("WHERE n.")
-                    .append(_nodeKey)
-                    .append(" in ")
-                    .append(key)
-                    .append("\n")
-                    .append("DELETE chaves_estrangeiras,n");
-        }
+        var key = String.valueOf(keys);
+        query
+                .append("MATCH(n:")
+                .append(table)
+                .append(")\n")
+                .append("OPTIONAL MATCH(n:")
+                .append(table)
+                .append(") -[chaves_estrangeiras]-> (ce)\n")
+                .append("WHERE n.")
+                .append(_nodeKey)
+                .append(" in ")
+                .append(key)
+                .append("\n")
+                .append("DELETE chaves_estrangeiras,n");
 
         return query.toString();
     }

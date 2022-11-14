@@ -66,10 +66,12 @@ public class MongoConnector extends Connector
     }
 
     @Override
-    public void delete(String table, String...keys)
+    public void delete(String table, List<String> keys)
     {
         for (String key : keys)
+        {
             mongoDatabase.getCollection(table).findAndRemove(new BasicDBObject("_id", key));
+        }
     }
 
     @Override

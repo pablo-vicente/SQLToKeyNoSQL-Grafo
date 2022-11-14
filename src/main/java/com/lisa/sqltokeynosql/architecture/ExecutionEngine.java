@@ -184,7 +184,7 @@ public class ExecutionEngine {
 
             keys.add(key);
         }
-        this.connector.delete(table, String.valueOf(keys));
+        this.connector.delete(table, keys);
 
         for (var key : keys)
             table1.getKeys().remove(key);

@@ -45,7 +45,7 @@ public class VoldemortConnector extends Connector {
     }
 
     @Override
-    public void delete(String t, String...keys) {
+    public void delete(String t, List<String> keys) {
 
     }
 
